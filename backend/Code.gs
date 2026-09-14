@@ -7,6 +7,13 @@
 const GEMINI_API_KEY = '여기에_발급받은_Gemini_API_키를_붙여넣으세요';
 const GEMINI_MODEL = 'gemini-2.0-flash';
 
+// 2) 무작위 봇의 무단 호출을 막기 위한 간단한 공유 비밀번호. 원하는 문자열로 바꾸세요.
+//    (index.html의 GAS_SECRET 값도 반드시 이 값과 동일하게 맞춰야 합니다.)
+const CLASS_SECRET = '원하는-비밀번호로-변경';
+
+// 3) 하루 최대 채점 횟수. 무단 대량 호출로 무료 할당량이 소진되는 것을 막는 안전장치입니다.
+const MAX_DAILY_REQUESTS = 300;
+
 const CRITERIA = [
   { key: 'observation', name: '사전 관찰' },
   { key: 'experiment', name: 'AI 실험 체계성' },
@@ -18,10 +25,34 @@ const CRITERIA = [
 function doPost(e) {
   try {
     const payload = JSON.parse(e.postData.contents);
+
+    if (CLASS_SECRET && payload.secret !== CLASS_SECRET) {
+      return jsonResponse({ ok: false, error: '인증 실패: secret 값이 올바르지 않습니다.' });
+    }
+    checkAndIncrementDailyQuota();
+
     const report = gradeWithAI(payload);
     return jsonResponse({ ok: true, report: report });
   } catch (err) {
     return jsonResponse({ ok: false, error: String((err && err.message) || err) });
+  }
+}
+
+// 하루 호출 횟수를 세어 MAX_DAILY_REQUESTS를 넘으면 예외를 던진다.
+function checkAndIncrementDailyQuota() {
+  const props = PropertiesService.getScriptProperties();
+  const today = Utilities.formatDate(new Date(), Session.getScriptTimeZone() || 'Asia/Seoul', 'yyyy-MM-dd');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(5000);
+  try {
+    const key = 'reqCount_' + today;
+    const count = Number(props.getProperty(key) || '0');
+    if (count >= MAX_DAILY_REQUESTS) {
+      throw new Error('오늘의 채점 요청 한도(' + MAX_DAILY_REQUESTS + '회)를 초과했습니다. 내일 다시 시도하거나 관리자에게 문의하세요.');
+    }
+    props.setProperty(key, String(count + 1));
+  } finally {
+    lock.releaseLock();
   }
 }
 
