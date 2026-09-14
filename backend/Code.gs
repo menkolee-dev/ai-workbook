@@ -91,12 +91,17 @@ function gradeWithAI(payload) {
   const criteriaList = CRITERIA.map(function (c) { return '- ' + c.name; }).join('\n');
 
   const prompt =
-    '너는 건축·공간디자인 AI 활용 수업의 채점 조교다. 아래 학생의 12개 미션 실습 기록을 읽고, ' +
-    '다음 5개 기준으로 각각 0~20점을 매기고 총점(100점 만점)과 등급(A/B/C/D/F), 총평, 각 기준별 코멘트를 작성해라.\n\n' +
-    '채점 기준:\n' + criteriaList + '\n\n' +
+    '너는 건축·공간디자인 AI 활용 수업의 채점 조교다. 아래 학생의 미션 실습 기록을 읽고 채점표를 작성해라.\n\n' +
+    '중요한 규칙:\n' +
+    '1) 미션 01~10(코어 스튜디오)만 아래 5개 기준으로 채점한다. 각 기준 0~20점, 5개 합산 최대 100점.\n' +
+    '2) 미션 11(공공건축 MCP 분석)과 미션 12(AI 건축 모델링 검증)는 보너스 과제이며 정규 100점 채점에는 절대 포함하지 않는다. ' +
+    '두 미션은 완성된 결과물(실제 MCP 실행이나 완성된 영상) 유무로 감점하지 말고, 학생이 기록한 판단 과정(스크린샷 첨부, 검색 질문, 발견한 오류, 최종 결정 등)이 있으면 완료로 간주해 각각 0~5점의 보너스를 부여한다. 기록이 없으면 0점.\n' +
+    '3) totalScore는 "1)의 100점 만점 점수"만을 의미한다 (보너스 점수는 별도 필드로 분리해서 제시하고 totalScore에 합산하지 않는다).\n\n' +
+    '채점 기준 (미션 01~10 전용):\n' + criteriaList + '\n\n' +
     '반드시 아래 JSON 형식으로만 응답하고 다른 텍스트는 절대 포함하지 마라:\n' +
-    '{"totalScore":숫자,"grade":"A/B/C/D/F 중 하나","overallComment":"총평 2~3문장","criteria":[{"name":"기준명","score":숫자,"comment":"코멘트 1~2문장"}]}\n' +
-    '(criteria 배열은 반드시 위 5개 기준 각각에 대해 하나씩, 총 5개 항목이어야 한다)\n\n' +
+    '{"totalScore":숫자(0~100),"grade":"A/B/C/D/F 중 하나","overallComment":"총평 2~3문장","criteria":[{"name":"기준명","score":숫자,"comment":"코멘트 1~2문장"}],' +
+    '"bonusMissions":[{"id":"11","label":"11번 · 공공건축 MCP 분석","score":숫자(0~5),"comment":"코멘트 1문장"},{"id":"12","label":"12번 · AI 건축 모델링 검증","score":숫자(0~5),"comment":"코멘트 1문장"}]}\n' +
+    '(criteria 배열은 반드시 위 5개 기준 각각에 대해 하나씩, 총 5개 항목. bonusMissions는 반드시 11번, 12번 각각 하나씩 총 2개 항목)\n\n' +
     '학생 기록:\n' + summary;
 
   const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + GEMINI_API_KEY;
