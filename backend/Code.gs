@@ -61,25 +61,58 @@ function jsonResponse(obj) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+// 텍스트 요약에서는 제외하고 별도로 이미지 파트로 첨부할 필드명
+const IMAGE_FIELD_KEY = 'imageData';
+// 안전장치: 이미지 1장당 base64 용량 상한(약 1.2MB 원본 기준). 이보다 크면 손상되었거나 비정상 데이터로 보고 건너뛴다.
+const MAX_IMAGE_BASE64_CHARS = 1600000;
+
 function buildSummary(payload) {
   const student = payload.student || {};
   const missions = payload.missions || [];
+  const core = missions.filter(function (m) { return m.id !== '11' && m.id !== '12'; });
+  const completedCount = core.filter(function (m) { return m.completed; }).length;
+  const imageCount = core.filter(function (m) { return m.fields && m.fields[IMAGE_FIELD_KEY]; }).length;
+
   const lines = [];
   lines.push('학생 이름: ' + (student.name || '미기재'));
   lines.push('학번: ' + (student.studentId || '미기재'));
+  lines.push('코어 미션(01~10) 완료 개수: ' + completedCount + ' / ' + core.length);
+  lines.push('첨부된 실습 이미지 개수: ' + imageCount + ' (아래 이미지들은 이 프롬프트 뒤에 [미션 NN 첨부 이미지] 라벨과 함께 순서대로 첨부됨)');
   lines.push('');
   missions.forEach(function (m) {
     lines.push('[미션 ' + m.id + '] ' + m.title + ' - ' + (m.completed ? '완료' : '미완료'));
     const f = m.fields || {};
+    let hasField = false;
     Object.keys(f).forEach(function (k) {
-      if (k === 'completed') return;
+      if (k === 'completed' || k === IMAGE_FIELD_KEY) return;
       const v = f[k];
       if (v === undefined || v === null || v === '') return;
       lines.push('  - ' + k + ': ' + v);
+      hasField = true;
     });
+    if (f[IMAGE_FIELD_KEY]) lines.push('  - (첨부 이미지 있음, 아래 참고)');
+    if (!hasField && !f[IMAGE_FIELD_KEY]) lines.push('  (기록 없음)');
     lines.push('');
   });
   return lines.join('\n');
+}
+
+// 미션별 첨부 이미지를 Gemini 멀티모달 파트(라벨 텍스트 + inlineData)로 변환한다.
+function buildImageParts(payload) {
+  const missions = payload.missions || [];
+  const parts = [];
+  missions.forEach(function (m) {
+    const dataUrl = m.fields && m.fields[IMAGE_FIELD_KEY];
+    if (!dataUrl || typeof dataUrl !== 'string') return;
+    const match = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+    if (!match) return;
+    const mimeType = match[1];
+    const base64 = match[2];
+    if (base64.length > MAX_IMAGE_BASE64_CHARS) return; // 비정상적으로 큰 데이터는 건너뛴다
+    parts.push({ text: '[미션 ' + m.id + ' 첨부 이미지]' });
+    parts.push({ inlineData: { mimeType: mimeType, data: base64 } });
+  });
+  return parts;
 }
 
 function gradeWithAI(payload) {
@@ -104,17 +137,32 @@ function gradeWithAI(payload) {
     '   - 보통: 답변은 있으나 구체적인 근거나 예시 없이 일반적인 수준에 그치는 경우\n' +
     '   - 잘함: 무엇을 관찰했고 어떤 근거로 판단했는지가 구체적으로 드러나는 경우\n' +
     '   - 매우 잘함: 매우 구체적인 관찰/근거에 더해 실제 기준(시공·전공·현장 조건 등)과의 비교, 명확한 판단 이유까지 모두 드러나는 경우\n' +
-    '   글자 수가 많다고 무조건 높은 등급을 주지 말고, 내용이 비어 있거나 성의 없이 짧으면 반드시 "노력 필요"로 평가해라.\n\n' +
+    '   글자 수가 많다고 무조건 높은 등급을 주지 말고, 내용이 비어 있거나 성의 없이 짧으면 반드시 "노력 필요"로 평가해라.\n' +
+    '6) 완성도(개수)를 종합 등급(overallTier)의 상한선으로 반드시 적용해라 — 아무리 내용이 훌륭해도 완료한 미션 수가 적으면 종합 등급을 그 이상 줄 수 없다:\n' +
+    '   - 코어 미션 10개 중 3개 이하 완료: overallTier는 "노력 필요"를 넘을 수 없다\n' +
+    '   - 4~6개 완료: "보통"을 넘을 수 없다\n' +
+    '   - 7~8개 완료: "잘함"을 넘을 수 없다\n' +
+    '   - 9~10개 완료해야만 "매우 잘함"이 가능하다\n' +
+    '   (개별 criteria 항목 등급은 실제로 기록이 있는 미션들의 내용만 보고 판단하되, overallTier는 위 상한선 규칙을 반드시 지켜라.)\n' +
+    '7) "(기록 없음)"으로 표시된 미완료 미션은 해당 내용이 전혀 없는 것이므로 관련 criteria 판단 시 낮은 근거로 반영해라.\n' +
+    '8) 여러 미션의 답변 문장이 서로 거의 동일하거나 복사해서 붙여넣은 것처럼 보이면(미션 내용이 다른데 문장이 같은 경우), 이는 실제 관찰·실험이 이루어지지 않았다는 신호이므로 해당 부분을 "보통" 이하로 평가하고 overallComment에 이 점을 짧게 언급해라.\n' +
+    '9) 학생이 고른 최종 결정(decisionType: 채택/수정/거부)과 실제로 적은 근거(decision) 내용이 서로 모순되면(예: 채택을 선택했는데 근거는 문제점만 나열) "오류 대응" 기준 평가에 반영해라.\n' +
+    '10) [중요] 프롬프트 뒤에 [미션 NN 첨부 이미지] 라벨과 함께 이미지가 첨부된 경우, 그 이미지의 주된 용도는 "이 미션을 실제로 수행했는지 확인하는 필터"다. ' +
+    '건축·공간·인테리어·도면·모델링·건물 관련 이미지가 아니라 명백히 무관한 이미지(예: 사람 얼굴 셀카, 음식, 동물, 밈, 스크린샷이 아닌 채팅 화면, 완전한 단색/빈 이미지, 미션 주제와 전혀 상관없는 사진)라면, ' +
+    '텍스트 답변이 아무리 그럴듯해도 해당 미션 관련 criteria(특히 "사전 관찰", "기록의 구체성")를 반드시 "노력 필요"로 낮추고, overallComment에 "이미지가 미션 주제와 맞지 않습니다" 라고 짧게 언급해라. ' +
+    '반대로 이미지가 건축/공간 관련 내용이 맞고 텍스트 설명과 대체로 일치하면 이미지 자체의 미적 완성도는 채점하지 말고(완성 이미지가 아니라 판단 과정이 핵심이므로) 정상적으로 텍스트 기준을 그대로 적용해라.\n\n' +
     '채점 기준 (미션 01~10 전용):\n' + criteriaList + '\n\n' +
     '반드시 아래 JSON 형식으로만 응답하고 다른 텍스트는 절대 포함하지 마라 (숫자 점수 필드를 절대 추가하지 마라):\n' +
-    '{"overallTier":' + tierOptions + ',"overallComment":"총평 2문장 이내","criteria":[{"name":"기준명","tier":' + tierOptions + ',"comment":"코멘트 1문장"}],' +
+    '{"completedCount":"N/10 형식의 문자열","overallTier":' + tierOptions + ',"overallComment":"총평 2문장 이내","criteria":[{"name":"기준명","tier":' + tierOptions + ',"comment":"코멘트 1문장"}],' +
+    '"weakMissions":["보완이 필요한 미션 번호(01~10)만 배열로, 없으면 빈 배열"],' +
     '"bonusMissions":[{"id":"11","label":"11번 · 공공건축 MCP 분석","completed":true 또는 false,"comment":"코멘트 1문장"},{"id":"12","label":"12번 · AI 건축 모델링 검증","completed":true 또는 false,"comment":"코멘트 1문장"}]}\n' +
     '(criteria 배열은 반드시 위 5개 기준 각각에 대해 하나씩, 총 5개 항목. bonusMissions는 반드시 11번, 12번 각각 하나씩 총 2개 항목)\n\n' +
     '학생 기록:\n' + summary;
 
+  const imageParts = buildImageParts(payload);
   const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + GEMINI_API_KEY;
   const body = {
-    contents: [{ parts: [{ text: prompt }] }],
+    contents: [{ parts: [{ text: prompt }].concat(imageParts) }],
     generationConfig: { temperature: 0.3, responseMimeType: 'application/json' }
   };
 

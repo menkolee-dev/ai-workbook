@@ -99,7 +99,7 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 </div>
 
 <div id="challengeWorkspace"></div>
-<div class="card" id="projectInputCard"><div class="eyebrow">이제 내 차례</div><h3>나의 실습 이미지</h3><div class="grid2"><div class="upload" id="uploadBox"><div id="uploadPlaceholder">＋ 기준 이미지 선택<br><span class="small">JPG / PNG / WebP 미리보기</span></div><input type="file" accept="image/*" id="imageInput"></div><div><label>프로젝트 메모</label><textarea data-field="projectNote" placeholder="용도, 대상, 설계조건, 유지할 요소 등을 기록"></textarea><label>오늘의 핵심 목표</label><input data-field="goal" placeholder="예: 기존 매스를 유지하고 입면 대안 3개 만들기"></div></div></div>
+<div class="card" id="projectInputCard"><div class="eyebrow">이제 내 차례</div><h3>나의 실습 이미지</h3><div class="grid2"><div><div class="upload" id="uploadBox"><div id="uploadPlaceholder">＋ 기준 이미지 선택<br><span class="small">JPG / PNG / WebP 미리보기</span></div><input type="file" accept="image/*" id="imageInput"></div><div class="small" style="color:var(--muted);margin-top:6px">💡 이 이미지는 AI 검증서 채점 시 함께 검토됩니다. 미션과 무관한 이미지는 낮은 평가를 받을 수 있어요.</div></div><div><label>프로젝트 메모</label><textarea data-field="projectNote" placeholder="용도, 대상, 설계조건, 유지할 요소 등을 기록"></textarea><label>오늘의 핵심 목표</label><input data-field="goal" placeholder="예: 기존 매스를 유지하고 입면 대안 3개 만들기"></div></div></div>
 
 <div id="promptBlock"></div><div id="steps"></div>
 
@@ -522,6 +522,12 @@ function renderReport(report){
       <b class="small" style="color:var(--accent);display:block;margin-bottom:2px">보너스 과제 (정규 등급과 별개)</b>
       ${bonusList.map(b=>`<div class="bonusRow"><span>${b.label||b.name||b.id}</span><span>${b.completed?'✅ 완료':'⭕ 미제출'}</span></div>`).join('')}
     </div>`:'';
+  const weak=report.weakMissions||[];
+  const weakHtml=weak.length?`
+    <div class="bonusBox">
+      <b class="small" style="color:var(--accent);display:block;margin-bottom:2px">보완하면 좋을 미션</b>
+      <div class="small" style="color:var(--muted)">${weak.join(' · ')}번 미션을 다시 살펴보세요.</div>
+    </div>`:'';
   box.innerHTML=`
     <div class="reportCertificate">
       ${tierMotif(report.overallTier)}
@@ -529,12 +535,14 @@ function renderReport(report){
         <div>
           <div class="reportCertTitle">나의 건축AI 활용능력 검증서</div>
           <div class="reportCertOverall">${tierEmoji(report.overallTier)} ${report.overallTier||'-'}</div>
+          ${report.completedCount?`<div class="small" style="color:#cfe4dc;margin-top:2px">코어 미션 완료 ${report.completedCount}</div>`:''}
         </div>
         <div class="reportCertLogo"><img src="assets/kbu-logo.png" alt="경복대학교" onerror="this.parentNode.style.display='none'"></div>
       </div>
       <p class="reportCertComment">${report.overallComment||''}</p>
     </div>
     <div class="reportCriteriaGrid">${crit}</div>
+    ${weakHtml}
     ${bonusHtml}
     <div class="reportDisclaimer">※ 이 등급은 AI가 기록을 바탕으로 참고용으로 생성한 피드백이며, 절대적인 평가나 확정 성적이 아닙니다. 학습 과정을 돌아보는 참고 자료로만 활용하시고, 실제 성적은 담당 교수의 별도 평가를 따릅니다.</div>
     <div class="actions"><button class="ghost" onclick="downloadReport()">검증서 다운로드</button></div>`;
@@ -544,8 +552,10 @@ function downloadReport(){
   if(!report){alert('먼저 검증서를 받아주세요.');return;}
   const info=loadStudentInfo();
   let out=`Architecture AX Expert\n나의 건축AI 활용능력 검증서\n${'='.repeat(44)}\n이름: ${info.name}\n학번: ${info.studentId}\n생성일시: ${new Date().toLocaleString('ko-KR')}\n${'='.repeat(44)}\n\n`;
+  out+=`코어 미션 완료: ${report.completedCount||'-'}\n`;
   out+=`종합 등급: ${report.overallTier}\n${report.overallComment}\n\n`;
   (report.criteria||[]).forEach(c=>{out+=`- ${c.name}: ${c.tier}\n  ${c.comment}\n\n`});
+  if((report.weakMissions||[]).length) out+=`보완하면 좋을 미션: ${report.weakMissions.join(' · ')}번\n\n`;
   (report.bonusMissions||[]).forEach(b=>{out+=`[보너스] ${b.label||b.name||b.id}: ${b.completed?'완료':'미제출'}\n`});
   out+=`\n※ 이 등급은 참고용 AI 피드백이며 절대적 평가나 확정 성적이 아닙니다. 실제 성적은 담당 교수의 별도 평가를 따릅니다.\n`;
   const safe=(s)=>String(s||'').trim().replace(/\s+/g,'_')||'report';
@@ -593,7 +603,13 @@ function render(){
   if(pic) pic.style.display=(['00','10','11','12'].includes(l.id)?'none':'block');
   bindAutosave();updateProgress();
   document.getElementById('uploadBox').querySelectorAll('img').forEach(x=>x.remove());
-  document.getElementById('uploadPlaceholder').style.display='block';
+  if(s.imageData){
+    document.getElementById('uploadPlaceholder').style.display='none';
+    let savedImg=document.createElement('img');savedImg.src=s.imageData;
+    document.getElementById('uploadBox').appendChild(savedImg);
+  }else{
+    document.getElementById('uploadPlaceholder').style.display='block';
+  }
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function updateProgress(){
@@ -628,7 +644,39 @@ document.getElementById('completeBtn').onclick=toggleCompletion;document.getElem
    showFinalSubmission();
  }
 };
-document.getElementById('imageInput').addEventListener('change',e=>{let f=e.target.files[0];if(!f)return;if(previewURL)URL.revokeObjectURL(previewURL);previewURL=URL.createObjectURL(f);let box=document.getElementById('uploadBox');box.querySelectorAll('img').forEach(x=>x.remove());document.getElementById('uploadPlaceholder').style.display='none';let img=document.createElement('img');img.src=previewURL;box.appendChild(img)});render();
+function compressImageToBase64(file,maxDim,quality){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onerror=reject;
+    reader.onload=e=>{
+      const img=new Image();
+      img.onerror=reject;
+      img.onload=()=>{
+        let w=img.width,h=img.height;
+        if(w>h&&w>maxDim){h=Math.round(h*maxDim/w);w=maxDim}
+        else if(h>maxDim){w=Math.round(w*maxDim/h);h=maxDim}
+        const canvas=document.createElement('canvas');
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/jpeg',quality));
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+document.getElementById('imageInput').addEventListener('change',e=>{
+  let f=e.target.files[0];if(!f)return;
+  if(f.size>20*1024*1024){alert('파일이 너무 큽니다 (20MB 이하만 가능). 더 작은 이미지를 선택해주세요.');e.target.value='';return}
+  if(previewURL)URL.revokeObjectURL(previewURL);previewURL=URL.createObjectURL(f);
+  let box=document.getElementById('uploadBox');box.querySelectorAll('img').forEach(x=>x.remove());
+  document.getElementById('uploadPlaceholder').style.display='none';
+  let img=document.createElement('img');img.src=previewURL;box.appendChild(img);
+  compressImageToBase64(f,480,0.6).then(dataUrl=>{
+    let s=loadState(current);s.imageData=dataUrl;saveState(current,s);
+  }).catch(()=>{});
+});
+render();
 </script>
 
 <div class="finalSubmitPanel" id="finalSubmitPanel">
