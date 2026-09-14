@@ -46,33 +46,37 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 
 .finalSubmitPanel{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:10000;display:none;align-items:center;justify-content:center;padding:24px}
 .finalSubmitPanel.open{display:flex}
-.finalSubmitBox{background:#fff;border-radius:18px;max-width:760px;width:100%;max-height:90vh;overflow:auto;padding:26px}
+.finalSubmitBox{background:#fff;border-radius:18px;max-width:860px;width:100%;max-height:92vh;overflow:auto;padding:30px}
 .finalSubmitBox h3{font-size:24px;margin-bottom:8px}
 .finalItem{border:1px solid var(--line);border-radius:12px;padding:13px;margin-top:10px;background:#fafaf8}
 
 .heroPills{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.heroPill{border:1px solid #ffffff4a;background:#ffffff14;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:750}
 .principleTip{background:linear-gradient(135deg,#fff,#f1f6f4);border-color:#cdded8;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:14px 18px;font-size:14px}.principleTip .small{color:var(--muted)}
 .resultBox{border:1px solid var(--line);background:#fafaf8;border-radius:12px;padding:14px}.resultBox b{display:block;color:var(--accent);margin-bottom:6px}
-.scoreHeadline{font-size:20px;font-weight:850;color:var(--accent)}.gradeLoading{display:inline-flex;gap:6px;align-items:center;color:var(--muted);font-size:13px}
-.reportCertificate{position:relative;overflow:hidden;background:linear-gradient(135deg,#173f39,#2f675d);color:#fff;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
-.reportCertTop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;position:relative;z-index:1}
-.reportCertTitle{font-size:11px;letter-spacing:.08em;font-weight:800;color:#bfe0d6;text-transform:uppercase}
-.reportCertOverall{font-size:21px;font-weight:900;margin-top:3px;display:flex;align-items:center;gap:7px}
-.reportCertLogo{background:#fff;border-radius:8px;padding:5px 9px;flex-shrink:0;line-height:0}
-.reportCertLogo img{height:22px;display:block}
-.reportCertComment{margin:2px 0 0;line-height:1.5;color:#e6f0ec;font-size:12.5px;position:relative;z-index:1;max-width:78%}
-.reportCertMotif{position:absolute;right:10px;bottom:6px;opacity:.9;pointer-events:none}
-.reportCriteriaGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
-.reportCriteriaItem{border:1px solid var(--line);border-radius:11px;padding:9px 11px;background:#fff}
+.scoreHeadline{font-size:20px;font-weight:850;color:var(--accent)}.gradeLoading{display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--muted);font-size:13px;padding:18px 10px;text-align:center}
+.gradeSpinner{width:28px;height:28px;border-radius:50%;border:3px solid var(--accent2);border-top-color:var(--accent);animation:gradeSpin .8s linear infinite}
+@keyframes gradeSpin{to{transform:rotate(360deg)}}
+.gradeLoadingMsg{font-weight:700;color:var(--accent)}
+.gradeLoadingSub{font-size:12px;color:var(--muted)}
+.reportCertificate{position:relative;overflow:hidden;background:linear-gradient(135deg,#173f39,#2f675d);color:#fff;border-radius:18px;padding:26px 28px;display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.reportCertTop{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;position:relative;z-index:1}
+.reportCertTitle{font-size:12px;letter-spacing:.09em;font-weight:800;color:#bfe0d6;text-transform:uppercase}
+.reportCertOverall{font-size:30px;font-weight:900;margin-top:6px;display:flex;align-items:center;gap:10px}
+.reportCertLogo{background:#fff;border-radius:9px;padding:6px 11px;flex-shrink:0;line-height:0}
+.reportCertLogo img{height:26px;display:block}
+.reportCertComment{margin:6px 0 0;line-height:1.65;color:#e6f0ec;font-size:14px;position:relative;z-index:1;max-width:85%}
+.reportCertMotif{position:absolute;right:14px;bottom:8px;opacity:.9;pointer-events:none;transform:scale(1.15)}
+.reportCriteriaGrid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px}
+.reportCriteriaItem{border:1px solid var(--line);border-radius:13px;padding:15px 18px;background:#fff}
 .reportCriteriaItem.wide{grid-column:1/-1}
-.reportCriteriaHead{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:3px}
-.reportCriteriaHead b{font-size:12.5px}
-.tierBadge{font-size:11px;font-weight:800;white-space:nowrap;padding:2px 8px;border-radius:999px;background:var(--accent2);color:var(--accent)}
-.reportCriteriaItem p{margin:0;font-size:11.5px;color:var(--muted);line-height:1.4}
-.bonusBox{border:1px dashed #cfe1d9;background:#f3f8f6;border-radius:11px;padding:9px 12px;margin-bottom:10px}
-.bonusRow{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px;gap:8px}
+.reportCriteriaHead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.reportCriteriaHead b{font-size:15px}
+.tierBadge{font-size:12.5px;font-weight:800;white-space:nowrap;padding:4px 12px;border-radius:999px;background:var(--accent2);color:var(--accent)}
+.reportCriteriaItem p{margin:0;font-size:13px;color:var(--muted);line-height:1.55}
+.bonusBox{border:1px dashed #cfe1d9;background:#f3f8f6;border-radius:13px;padding:14px 18px;margin-bottom:14px}
+.bonusRow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13.5px;gap:8px}
 .bonusRow:not(:last-child){border-bottom:1px dashed #dce8e3}
-.reportDisclaimer{font-size:11px;color:var(--muted);line-height:1.5;background:#fafaf7;border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:10px}
+.reportDisclaimer{font-size:12px;color:var(--muted);line-height:1.6;background:#fafaf7;border:1px solid var(--line);border-radius:11px;padding:13px 15px;margin-bottom:14px}
 .sectionLabel{padding:13px 10px 5px;color:#8a8f92;font-size:11px;letter-spacing:.12em;font-weight:900}.lessonBtn.advanced{margin-top:4px;background:#f2f5f8;border:1px solid #dbe3ea}.lessonBtn.advanced.active{background:var(--navy);color:#fff}.lessonBtn.advanced .n{border-color:#94a7b8}.lessonBtn.advanced.active .n{border-color:#fff}.advancedTag{display:block;color:#7d4ac7;font-size:9px;letter-spacing:.08em;margin-top:3px}.lessonBtn.advanced.active .advancedTag{color:#ded1ff}
 .challengeRibbon{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:13px}.statusChip{display:inline-flex;align-items:center;gap:5px;border:1px solid #ccd7df;background:#f2f6f9;color:var(--navy);border-radius:999px;padding:6px 9px;font-size:11px;font-weight:850}.statusChip.safe{background:#eaf4ef;border-color:#cce1d7;color:#176047}.statusChip.violet{background:#f1edfb;border-color:#ddd2f6;color:#603fad}
 .mcpDemo{grid-column:1/-1;border:1px solid #cfdbe4;border-radius:16px;background:linear-gradient(145deg,#f7fbfd,#fff);padding:18px}.traceGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:16px 0}.traceStep{position:relative;border:1px solid #dbe4ea;background:#fff;border-radius:12px;padding:12px;min-height:104px}.traceStep b{display:block;font-size:12px;color:var(--navy);margin-bottom:7px}.traceStep span{font-size:12px;line-height:1.45;color:var(--muted)}.traceStep:not(:last-child):after{content:'→';position:absolute;right:-10px;top:39%;z-index:2;color:#6f8797;font-weight:900}.evidenceGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.evidenceBox{border-radius:12px;padding:13px;background:#fff;border:1px solid #e0e6e8}.evidenceBox b{display:block;font-size:13px;margin-bottom:6px}.evidenceBox p{margin:0;font-size:12px;line-height:1.5;color:var(--muted)}details.tech{margin-top:13px;border-top:1px solid #dde4e7;padding-top:11px}details.tech summary{cursor:pointer;font-size:12px;font-weight:800;color:var(--navy)}pre.safeJson{white-space:pre-wrap;word-break:break-word;background:#142535;color:#dbeaf6;padding:13px;border-radius:11px;font-size:11px;line-height:1.5;overflow:auto}
@@ -93,7 +97,7 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 
 <div class="layout"><aside class="sidebar" id="sidebar"></aside><section class="content">
 <div class="card principleTip" id="principleCard"><span>💡 <b>따라 만들기보다, 왜 그렇게 선택했는지가 중요해요.</b></span><span class="small">관찰 → AI 실험 → 근거 대조 → 오류 찾기 → 결정</span></div>
-<div class="card lessonHeaderCard"><img class="canopyMotif" src="assets/munich-canopy-motif.png" alt="" aria-hidden="true" onerror="this.style.display='none'"><div class="eyebrow" id="lessonNo"></div><h2 id="title"></h2><div class="sub" id="subtitle"></div><div class="mission" id="mission"></div></div>
+<div class="card lessonHeaderCard"><svg class="canopyMotif" viewBox="0 0 165 125" aria-hidden="true"><path d="M4 116 Q60 106 92 116 T161 113" stroke="#174c43" stroke-width="1" fill="none" opacity=".28"/><g stroke="#174c43" stroke-width="1.1" fill="none" opacity=".5"><ellipse cx="95" cy="108" rx="26" ry="7"/><ellipse cx="98" cy="86" rx="23" ry="6.5" transform="rotate(-6 98 86)"/><ellipse cx="101" cy="64" rx="20" ry="6" transform="rotate(-12 101 64)"/><ellipse cx="104" cy="44" rx="17" ry="5.5" transform="rotate(-18 104 44)"/><ellipse cx="106" cy="26" rx="13" ry="5" transform="rotate(-24 106 26)"/><line x1="69" y1="108" x2="93" y2="26"/><line x1="121" y1="108" x2="119" y2="26"/><line x1="95" y1="115" x2="106" y2="21" stroke-dasharray="1 3" opacity=".6"/></g><g stroke="#6d4cc7" stroke-width=".8" opacity=".5"><line x1="28" y1="38" x2="58" y2="54"/><line x1="58" y1="54" x2="53" y2="84"/><line x1="28" y1="38" x2="18" y2="68"/><line x1="18" y1="68" x2="53" y2="84"/><line x1="58" y1="54" x2="90" y2="60"/></g><g fill="#6d4cc7" opacity=".85"><circle cx="28" cy="38" r="2.2"/><circle cx="58" cy="54" r="1.8"/><circle cx="18" cy="68" r="1.8"/><circle cx="53" cy="84" r="2"/></g><circle cx="106" cy="21" r="2" fill="#174c43"/></svg><div class="eyebrow" id="lessonNo"></div><h2 id="title"></h2><div class="sub" id="subtitle"></div><div class="mission" id="mission"></div></div>
 
 <div class="card" id="exampleSection"><div class="eyebrow" id="exampleEyebrow">예제 · 여기서 시작</div><h3 id="exampleHeading">예제 먼저 보기</h3><div class="sub" id="exampleDesc"></div>
 <div class="grid3" id="exampleGrid"></div>
@@ -487,8 +491,12 @@ async function requestGrading(){
     box.innerHTML='<div class="safetyNotice"><b>채점 서버가 아직 연결되지 않았습니다.</b><br><span class="small">DEPLOY.md 안내대로 Google Apps Script를 배포한 뒤 GAS_ENDPOINT 값을 실제 웹앱 주소로 바꿔주세요.</span></div>';
     return;
   }
-  btn.disabled=true;const prevText=btn.textContent;btn.textContent='AI 채점 중… (10~20초 소요)';
-  box.innerHTML='<div class="small gradeLoading">서버에 기록을 전송하고 AI 채점을 기다리는 중입니다…</div>';
+  btn.disabled=true;const prevText=btn.textContent;btn.textContent='AI 채점 중…';
+  const loadingSteps=['기록을 서버로 전송하는 중…','AI가 12개 미션 기록을 읽는 중…','건축 이미지와 판단 근거를 대조하는 중…','등급과 코멘트를 정리하는 중…','거의 다 됐어요…'];
+  let stepIdx=0,elapsed=0;
+  const renderLoading=()=>{box.innerHTML=`<div class="gradeLoading"><div class="gradeSpinner"></div><div class="gradeLoadingMsg">${loadingSteps[stepIdx%loadingSteps.length]}</div><div class="gradeLoadingSub">멈춘 게 아니에요, 진행 중입니다 · ${elapsed}초 경과</div></div>`};
+  renderLoading();
+  const loadingTimer=setInterval(()=>{elapsed++;if(elapsed%3===0)stepIdx++;renderLoading()},1000);
   try{
     const payload={student:info,missions:collectAllMissionData(),sentAt:new Date().toISOString(),secret:GAS_SECRET};
     const res=await fetch(GAS_ENDPOINT,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
@@ -497,8 +505,10 @@ async function requestGrading(){
     window.__lastReport=data.report;
     renderReport(data.report);
   }catch(err){
-    box.innerHTML=`<div class="safetyNotice"><b>채점 요청 실패</b><br><span class="small">${String(err.message||err)}</span><br><span class="small">GAS_ENDPOINT 설정과 인터넷 연결을 확인한 뒤 다시 시도하세요.</span></div>`;
+    clearInterval(loadingTimer);
+    box.innerHTML=`<div class="safetyNotice"><b>채점 요청 실패</b><br><span class="small">${String(err.message||err)}</span></div><div class="actions" style="margin-top:10px"><button class="primary" onclick="requestGrading()">다시 시도</button></div>`;
   }finally{
+    clearInterval(loadingTimer);
     btn.disabled=false;btn.textContent=prevText;
   }
 }
