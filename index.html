@@ -84,7 +84,7 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 
 <div id="promptBlock"></div><div id="steps"></div>
 
-<div class="card" id="humanCheckCard"><div class="eyebrow">HUMAN CHECK · REQUIRED</div><h3>AI의 제안보다 나의 판단과 근거가 최종 결과입니다.</h3><div class="judgmentNotice"><b>“좋다/나쁘다”로 끝내지 마세요.</b> 무엇을 확인했고, AI의 제안을 왜 채택·수정·거부했는지 구체적으로 기록합니다.</div><div class="checks"><label><input type="checkbox" data-field="check1"> AI를 사용하기 전에 내가 먼저 관찰·판단했는가?</label><label><input type="checkbox" data-field="check2"> AI가 임의로 추가·삭제·변경한 부분을 찾았는가?</label><label><input type="checkbox" data-field="check3"> 현장 조건과 건축·공간·친환경 기준으로 현실성을 확인했는가?</label><label><input type="checkbox" data-field="check4"> 최종 결정의 근거를 내 언어로 설명할 수 있는가?</label></div><label><span class="requiredMark">필수</span> 나의 최종 결정</label><select data-field="decisionType"><option value="">선택하세요</option><option value="채택">채택 — 근거와 조건에 부합함</option><option value="수정">수정 — 일부만 활용하고 전공 판단으로 보완함</option><option value="거부">거부 — 오류·근거 부족·조건 불일치</option></select><label><span class="requiredMark">필수</span> AI ERROR / HUMAN DECISION</label><textarea data-field="decision" placeholder="AI가 틀리거나 불확실한 부분과 내가 내린 결정을 20자 이상 기록하세요."></textarea><label>One-line Reflection</label><textarea data-field="reflection" placeholder="이번 과제에서 AI보다 나의 판단이 중요했던 순간을 한 문장으로 정리하세요."></textarea><div class="completionRule">완료 조건: 4개 확인 항목 + 최종 결정 + 구체적인 판단 근거</div><div class="actions"><button class="primary" id="completeBtn">검증 후 과제 완료</button><button class="ghost" id="resetBtn">현재 과제 입력 초기화</button></div></div>
+<div class="card" id="humanCheckCard"><div class="eyebrow">HUMAN CHECK · REQUIRED</div><h3>AI의 제안보다 나의 판단과 근거가 최종 결과입니다.</h3><div class="judgmentNotice"><b>“좋다/나쁘다”로 끝내지 마세요.</b> 무엇을 확인했고, AI의 제안을 왜 채택·수정·거부했는지 구체적으로 기록합니다.</div><div class="checks"><label><input type="checkbox" data-field="check1"> AI를 사용하기 전에 내가 먼저 관찰·판단했는가?</label><label><input type="checkbox" data-field="check2"> AI가 임의로 추가·삭제·변경한 부분을 찾았는가?</label><label><input type="checkbox" data-field="check3"> 현장 조건과 건축·공간·친환경 기준으로 현실성을 확인했는가?</label><label><input type="checkbox" data-field="check4"> 최종 결정의 근거를 내 언어로 설명할 수 있는가?</label></div><label><span class="requiredMark">필수</span> 나의 최종 결정</label><select data-field="decisionType"><option value="">선택하세요</option><option value="채택">채택 — 근거와 조건에 부합함</option><option value="수정">수정 — 일부만 활용하고 전공 판단으로 보완함</option><option value="거부">거부 — 오류·근거 부족·조건 불일치</option></select><label><span class="requiredMark">필수</span> AI ERROR / HUMAN DECISION</label><textarea data-field="decision" placeholder="AI가 틀리거나 불확실한 부분과 내가 내린 결정을 기록하세요."></textarea><label>One-line Reflection</label><textarea data-field="reflection" placeholder="이번 과제에서 AI보다 나의 판단이 중요했던 순간을 한 문장으로 정리하세요."></textarea><div class="completionRule">완료 조건: 4개 확인 항목 + 최종 결정 + 구체적인 판단 근거</div><div class="actions"><button class="primary" id="completeBtn">검증 후 과제 완료</button><button class="ghost" id="resetBtn">현재 과제 입력 초기화</button></div></div>
 
 <div class="footer" id="lessonFooter"><button class="ghost" id="prevBtn">← 이전 과제</button><button class="primary" id="nextBtn">다음 과제 →</button></div>
 </section></div></main>
@@ -297,6 +297,7 @@ function showFinalSubmission(){
   if(nameEl) nameEl.value=info.name||'';
   if(idEl) idEl.value=info.studentId||'';
   document.getElementById('gradeResult').innerHTML='';
+  renderSelfEval();
   p.classList.add('open');
   document.body.style.overflow='hidden';
 }
@@ -324,6 +325,60 @@ function saveStudentInfo(){
   const info={name:(nameEl&&nameEl.value)||'',studentId:(idEl&&idEl.value)||''};
   localStorage.setItem('aivis_student_info',JSON.stringify(info));
   return info;
+}
+
+// ===== 자기평가서 =====
+const SELF_EVAL_CRITERIA=[
+  {key:'observation',label:'사전 관찰 — AI 사용 전 스스로 관찰하고 판단했는가'},
+  {key:'experiment',label:'AI 실험 체계성 — 변수를 하나씩 바꾸며 체계적으로 실험했는가'},
+  {key:'evidence',label:'근거 대조 — 현장 조건·전공 기준·공식 데이터와 비교했는가'},
+  {key:'errorHandling',label:'오류 대응 — AI의 오류를 찾아 채택·수정·거부로 대응했는가'},
+  {key:'documentation',label:'기록의 구체성 — 판단 과정을 구체적으로 기록했는가'}
+];
+function loadSelfEval(){try{return JSON.parse(localStorage.getItem('aivis_self_eval')||'{}')}catch(e){return{}}}
+function collectSelfEval(){
+  const s={};
+  document.querySelectorAll('[data-selfeval]').forEach(el=>{s[el.dataset.selfeval]=el.value});
+  const overallEl=document.getElementById('selfEvalOverall');
+  s.overall=overallEl?overallEl.value:'';
+  localStorage.setItem('aivis_self_eval',JSON.stringify(s));
+  updateSelfEvalTotal(s);
+}
+function updateSelfEvalTotal(s){
+  s=s||loadSelfEval();
+  let total=0;
+  SELF_EVAL_CRITERIA.forEach(c=>{total+=Number(s[c.key+'_score']||0)});
+  const totalEl=document.getElementById('selfEvalTotal');
+  if(totalEl) totalEl.textContent=total;
+}
+function renderSelfEval(){
+  const host=document.getElementById('selfEvalCriteria');
+  if(!host) return;
+  host.innerHTML=SELF_EVAL_CRITERIA.map(c=>`
+    <div class="resultBox" style="margin-top:8px">
+      <b>${c.label}</b>
+      <div class="grid2" style="margin-top:6px">
+        <select data-selfeval="${c.key}_score" onchange="collectSelfEval()">
+          <option value="">점수 선택</option>
+          <option value="20">20 — 매우 잘함</option>
+          <option value="15">15 — 잘함</option>
+          <option value="10">10 — 보통</option>
+          <option value="5">5 — 미흡</option>
+          <option value="0">0 — 시도하지 않음</option>
+        </select>
+        <input data-selfeval="${c.key}_note" oninput="collectSelfEval()" placeholder="근거나 사례를 자유롭게 (글자수 제한 없음)">
+      </div>
+    </div>`).join('');
+  const s=loadSelfEval();
+  SELF_EVAL_CRITERIA.forEach(c=>{
+    const scoreEl=host.querySelector(`[data-selfeval="${c.key}_score"]`);
+    const noteEl=host.querySelector(`[data-selfeval="${c.key}_note"]`);
+    if(scoreEl) scoreEl.value=s[c.key+'_score']||'';
+    if(noteEl) noteEl.value=s[c.key+'_note']||'';
+  });
+  const overallEl=document.getElementById('selfEvalOverall');
+  if(overallEl) overallEl.value=s.overall||'';
+  updateSelfEvalTotal(s);
 }
 
 // ===== 전체 기록 수집 =====
@@ -365,6 +420,18 @@ function buildRecordText(){
   out+=`완료: ${stats.completed} / ${stats.total} 미션\n`;
   out+=`최종 결정 분포 — 채택 ${stats.tally['채택']} · 수정 ${stats.tally['수정']} · 거부 ${stats.tally['거부']}\n`;
   out+=`평균 판단 근거 글자수: 약 ${stats.avgLen}자\n`+'='.repeat(44)+'\n\n';
+  const selfEval=loadSelfEval();
+  let selfTotal=0;
+  out+='[자기평가서 · Self-Evaluation]\n';
+  SELF_EVAL_CRITERIA.forEach(c=>{
+    const score=selfEval[c.key+'_score'];
+    const note=selfEval[c.key+'_note']||'';
+    if(score!==undefined&&score!==''&&!isNaN(Number(score))) selfTotal+=Number(score);
+    out+=`- ${c.label}: ${score===undefined||score===''?'(미평가)':score}\n`;
+    if(note) out+=`  메모: ${note}\n`;
+  });
+  out+=`자기평가 합계: ${selfTotal} / 100\n`;
+  out+=`종합 소감: ${selfEval.overall||'(미기재)'}\n`+'='.repeat(44)+'\n\n';
   missions.forEach(m=>{
     out+=`[${m.id}] ${m.title}  ${m.completed?'(완료)':'(미완료)'}\n`;
     Object.keys(m.fields).forEach(k=>{
@@ -379,6 +446,7 @@ function buildRecordText(){
 }
 function exportRecord(){
   collectState();
+  collectSelfEval();
   const info=saveStudentInfo();
   const safe=(s)=>String(s||'').trim().replace(/\s+/g,'_')||'record';
   downloadTextFile(`StudioProofAI_${safe(info.name)}_${safe(info.studentId)}.txt`,buildRecordText());
@@ -485,9 +553,9 @@ function toggleCompletion(){
   if(s.completed){s.completed=false;saveState(current,s);render();return;}
   const missing=[];
   if(!s.check1||!s.check2||!s.check3||!s.check4) missing.push('Human Check 4개 항목');
-  if(!(s.step1||'').trim()||String(s.step1).trim().length<10) missing.push('AI 사용 전 나의 첫 판단 기록');
+  if(!(s.step1||'').trim()) missing.push('AI 사용 전 나의 첫 판단 기록');
   if(!s.decisionType) missing.push('채택·수정·거부 중 최종 결정');
-  if(!(s.decision||'').trim()||String(s.decision).trim().length<20) missing.push('20자 이상의 오류·판단 근거');
+  if(!(s.decision||'').trim()) missing.push('오류·판단 근거');
   if(missing.length){alert('아직 완료할 수 없습니다.\n\n• '+missing.join('\n• ')+'\n\n완성 이미지보다 판단 과정이 이 실습의 핵심입니다.');return;}
   s.completed=true;saveState(current,s);render();
 }
@@ -525,10 +593,21 @@ document.getElementById('imageInput').addEventListener('change',e=>{let f=e.targ
       </div>
     </div>
 
+    <div class="finalItem" id="selfEvalBlock">
+      <b>자기평가서 (Self-Evaluation)</b><br>
+      <span class="small">제출 전 스스로 점검합니다. 글자수 제한은 없으니 느낀 대로 자유롭게 적으세요.</span>
+      <div id="selfEvalCriteria"></div>
+      <div class="finalItem" style="background:#f2f6f4;border-color:#cdded8;margin-top:10px">
+        <b>자기평가 합계: <span id="selfEvalTotal">0</span> / 100</b>
+      </div>
+      <label style="margin-top:10px">종합 소감 (자유 서술)</label>
+      <textarea id="selfEvalOverall" oninput="collectSelfEval()" placeholder="12개 미션을 진행하며 스스로 느낀 성장, 부족했던 점, 다음에 시도하고 싶은 것을 자유롭게 적어주세요."></textarea>
+    </div>
+
     <div class="finalItem">
-      <b>나의 전체 기록 내보내기</b><br>
-      <span class="small">12개 미션의 관찰·프롬프트·판단 기록을 텍스트 파일로 즉시 저장합니다. 서버 연결 없이 작동합니다.</span>
-      <div class="actions"><button class="ghost" onclick="exportRecord()">기록 내보내기 (.txt)</button></div>
+      <b>나의 전체 기록 + 자기평가서 내보내기</b><br>
+      <span class="small">12개 미션의 관찰·프롬프트·판단 기록과 위 자기평가서를 하나의 텍스트 파일로 즉시 저장합니다. 서버 연결 없이 작동하며, 이 파일을 지정된 LMS/공유폴더에 제출하세요.</span>
+      <div class="actions"><button class="ghost" onclick="exportRecord()">기록+평가서 내보내기 (.txt)</button></div>
     </div>
 
     <div class="finalItem">
