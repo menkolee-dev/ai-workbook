@@ -54,13 +54,14 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 .principleTip{background:linear-gradient(135deg,#fff,#f1f6f4);border-color:#cdded8;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:14px 18px;font-size:14px}.principleTip .small{color:var(--muted)}
 .resultBox{border:1px solid var(--line);background:#fafaf8;border-radius:12px;padding:14px}.resultBox b{display:block;color:var(--accent);margin-bottom:6px}
 .scoreHeadline{font-size:20px;font-weight:850;color:var(--accent)}.gradeLoading{display:inline-flex;gap:6px;align-items:center;color:var(--muted);font-size:13px}
-.reportCertificate{background:linear-gradient(135deg,#173f39,#2f675d);color:#fff;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
-.reportCertTop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.reportCertificate{position:relative;overflow:hidden;background:linear-gradient(135deg,#173f39,#2f675d);color:#fff;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.reportCertTop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;position:relative;z-index:1}
 .reportCertTitle{font-size:11px;letter-spacing:.08em;font-weight:800;color:#bfe0d6;text-transform:uppercase}
 .reportCertOverall{font-size:21px;font-weight:900;margin-top:3px;display:flex;align-items:center;gap:7px}
 .reportCertLogo{background:#fff;border-radius:8px;padding:5px 9px;flex-shrink:0;line-height:0}
 .reportCertLogo img{height:22px;display:block}
-.reportCertComment{margin:2px 0 0;line-height:1.5;color:#e6f0ec;font-size:12.5px}
+.reportCertComment{margin:2px 0 0;line-height:1.5;color:#e6f0ec;font-size:12.5px;position:relative;z-index:1;max-width:78%}
+.reportCertMotif{position:absolute;right:10px;bottom:6px;opacity:.9;pointer-events:none}
 .reportCriteriaGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 .reportCriteriaItem{border:1px solid var(--line);border-radius:11px;padding:9px 11px;background:#fff}
 .reportCriteriaItem.wide{grid-column:1/-1}
@@ -501,12 +502,13 @@ async function requestGrading(){
   }
 }
 const TIER_META={
-  '매우 잘함':{emoji:'🌟'},
-  '잘함':{emoji:'👍'},
-  '보통':{emoji:'🙂'},
-  '노력 필요':{emoji:'🌱'}
+  '매우 잘함':{emoji:'🌟',svg:'<svg viewBox="0 0 100 70" width="94" height="60"><path d="M14 64 L14 26 L46 6 L78 26 L78 64 Z" stroke="#fff" stroke-width="1.3" fill="none" opacity=".9"/><line x1="14" y1="26" x2="78" y2="26" stroke="#fff" stroke-width="1" opacity=".6"/><line x1="14" y1="26" x2="46" y2="44" stroke="#fff" stroke-width=".9" opacity=".55"/><line x1="78" y1="26" x2="46" y2="44" stroke="#fff" stroke-width=".9" opacity=".55"/><line x1="46" y1="44" x2="46" y2="64" stroke="#fff" stroke-width=".9" opacity=".55"/><line x1="14" y1="64" x2="46" y2="44" stroke="#fff" stroke-width=".8" opacity=".4"/><line x1="78" y1="64" x2="46" y2="44" stroke="#fff" stroke-width=".8" opacity=".4"/><circle cx="46" cy="6" r="1.8" fill="#fff"/><circle cx="46" cy="44" r="1.6" fill="#fff"/><circle cx="14" cy="26" r="1.2" fill="#fff" opacity=".8"/><circle cx="78" cy="26" r="1.2" fill="#fff" opacity=".8"/><circle cx="88" cy="14" r="1" fill="#fff" opacity=".6"/></svg>'},
+  '잘함':{emoji:'👍',svg:'<svg viewBox="0 0 100 70" width="80" height="52"><path d="M20 62 L20 28 L50 10 L80 28 L80 62 Z" stroke="#e7f4ee" stroke-width="1.3" fill="none" opacity=".85"/><line x1="20" y1="28" x2="80" y2="28" stroke="#e7f4ee" stroke-width="1" opacity=".55"/><line x1="20" y1="28" x2="50" y2="45" stroke="#e7f4ee" stroke-width=".9" opacity=".5"/><line x1="80" y1="28" x2="50" y2="45" stroke="#e7f4ee" stroke-width=".9" opacity=".5"/><line x1="50" y1="45" x2="50" y2="62" stroke="#e7f4ee" stroke-width=".9" opacity=".5"/><circle cx="50" cy="10" r="1.6" fill="#e7f4ee"/><circle cx="50" cy="45" r="1.6" fill="#e7f4ee"/></svg>'},
+  '보통':{emoji:'🙂',svg:'<svg viewBox="0 0 100 70" width="66" height="46"><path d="M25 60 L25 30 L50 15 L75 30 L75 60 Z" stroke="#cfe4dc" stroke-width="1.3" fill="none" opacity=".8"/><line x1="25" y1="30" x2="75" y2="30" stroke="#cfe4dc" stroke-width="1" opacity=".6"/><circle cx="50" cy="15" r="1.6" fill="#cfe4dc"/></svg>'},
+  '노력 필요':{emoji:'🌱',svg:'<svg viewBox="0 0 100 70" width="52" height="36"><rect x="30" y="25" width="40" height="35" stroke="#bcdcd0" stroke-width="1.2" fill="none" stroke-dasharray="3 3" opacity=".7"/><circle cx="50" cy="25" r="1.8" fill="#bcdcd0"/></svg>'}
 };
 function tierEmoji(tier){return (TIER_META[tier]||{}).emoji||'📘'}
+function tierMotif(tier){const m=TIER_META[tier];return m&&m.svg?`<div class="reportCertMotif">${m.svg}</div>`:''}
 function renderReport(report){
   const box=document.getElementById('gradeResult');
   const crit=(report.criteria||[]).map((c,i)=>`
@@ -522,6 +524,7 @@ function renderReport(report){
     </div>`:'';
   box.innerHTML=`
     <div class="reportCertificate">
+      ${tierMotif(report.overallTier)}
       <div class="reportCertTop">
         <div>
           <div class="reportCertTitle">나의 건축AI 활용능력 검증서</div>
