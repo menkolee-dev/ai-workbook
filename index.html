@@ -472,9 +472,9 @@ function exportRecord(){
 
 // ===== AI 채점표 받기 (Google Apps Script 백엔드 호출) =====
 // 배포 방법은 DEPLOY.md 참고. 아래 URL을 배포된 웹앱 /exec 주소로 교체하세요.
-const GAS_ENDPOINT='https://script.google.com/macros/s/여기에_배포된_스크립트_ID를_붙여넣으세요/exec';
+const GAS_ENDPOINT='https://script.google.com/macros/s/AKfycbxdunxxPlYmU2lax52cYAB7wbKIjIePvsPRwhRvfgA0HddVqBU7m8PiY3bFwmnAW9zxQQ/exec';
 // backend/Code.gs의 CLASS_SECRET과 반드시 동일한 값으로 맞추세요.
-const GAS_SECRET='원하는-비밀번호로-변경';
+const GAS_SECRET='kbu2026';
 window.__lastReport=null;
 async function requestGrading(){
   collectState();
