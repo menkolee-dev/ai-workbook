@@ -152,7 +152,19 @@ LESSONS.unshift({"id":"00","title":"Architecture AX Expert — 건축디자인 A
 current=parseInt(localStorage.getItem('aivis_current_v08')||'0');
 if(current<0||current>=LESSONS.length) current=0;
 function key(i){return LESSONS[i].id==='00'?'aivis_v02_intro':'aivis_v02_lesson_'+(i-1)} function loadState(i){try{return JSON.parse(localStorage.getItem(key(i))||'{}')}catch(e){return{}}} function saveState(i,s){localStorage.setItem(key(i),JSON.stringify(s));document.getElementById('saveState').textContent='저장됨';setTimeout(()=>document.getElementById('saveState').textContent='자동 저장',700)}
-function collectState(){let s=loadState(current);document.querySelectorAll('[data-field]').forEach(el=>s[el.dataset.field]=el.type==='checkbox'?el.checked:el.value);saveState(current,s);updateProgress()}
+function collectState(){let s=loadState(current);document.querySelectorAll('[data-field]').forEach(el=>s[el.dataset.field]=el.type==='checkbox'?el.checked:el.value);saveState(current,s);updateProgress();checkReportStale()}
+function checkReportStale(){
+  const box=document.getElementById('gradeResult');
+  if(!box||!window.__lastReportSnapshot) return;
+  const cert=box.querySelector('.reportCertificate');
+  if(!cert||box.querySelector('.reportStaleNotice')) return;
+  if(JSON.stringify(collectAllMissionData())===window.__lastReportSnapshot) return;
+  const notice=document.createElement('div');
+  notice.className='safetyNotice reportStaleNotice';
+  notice.style.marginBottom='10px';
+  notice.innerHTML='<b>⚠ 이전 답안 기준 피드백 · 재확인 필요</b><br><span class="small">이 검증서를 받은 뒤 기록을 수정했습니다. "검증서 받기"를 다시 눌러 최신 내용으로 갱신하세요.</span>';
+  cert.parentNode.insertBefore(notice,cert);
+}
 function bindAutosave(){document.querySelectorAll('[data-field]').forEach(el=>{el.addEventListener('input',collectState);el.addEventListener('change',collectState)})}
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 let sidebarCollapsed=true;
@@ -838,6 +850,7 @@ async function requestGrading(){
     const data=await res.json();
     if(!data.ok) throw new Error(data.error||'채점 서버 오류');
     window.__lastReport=data.report;
+    window.__lastReportSnapshot=JSON.stringify(collectAllMissionData());
     renderReport(data.report);
   }catch(err){
     clearInterval(loadingTimer);
