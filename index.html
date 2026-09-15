@@ -4,7 +4,7 @@
 <style>
 :root{--bg:#f5f5f2;--card:#fff;--text:#1d1d1f;--muted:#62676a;--line:#deded9;--accent:#174c43;--accent2:#e7efec;--soft:#fafaf7;--warn:#fff5d9;--navy:#17324d;--blue:#eaf2f8;--violet:#6d4cc7;--danger:#b84444}
 *{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Noto Sans KR",Arial,sans-serif;background:var(--bg);color:var(--text)}
-header{position:sticky;top:0;z-index:20;background:#fffffff2;border-bottom:1px solid var(--line)}.top{max-width:1200px;margin:auto;padding:14px 22px;display:flex;justify-content:space-between;align-items:center}.brand{font-weight:850}.badge{font-size:12px;background:#efefec;padding:5px 9px;border-radius:999px}
+header{position:sticky;top:0;z-index:20;background:#fffffff2;border-bottom:1px solid var(--line)}.top{max-width:1200px;margin:auto;padding:14px 22px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 10px}.brand{font-weight:850}.badge{font-size:12px;background:#efefec;padding:5px 9px;border-radius:999px;white-space:nowrap}
 main{max-width:1200px;margin:auto;padding:28px 22px 110px}.hero{background:linear-gradient(135deg,#173f39,#2f675d);color:#fff;border-radius:22px;padding:30px;display:grid;grid-template-columns:1fr .75fr .7fr;align-items:center;gap:18px}.hero h1{font-size:34px;line-height:1.15;margin:0 0 10px}.hero p{margin:0;color:#e1ebe8;line-height:1.65}.heroArt{position:relative;display:flex;justify-content:center;align-items:center;height:100%}.heroArt:before{content:'';position:absolute;left:50%;top:50%;width:80%;height:80%;transform:translate(-50%,-50%);background:radial-gradient(ellipse at center,rgba(255,255,255,.16) 0%,rgba(255,255,255,0) 72%);pointer-events:none}.heroArt img{position:relative;width:100%;max-width:250px;height:auto;filter:drop-shadow(0 8px 14px rgba(0,0,0,.4))}
 .progressWrap{background:#ffffff1f;padding:17px;border-radius:15px}.bar{height:10px;background:#ffffff38;border-radius:999px;overflow:hidden;margin:10px 0}.bar div{height:100%;background:#fff;width:0}
 .layout{display:grid;grid-template-columns:275px 1fr;gap:22px;margin-top:22px}.sidebar{background:#fff;border:1px solid var(--line);border-radius:18px;padding:13px;height:fit-content;position:sticky;top:80px;max-height:calc(100vh - 100px);overflow:auto}
@@ -17,7 +17,7 @@ h2{font-size:28px;margin:0 0 6px}h3{font-size:18px;margin:0 0 10px}.sub{color:va
 label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,input,select{width:100%;border:1px solid var(--line);border-radius:11px;padding:12px;font:inherit;background:#fff}textarea{min-height:95px}
 .prompt{background:#f2f6f4;border-left:4px solid var(--accent);border-radius:11px;padding:14px;line-height:1.6}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}button.primary,button.ghost{border-radius:10px;padding:10px 14px;font-weight:750;cursor:pointer}button.primary{background:var(--accent);color:#fff;border:1px solid var(--accent)}button.ghost{background:#fff;border:1px solid var(--line)}
 .checks label{font-weight:500;padding:7px 0;margin:0;border-bottom:1px solid #f0f0ed}.checks input{width:auto;margin-right:7px}.footer{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);display:flex;justify-content:center;gap:10px;background:#fff;padding:10px 14px;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.18);border:1px solid var(--line);z-index:40}.footer button{white-space:nowrap}.small{font-size:12px;color:var(--muted);line-height:1.5}.notice{background:var(--warn);border-radius:14px;padding:16px;line-height:1.55}
-@media(max-width:850px){.hero,.layout,.grid2,.grid3{grid-template-columns:1fr}.sidebar{position:static;max-height:none}}
+@media(max-width:850px){.hero,.layout,.grid2,.grid3{grid-template-columns:1fr}.sidebar{position:static;max-height:none}.footer{position:static;left:auto;bottom:auto;transform:none;box-shadow:none;margin:18px 0 0;width:fit-content}}
 
 .exampleGridFull{display:grid;grid-template-columns:1fr!important}
 .exampleCardWide{grid-column:1/-1;padding:18px}
@@ -40,7 +40,7 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 
 .lessonHeaderCard{position:relative}
 @media(max-width:1000px){.slideUploadGrid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:600px){.slideUploadGrid{grid-template-columns:1fr}}
+@media(max-width:600px){.slideUploadGrid{grid-template-columns:1fr}.badge{display:none}}
 
 
 .finalSubmitPanel{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:10000;display:none;align-items:center;justify-content:center;padding:24px}
