@@ -17,7 +17,8 @@ h2{font-size:28px;margin:0 0 6px}h3{font-size:18px;margin:0 0 10px}.sub{color:va
 label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,input,select{width:100%;border:1px solid var(--line);border-radius:11px;padding:12px;font:inherit;background:#fff}textarea{min-height:95px}
 .prompt{background:#f2f6f4;border-left:4px solid var(--accent);border-radius:11px;padding:14px;line-height:1.6}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}button.primary,button.ghost{border-radius:10px;padding:10px 14px;font-weight:750;cursor:pointer}button.primary{background:var(--accent);color:#fff;border:1px solid var(--accent)}button.ghost{background:#fff;border:1px solid var(--line)}
 .checks label{font-weight:500;padding:7px 0;margin:0;border-bottom:1px solid #f0f0ed}.checks input{width:auto;margin-right:7px}.footer{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);display:flex;justify-content:center;gap:10px;background:#fff;padding:10px 14px;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.18);border:1px solid var(--line);z-index:40}.footer button{white-space:nowrap}.small{font-size:12px;color:var(--muted);line-height:1.5}.notice{background:var(--warn);border-radius:14px;padding:16px;line-height:1.55}
-@media(max-width:850px){.hero,.layout,.grid2,.grid3{grid-template-columns:1fr}.sidebar{position:static;max-height:none}.footer{position:static;left:auto;bottom:auto;transform:none;box-shadow:none;margin:18px 0 0;width:fit-content}}
+.sidebarToggleBtn{display:none}
+@media(max-width:850px){.hero,.layout,.grid2,.grid3{grid-template-columns:1fr}.sidebar{position:static;max-height:none}.footer{position:static;left:auto;bottom:auto;transform:none;box-shadow:none;margin:18px 0 0;width:fit-content}.sidebarToggleBtn{display:flex;width:100%;justify-content:space-between;align-items:center;background:var(--accent2);color:var(--accent);border:0;border-radius:10px;padding:12px 14px;font-weight:800;font-size:13px;margin-bottom:6px;min-height:44px;box-sizing:border-box}.sidebar.collapsed .sectionLabel{display:none}.sidebar.collapsed .lessonBtn:not(.active){display:none}button.primary,button.ghost{min-height:44px}}
 
 .exampleGridFull{display:grid;grid-template-columns:1fr!important}
 .exampleCardWide{grid-column:1/-1;padding:18px}
@@ -125,7 +126,8 @@ if(current<0||current>=LESSONS.length) current=0;
 function key(i){return LESSONS[i].id==='00'?'aivis_v02_intro':'aivis_v02_lesson_'+(i-1)} function loadState(i){try{return JSON.parse(localStorage.getItem(key(i))||'{}')}catch(e){return{}}} function saveState(i,s){localStorage.setItem(key(i),JSON.stringify(s));document.getElementById('saveState').textContent='저장됨';setTimeout(()=>document.getElementById('saveState').textContent='자동 저장',700)}
 function collectState(){let s=loadState(current);document.querySelectorAll('[data-field]').forEach(el=>s[el.dataset.field]=el.type==='checkbox'?el.checked:el.value);saveState(current,s);updateProgress()}
 function bindAutosave(){document.querySelectorAll('[data-field]').forEach(el=>{el.addEventListener('input',collectState);el.addEventListener('change',collectState)})}
-function renderSidebar(){let sb=document.getElementById('sidebar');sb.innerHTML='';LESSONS.forEach((l,i)=>{if(i===0){let t=document.createElement('div');t.className='sectionLabel';t.textContent='시작하기 · 프로젝트 소개';sb.appendChild(t)}if(i===1){let t=document.createElement('div');t.className='sectionLabel';t.textContent='코어 스튜디오 · 01–10';sb.appendChild(t)}if(i===11){let t=document.createElement('div');t.className='sectionLabel';t.textContent='심화 과제 · 11–12';sb.appendChild(t)}let s=loadState(i),b=document.createElement('button'),advanced=['11','12'].includes(l.id),intro=l.id==='00';b.className='lessonBtn'+(intro?' intro':'')+(advanced?' advanced':'')+(i===current?' active':'')+(s.completed?' done':'');b.innerHTML=`<span class="n">${l.id}</span><span class="lt">${l.title}${intro?'<span class="introTag">먼저 시청 · 영상 2편</span>':(advanced?'<span class="advancedTag">보너스 · 근거 기반</span>':'')}</span>`;b.onclick=()=>{collectState();current=i;localStorage.setItem('aivis_current_v08',i);render()};sb.appendChild(b)})}
+let sidebarCollapsed=true;
+function renderSidebar(){let sb=document.getElementById('sidebar');sb.innerHTML='';sb.classList.toggle('collapsed',sidebarCollapsed);let toggleBtn=document.createElement('button');toggleBtn.type='button';toggleBtn.className='sidebarToggleBtn';toggleBtn.textContent=sidebarCollapsed?'▸ 전체 미션 목록 펼치기':'▾ 미션 목록 접기';toggleBtn.onclick=()=>{sidebarCollapsed=!sidebarCollapsed;renderSidebar()};sb.appendChild(toggleBtn);LESSONS.forEach((l,i)=>{if(i===0){let t=document.createElement('div');t.className='sectionLabel';t.textContent='시작하기 · 프로젝트 소개';sb.appendChild(t)}if(i===1){let t=document.createElement('div');t.className='sectionLabel';t.textContent='코어 스튜디오 · 01–10';sb.appendChild(t)}if(i===11){let t=document.createElement('div');t.className='sectionLabel';t.textContent='심화 과제 · 11–12';sb.appendChild(t)}let s=loadState(i),b=document.createElement('button'),advanced=['11','12'].includes(l.id),intro=l.id==='00';b.className='lessonBtn'+(intro?' intro':'')+(advanced?' advanced':'')+(i===current?' active':'')+(s.completed?' done':'');b.innerHTML=`<span class="n">${l.id}</span><span class="lt">${l.title}${intro?'<span class="introTag">먼저 시청 · 영상 2편</span>':(advanced?'<span class="advancedTag">보너스 · 근거 기반</span>':'')}</span>`;b.onclick=()=>{collectState();current=i;localStorage.setItem('aivis_current_v08',i);render()};sb.appendChild(b)})}
 function renderExamples(l){
  let g=document.getElementById('exampleGrid');
  g.innerHTML='';
@@ -321,7 +323,36 @@ function previewSlide(e,n){
 }
 function renderSteps(l){let h=document.getElementById('steps');h.innerHTML='';l.steps.forEach((st,idx)=>{let c=document.createElement('div');c.className='card';c.innerHTML=`<div class="eyebrow">${st[0]}</div><h3>${st[1]}</h3><p>${st[2]}</p><label>나의 기록</label><textarea data-field="step${idx+1}" placeholder="관찰, 프롬프트, 결과, 수정사항 등을 기록"></textarea>`;h.appendChild(c)})}
 function renderPrompt(l){let h=document.getElementById('promptBlock');h.innerHTML='';if(!l.prompt)return;h.innerHTML=`<div class="card"><div class="eyebrow">프롬프트 복사하기</div><h3>예제 프롬프트</h3><div class="prompt" id="promptText">${l.prompt}</div><div class="actions"><button class="primary" onclick="copyPrompt()">프롬프트 복사</button></div></div>`}
-function copyPrompt(){navigator.clipboard.writeText(document.getElementById('promptText').innerText);alert('프롬프트를 복사했습니다.')}
+function copyPrompt(){
+  const text=document.getElementById('promptText').innerText;
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>{alert('프롬프트를 복사했습니다.')}).catch(()=>{showCopyFallback(text)});
+  }else{
+    showCopyFallback(text);
+  }
+}
+function showCopyFallback(text){
+  const card=document.getElementById('promptBlock').querySelector('.card');
+  if(!card) return;
+  let el=document.getElementById('copyFallback');
+  if(!el){
+    el=document.createElement('textarea');
+    el.id='copyFallback';
+    el.readOnly=true;
+    el.style.cssText='width:100%;margin-top:8px;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:12px;box-sizing:border-box';
+    card.appendChild(el);
+    const hint=document.createElement('div');
+    hint.id='copyFallbackHint';
+    hint.className='small';
+    hint.style.marginTop='4px';
+    hint.textContent='자동 복사가 되지 않았습니다. 위 텍스트를 직접 선택해 복사하세요.';
+    card.appendChild(hint);
+  }
+  el.value=text;
+  el.style.display='block';
+  el.focus();
+  el.select();
+}
 function showFinalSubmission(){
   const p=document.getElementById('finalSubmitPanel');
   const info=loadStudentInfo();
