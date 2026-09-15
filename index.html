@@ -49,6 +49,34 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 .finalSubmitBox{background:#fff;border-radius:18px;max-width:860px;width:100%;max-height:92vh;overflow:auto;padding:30px}
 .finalSubmitBox h3{font-size:24px;margin-bottom:8px}
 .finalItem{border:1px solid var(--line);border-radius:12px;padding:13px;margin-top:10px;background:#fafaf8}
+.reportPanel{display:none;position:fixed;inset:0;background:#fff;z-index:10001;overflow:auto}
+.reportPanel.open{display:block}
+.reportPanelBar{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:14px 24px;display:flex;justify-content:flex-end;gap:10px;z-index:1}
+.reportPanelBox{max-width:820px;margin:0 auto;padding:28px 24px 60px}
+.reportHeadTop{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-bottom:6px}
+.reportHead h2{margin:0 0 4px;font-size:24px}
+.reportStudentId{color:var(--muted);font-weight:600;font-size:15px;margin-left:8px}
+.reportDraftNotice{background:#fff4e8;border:1px solid #f0d6b6;border-radius:10px;padding:12px 14px;margin:14px 0;font-size:13px;line-height:1.6}
+.reportProgress{font-size:13px;color:var(--muted);margin:6px 0 10px}
+.reportSectionTitle{margin:22px 0 8px;font-size:15px;border-bottom:2px solid var(--accent);padding-bottom:6px}
+.reportMission{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:10px;break-inside:avoid}
+.reportMissionHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.reportBadgeDone{background:var(--accent2);color:var(--accent);border-radius:999px;padding:2px 9px;font-size:11px;font-weight:800}
+.reportBadgeTodo{background:#f4f0f0;color:var(--muted);border-radius:999px;padding:2px 9px;font-size:11px;font-weight:800}
+.reportThumb{max-width:220px;max-height:160px;display:block;border-radius:8px;border:1px solid var(--line);margin-bottom:8px;object-fit:cover}
+.reportNoImage{font-size:11px;color:var(--muted);margin-bottom:6px}
+.reportField{display:flex;gap:8px;font-size:12.5px;line-height:1.6;margin-top:4px}
+.reportFieldLabel{color:var(--muted);min-width:120px;flex-shrink:0}
+.reportFieldValue{white-space:pre-wrap;word-break:break-word}
+.reportEmpty{font-size:12px;color:var(--muted);font-style:italic}
+.reportIssueList{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--muted)}
+.reportFooterNote{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);line-height:1.6}
+@media print{
+  body *{visibility:hidden}
+  .reportPanel.open,.reportPanel.open *{visibility:visible}
+  .reportPanel{position:absolute;top:0;left:0;width:100%;background:#fff}
+  .reportPanelBar{display:none}
+}
 
 .heroPills{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.heroPill{border:1px solid #ffffff4a;background:#ffffff14;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:750}
 .principleTip{background:linear-gradient(135deg,#fff,#f1f6f4);border-color:#cdded8;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:14px 18px;font-size:14px}.principleTip .small{color:var(--muted)}
@@ -126,6 +154,7 @@ if(current<0||current>=LESSONS.length) current=0;
 function key(i){return LESSONS[i].id==='00'?'aivis_v02_intro':'aivis_v02_lesson_'+(i-1)} function loadState(i){try{return JSON.parse(localStorage.getItem(key(i))||'{}')}catch(e){return{}}} function saveState(i,s){localStorage.setItem(key(i),JSON.stringify(s));document.getElementById('saveState').textContent='저장됨';setTimeout(()=>document.getElementById('saveState').textContent='자동 저장',700)}
 function collectState(){let s=loadState(current);document.querySelectorAll('[data-field]').forEach(el=>s[el.dataset.field]=el.type==='checkbox'?el.checked:el.value);saveState(current,s);updateProgress()}
 function bindAutosave(){document.querySelectorAll('[data-field]').forEach(el=>{el.addEventListener('input',collectState);el.addEventListener('change',collectState)})}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 let sidebarCollapsed=true;
 function renderSidebar(){let sb=document.getElementById('sidebar');sb.innerHTML='';sb.classList.toggle('collapsed',sidebarCollapsed);let toggleBtn=document.createElement('button');toggleBtn.type='button';toggleBtn.className='sidebarToggleBtn';toggleBtn.textContent=sidebarCollapsed?'▸ 전체 미션 목록 펼치기':'▾ 미션 목록 접기';toggleBtn.onclick=()=>{sidebarCollapsed=!sidebarCollapsed;renderSidebar()};sb.appendChild(toggleBtn);LESSONS.forEach((l,i)=>{if(i===0){let t=document.createElement('div');t.className='sectionLabel';t.textContent='시작하기 · 프로젝트 소개';sb.appendChild(t)}if(i===1){let t=document.createElement('div');t.className='sectionLabel';t.textContent='코어 스튜디오 · 01–10';sb.appendChild(t)}if(i===11){let t=document.createElement('div');t.className='sectionLabel';t.textContent='심화 과제 · 11–12';sb.appendChild(t)}let s=loadState(i),b=document.createElement('button'),advanced=['11','12'].includes(l.id),intro=l.id==='00';b.className='lessonBtn'+(intro?' intro':'')+(advanced?' advanced':'')+(i===current?' active':'')+(s.completed?' done':'');b.innerHTML=`<span class="n">${l.id}</span><span class="lt">${l.title}${intro?'<span class="introTag">먼저 시청 · 영상 2편</span>':(advanced?'<span class="advancedTag">보너스 · 근거 기반</span>':'')}</span>`;b.onclick=()=>{collectState();current=i;localStorage.setItem('aivis_current_v08',i);render()};sb.appendChild(b)})}
 function renderExamples(l){
@@ -508,6 +537,84 @@ function computeStats(missions){
   return {total,completed,tally,avgLen:lenCount?Math.round(lenSum/lenCount):0};
 }
 
+// ===== 학습 보고서 (인쇄/PDF) =====
+const APP_VERSION='v1.0';
+const REPORT_FIELD_LABELS={
+  projectNote:'프로젝트 메모',goal:'오늘의 핵심 목표',
+  step1:'STEP 1 기록',step2:'STEP 2 기록',step3:'STEP 3 기록',step4:'STEP 4 기록',
+  decisionType:'최종 결정',decision:'AI 오류 / 나의 결정',reflection:'한 줄 소감',
+  finalLearning:'발표 한 줄 결론',
+  g2bQuestion:'검색 질문',g2bConditions:'검색 조건',g2bEvidence:'선택한 공고와 근거',g2bDecision:'반영/제외 조건',
+  videoIntent:'공간 의도와 시나리오',cameraPath:'6컷 카메라 경로',modelLocks:'유지 조건',spatialAudit:'발견한 오류와 최종 판단'
+};
+const REPORT_IMAGE_KEYS=['imageData','slideImage1','slideImage2','slideImage3','slideImage4','slideImage5','refImageStart','refImageMiddle','refImageFinal','refImageMcp'];
+function renderReportMissionBlock(m){
+  let b='<div class="reportMission"><div class="reportMissionHead"><b>['+esc(m.id)+'] '+esc(m.title)+'</b><span class="'+(m.completed?'reportBadgeDone':'reportBadgeTodo')+'">'+(m.completed?'완료':'미완료')+'</span></div>';
+  const fields=m.fields||{};
+  const imageKey=REPORT_IMAGE_KEYS.find(k=>fields[k]);
+  if(imageKey){ b+='<img class="reportThumb" src="'+fields[imageKey]+'" alt="'+esc(m.id)+'번 첨부 이미지">'; }
+  else{ b+='<div class="reportNoImage">이미지 별도 첨부</div>'; }
+  let any=false;
+  Object.keys(fields).forEach(k=>{
+    if(REPORT_IMAGE_KEYS.includes(k)||k==='completed') return;
+    const v=fields[k];
+    if(v===undefined||v===null||v==='') return;
+    if(k.startsWith('check')&&typeof v==='boolean') return;
+    any=true;
+    b+='<div class="reportField"><span class="reportFieldLabel">'+esc(REPORT_FIELD_LABELS[k]||k)+'</span><span class="reportFieldValue">'+esc(v)+'</span></div>';
+  });
+  if(!any) b+='<div class="reportEmpty">미작성</div>';
+  b+='</div>';
+  return b;
+}
+function buildReportHTML(){
+  collectState();
+  const info=loadStudentInfo();
+  const missions=collectAllMissionData();
+  const core=missions.filter(m=>!['11','12'].includes(m.id));
+  const bonus=missions.filter(m=>['11','12'].includes(m.id));
+  const missingCore=core.filter(m=>!m.completed);
+  let html='<div class="reportHead"><div class="reportHeadTop"><b>Architecture AX Expert · 학습 보고서</b><span>APP '+APP_VERSION+'</span></div>';
+  html+='<h2>'+esc(info.name||'(이름 미기재)')+'<span class="reportStudentId">'+esc(info.studentId||'(학번 미기재)')+'</span></h2>';
+  html+='<div class="small">작성일: '+esc(new Date().toLocaleString('ko-KR'))+'</div></div>';
+  if(missingCore.length){
+    html+='<div class="reportDraftNotice"><b>⚠ 미완성 초안</b><br>다음 코어 미션이 아직 완료되지 않았습니다: '+missingCore.map(m=>esc(m.id)+'번').join(', ')+'</div>';
+  }
+  html+='<div class="reportProgress">코어 미션 진행: '+(core.length-missingCore.length)+' / '+core.length+' 완료</div>';
+  html+='<h3 class="reportSectionTitle">코어 스튜디오 · 01–10</h3>';
+  core.forEach(m=>{ html+=renderReportMissionBlock(m); });
+  html+='<h3 class="reportSectionTitle">보너스 과제 · 11–12 (정규 채점 제외)</h3>';
+  bonus.forEach(m=>{ html+=renderReportMissionBlock(m); });
+  const selfEval=loadSelfEval();
+  html+='<h3 class="reportSectionTitle">자기평가서</h3>';
+  if(selfEval&&Object.keys(selfEval).length){
+    SELF_EVAL_CRITERIA.forEach(c=>{
+      const score=selfEval[c.key+'_score'],note=selfEval[c.key+'_note'];
+      html+='<div class="reportField"><span class="reportFieldLabel">'+esc(c.label)+'</span><span class="reportFieldValue">'+(score?esc(score)+'점':'(미평가)')+(note?' — '+esc(note):'')+'</span></div>';
+    });
+    html+='<div class="reportField"><span class="reportFieldLabel">종합 소감</span><span class="reportFieldValue">'+(selfEval.overall?esc(selfEval.overall):'미작성')+'</span></div>';
+  }else{
+    html+='<div class="reportEmpty">미작성</div>';
+  }
+  html+='<h3 class="reportSectionTitle">미해결 사항</h3>';
+  if(missingCore.length){
+    html+='<ul class="reportIssueList">'+missingCore.map(m=>'<li>'+esc(m.id)+'번 — '+esc(m.title)+' 미완료</li>').join('')+'</ul>';
+  }else{
+    html+='<div class="small">코어 미션 10개 모두 완료되었습니다.</div>';
+  }
+  html+='<div class="reportFooterNote">이 보고서는 학생이 작성한 판단 과정을 확인하는 용도이며, AI 등급(있다면)은 참고 자료입니다. 실제 결과물 원본과 본 보고서는 지정된 LMS 또는 공유 폴더에 별도로 제출하세요.</div>';
+  return html;
+}
+function showReportPanel(){
+  document.getElementById('reportContent').innerHTML=buildReportHTML();
+  document.getElementById('reportPanel').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeReportPanel(){
+  document.getElementById('reportPanel').classList.remove('open');
+  document.body.style.overflow='';
+}
+
 // ===== 내 기록 내보내기 (서버 없이 즉시 다운로드) =====
 function downloadTextFile(filename,text){
   const blob=new Blob([text],{type:'text/plain;charset=utf-8'});
@@ -656,20 +763,20 @@ function renderReport(report){
   const box=document.getElementById('gradeResult');
   const crit=(report.criteria||[]).map((c,i)=>`
     <div class="reportCriteriaItem${i===4?' wide':''}">
-      <div class="reportCriteriaHead"><b>${tierEmoji(c.tier)} ${c.name}</b><span class="tierBadge">${c.tier||'-'}</span></div>
-      <p>${c.comment||''}</p>
+      <div class="reportCriteriaHead"><b>${tierEmoji(c.tier)} ${esc(c.name)}</b><span class="tierBadge">${esc(c.tier)||'-'}</span></div>
+      <p>${esc(c.comment)}</p>
     </div>`).join('');
   const bonusList=report.bonusMissions||[];
   const bonusHtml=bonusList.length?`
     <div class="bonusBox">
       <b class="small" style="color:var(--accent);display:block;margin-bottom:2px">보너스 과제 (정규 등급과 별개)</b>
-      ${bonusList.map(b=>`<div class="bonusRow"><span>${b.label||b.name||b.id}</span><span>${b.completed?'✅ 완료':'⭕ 미제출'}</span></div>`).join('')}
+      ${bonusList.map(b=>`<div class="bonusRow"><span>${esc(b.label||b.name||b.id)}</span><span>${b.completed?'✅ 완료':'⭕ 미제출'}</span></div>`).join('')}
     </div>`:'';
   const weak=report.weakMissions||[];
   const weakHtml=weak.length?`
     <div class="bonusBox">
       <b class="small" style="color:var(--accent);display:block;margin-bottom:2px">보완하면 좋을 미션</b>
-      <div class="small" style="color:var(--muted)">${weak.join(' · ')}번 미션을 다시 살펴보세요.</div>
+      <div class="small" style="color:var(--muted)">${esc(weak.join(' · '))}번 미션을 다시 살펴보세요.</div>
     </div>`:'';
   box.innerHTML=`
     <div class="reportCertificate">
@@ -677,12 +784,12 @@ function renderReport(report){
       <div class="reportCertTop">
         <div>
           <div class="reportCertTitle">나의 건축AI 활용능력 검증서</div>
-          <div class="reportCertOverall">${tierEmoji(report.overallTier)} ${report.overallTier||'-'}</div>
-          ${report.completedCount?`<div class="small" style="color:#cfe4dc;margin-top:2px">코어 미션 완료 ${report.completedCount}</div>`:''}
+          <div class="reportCertOverall">${tierEmoji(report.overallTier)} ${esc(report.overallTier)||'-'}</div>
+          ${report.completedCount?`<div class="small" style="color:#cfe4dc;margin-top:2px">코어 미션 완료 ${esc(report.completedCount)}</div>`:''}
         </div>
         <div class="reportCertLogo"><img src="assets/kbu-logo.png" alt="경복대학교" onerror="this.parentNode.style.display='none'"></div>
       </div>
-      <p class="reportCertComment">${report.overallComment||''}</p>
+      <p class="reportCertComment">${esc(report.overallComment)}</p>
     </div>
     <div class="reportCriteriaGrid">${crit}</div>
     ${weakHtml}
@@ -900,6 +1007,12 @@ render();
     </div>
 
     <div class="finalItem">
+      <b>학습 보고서 (인쇄 · PDF 저장용)</b><br>
+      <span class="small">확인 대상·근거·최종 판단을 미션별로 정리한 보고서입니다. 미작성 항목은 미작성으로 표시되며, AI가 대신 채워 넣지 않습니다. 화면에서 "인쇄 / PDF로 저장" 버튼으로 저장할 수 있습니다.</span>
+      <div class="actions"><button class="ghost" onclick="showReportPanel()">학습 보고서 보기</button></div>
+    </div>
+
+    <div class="finalItem">
       <b>나의 건축AI 활용능력 검증서 받기</b><br>
       <span class="small">1~10번 미션 기록을 채점 기준(사전 관찰 · AI 실험 체계성 · 근거 대조 · 오류 대응 · 기록의 구체성)에 따라 AI가 매우 잘함/잘함/보통/노력 필요 4단계로 평가합니다. 11·12번 보너스 과제는 완료 여부만 별도로 표시됩니다. 이 등급은 참고용이며 절대적인 평가가 아닙니다.</span>
       <div class="actions"><button class="primary" id="gradeBtn" onclick="requestGrading()">검증서 받기</button></div>
@@ -914,6 +1027,14 @@ render();
       <button class="ghost" onclick="closeFinalSubmission()">닫기</button>
     </div>
   </div>
+</div>
+
+<div class="reportPanel" id="reportPanel">
+  <div class="reportPanelBar">
+    <button class="primary" onclick="window.print()">인쇄 / PDF로 저장</button>
+    <button class="ghost" onclick="closeReportPanel()">닫기</button>
+  </div>
+  <div class="reportPanelBox" id="reportContent"></div>
 </div>
 
 <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
