@@ -224,9 +224,9 @@ function gradeWithAI(payload) {
     generationConfig: { temperature: 0.3, responseMimeType: 'application/json' }
   };
 
-  // Gemini가 일시적으로 혼잡(503)하거나 요청이 몰릴 때(429)는 잠깐 쉬었다가 자동으로 재시도한다.
+  // Gemini가 일시적으로 혼잡(503)하거나 요청이 몰릴 때(429)는 점점 더 길게 쉬었다가 자동으로 재시도한다.
   const RETRY_STATUSES = [503, 429, 500];
-  const MAX_ATTEMPTS = 3;
+  const MAX_ATTEMPTS = 4;
   let status, text;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const res = UrlFetchApp.fetch(url, {
@@ -239,7 +239,7 @@ function gradeWithAI(payload) {
     text = res.getContentText();
     if (status === 200) break;
     if (RETRY_STATUSES.indexOf(status) === -1 || attempt === MAX_ATTEMPTS) break;
-    Utilities.sleep(1200 * attempt); // 1.2초, 2.4초 간격으로 재시도
+    Utilities.sleep(1500 * Math.pow(2, attempt - 1)); // 1.5초, 3초, 6초 간격으로 재시도
   }
 
   if (status !== 200) {

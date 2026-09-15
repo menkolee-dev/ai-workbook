@@ -133,7 +133,7 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 </div>
 
 <div id="challengeWorkspace"></div>
-<div class="card" id="projectInputCard"><div class="eyebrow">이제 내 차례</div><h3>나의 실습 이미지</h3><div class="grid2"><div><div class="upload" id="uploadBox"><div id="uploadPlaceholder">＋ 기준 이미지 선택<br><span class="small">JPG / PNG / WebP 미리보기</span></div><input type="file" accept="image/*" id="imageInput"></div><div class="small" style="color:var(--muted);margin-top:6px">💡 이 이미지는 AI 검증서 채점 시 함께 검토됩니다. 미션과 무관한 이미지는 낮은 평가를 받을 수 있어요.</div></div><div><label>프로젝트 메모</label><textarea data-field="projectNote" placeholder="용도, 대상, 설계조건, 유지할 요소 등을 기록"></textarea><label>오늘의 핵심 목표</label><input data-field="goal" placeholder="예: 기존 매스를 유지하고 입면 대안 3개 만들기"></div></div></div>
+<div class="card" id="projectInputCard"><div class="eyebrow">이제 내 차례</div><h3>나의 실습 이미지</h3><div class="grid2"><div><div class="upload" id="uploadBox"><div id="uploadPlaceholder">＋ 기준 이미지 선택<br><span class="small">JPG / PNG / WebP 미리보기</span></div><input type="file" accept="image/*" id="imageInput"></div><div class="small" style="color:var(--muted);margin-top:6px">💡 이 이미지는 AI 셀프평가 시 함께 검토됩니다. 미션과 무관한 이미지는 낮은 평가를 받을 수 있어요.</div></div><div><label>프로젝트 메모</label><textarea data-field="projectNote" placeholder="용도, 대상, 설계조건, 유지할 요소 등을 기록"></textarea><label>오늘의 핵심 목표</label><input data-field="goal" placeholder="예: 기존 매스를 유지하고 입면 대안 3개 만들기"></div></div></div>
 
 <div id="promptBlock"></div><div id="steps"></div>
 
@@ -162,7 +162,7 @@ function checkReportStale(){
   const notice=document.createElement('div');
   notice.className='safetyNotice reportStaleNotice';
   notice.style.marginBottom='10px';
-  notice.innerHTML='<b>⚠ 이전 답안 기준 피드백 · 재확인 필요</b><br><span class="small">이 검증서를 받은 뒤 기록을 수정했습니다. "검증서 받기"를 다시 눌러 최신 내용으로 갱신하세요.</span>';
+  notice.innerHTML='<b>⚠ 이전 답안 기준 피드백 · 재확인 필요</b><br><span class="small">이 셀프평가 결과를 받은 뒤 기록을 수정했습니다. "셀프평가하기"를 다시 눌러 최신 내용으로 갱신하세요.</span>';
   cert.parentNode.insertBefore(notice,cert);
 }
 function bindAutosave(){document.querySelectorAll('[data-field]').forEach(el=>{el.addEventListener('input',collectState);el.addEventListener('change',collectState)})}
@@ -829,6 +829,7 @@ const GAS_ENDPOINT='https://script.google.com/macros/s/AKfycbxdunxxPlYmU2lax52cY
 // backend/Code.gs의 CLASS_SECRET과 반드시 동일한 값으로 맞추세요.
 const GAS_SECRET='kbu2026';
 window.__lastReport=null;
+let gradingAutoRetried=false;
 async function requestGrading(){
   collectState();
   const info=saveStudentInfo();
@@ -851,14 +852,25 @@ async function requestGrading(){
     if(!data.ok) throw new Error(data.error||'채점 서버 오류');
     window.__lastReport=data.report;
     window.__lastReportSnapshot=JSON.stringify(collectAllMissionData());
+    gradingAutoRetried=false;
     renderReport(data.report);
   }catch(err){
     clearInterval(loadingTimer);
-    box.innerHTML=`<div class="safetyNotice"><b>채점 요청 실패</b><br><span class="small">${String(err.message||err)}</span></div><div class="actions" style="margin-top:10px"><button class="primary" onclick="requestGrading()">다시 시도</button></div>`;
-  }finally{
-    clearInterval(loadingTimer);
+    const msg=String(err.message||err);
+    const congested=msg.indexOf('혼잡')!==-1;
+    if(congested&&!gradingAutoRetried){
+      gradingAutoRetried=true;
+      box.innerHTML='<div class="gradeLoading"><div class="gradeSpinner"></div><div class="gradeLoadingMsg">서버가 혼잡하여 자동으로 한 번 더 시도합니다…</div><div class="gradeLoadingSub">잠시만 기다려주세요.</div></div>';
+      setTimeout(requestGrading,3000);
+      return;
+    }
+    gradingAutoRetried=false;
+    box.innerHTML=`<div class="safetyNotice"><b>채점 요청 실패</b><br><span class="small">${esc(msg)}</span></div><div class="actions" style="margin-top:10px"><button class="primary" onclick="requestGrading()">다시 시도</button></div>`;
     btn.disabled=false;btn.textContent=prevText;
+    return;
   }
+  clearInterval(loadingTimer);
+  btn.disabled=false;btn.textContent=prevText;
 }
 const TIER_META={
   '매우 잘함':{emoji:'🌟',svg:'<svg viewBox="0 0 100 70" width="94" height="60"><path d="M14 64 L14 26 L46 6 L78 26 L78 64 Z" stroke="#fff" stroke-width="1.3" fill="none" opacity=".9"/><line x1="14" y1="26" x2="78" y2="26" stroke="#fff" stroke-width="1" opacity=".6"/><line x1="14" y1="26" x2="46" y2="44" stroke="#fff" stroke-width=".9" opacity=".55"/><line x1="78" y1="26" x2="46" y2="44" stroke="#fff" stroke-width=".9" opacity=".55"/><line x1="46" y1="44" x2="46" y2="64" stroke="#fff" stroke-width=".9" opacity=".55"/><line x1="14" y1="64" x2="46" y2="44" stroke="#fff" stroke-width=".8" opacity=".4"/><line x1="78" y1="64" x2="46" y2="44" stroke="#fff" stroke-width=".8" opacity=".4"/><circle cx="46" cy="6" r="1.8" fill="#fff"/><circle cx="46" cy="44" r="1.6" fill="#fff"/><circle cx="14" cy="26" r="1.2" fill="#fff" opacity=".8"/><circle cx="78" cy="26" r="1.2" fill="#fff" opacity=".8"/><circle cx="88" cy="14" r="1" fill="#fff" opacity=".6"/></svg>'},
@@ -892,7 +904,7 @@ function renderReport(report){
       ${tierMotif(report.overallTier)}
       <div class="reportCertTop">
         <div>
-          <div class="reportCertTitle">나의 건축AI 활용능력 검증서</div>
+          <div class="reportCertTitle">나의 건축AI 활용능력 셀프평가 결과</div>
           <div class="reportCertOverall">${tierEmoji(report.overallTier)} ${esc(report.overallTier)||'-'}</div>
           ${report.completedCount?`<div class="small" style="color:#cfe4dc;margin-top:2px">코어 미션 완료 ${esc(report.completedCount)}</div>`:''}
         </div>
@@ -904,13 +916,13 @@ function renderReport(report){
     ${weakHtml}
     ${bonusHtml}
     <div class="reportDisclaimer">※ 이 등급은 AI가 기록을 바탕으로 참고용으로 생성한 피드백이며, 절대적인 평가나 확정 성적이 아닙니다. 학습 과정을 돌아보는 참고 자료로만 활용하시고, 실제 성적은 담당 교수의 별도 평가를 따릅니다.</div>
-    <div class="actions"><button class="ghost" onclick="downloadReport()">검증서 다운로드</button></div>`;
+    <div class="actions"><button class="ghost" onclick="downloadReport()">셀프평가 결과 다운로드</button></div>`;
 }
 function downloadReport(){
   const report=window.__lastReport;
-  if(!report){alert('먼저 검증서를 받아주세요.');return;}
+  if(!report){alert('먼저 셀프평가를 받아주세요.');return;}
   const info=loadStudentInfo();
-  let out=`Architecture AX Expert\n나의 건축AI 활용능력 검증서\n${'='.repeat(44)}\n이름: ${info.name}\n학번: ${info.studentId}\n생성일시: ${new Date().toLocaleString('ko-KR')}\n${'='.repeat(44)}\n\n`;
+  let out=`Architecture AX Expert\n나의 건축AI 활용능력 셀프평가 결과\n${'='.repeat(44)}\n이름: ${info.name}\n학번: ${info.studentId}\n생성일시: ${new Date().toLocaleString('ko-KR')}\n${'='.repeat(44)}\n\n`;
   out+=`코어 미션 완료: ${report.completedCount||'-'}\n`;
   out+=`종합 등급: ${report.overallTier}\n${report.overallComment}\n\n`;
   (report.criteria||[]).forEach(c=>{out+=`- ${c.name}: ${c.tier}\n  ${c.comment}\n\n`});
@@ -918,7 +930,7 @@ function downloadReport(){
   (report.bonusMissions||[]).forEach(b=>{out+=`[보너스] ${b.label||b.name||b.id}: ${b.completed?'완료':'미제출'}\n`});
   out+=`\n※ 이 등급은 참고용 AI 피드백이며 절대적 평가나 확정 성적이 아닙니다. 실제 성적은 담당 교수의 별도 평가를 따릅니다.\n`;
   const safe=(s)=>String(s||'').trim().replace(/\s+/g,'_')||'report';
-  downloadTextFile(`ArchitectureAXExpert_검증서_${safe(info.name)}.txt`,out);
+  downloadTextFile(`ArchitectureAXExpert_셀프평가_${safe(info.name)}.txt`,out);
 }
 function openLightbox(src,alt){
  const lb=document.getElementById('lightbox');
@@ -1122,9 +1134,9 @@ render();
     </div>
 
     <div class="finalItem">
-      <b>나의 건축AI 활용능력 검증서 받기</b><br>
+      <b>나의 건축AI 활용능력 셀프평가</b><br>
       <span class="small">1~10번 미션 기록을 채점 기준(사전 관찰 · AI 실험 체계성 · 근거 대조 · 오류 대응 · 기록의 구체성)에 따라 AI가 매우 잘함/잘함/보통/노력 필요 4단계로 평가합니다. 11·12번 보너스 과제는 완료 여부만 별도로 표시됩니다. 이 등급은 참고용이며 절대적인 평가가 아닙니다.</span>
-      <div class="actions"><button class="primary" id="gradeBtn" onclick="requestGrading()">검증서 받기</button></div>
+      <div class="actions"><button class="primary" id="gradeBtn" onclick="requestGrading()">셀프평가하기</button></div>
       <div id="gradeResult" style="margin-top:10px"></div>
     </div>
 
