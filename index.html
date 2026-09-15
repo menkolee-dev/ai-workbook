@@ -76,6 +76,8 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
   .reportPanel.open,.reportPanel.open *{visibility:visible}
   .reportPanel{position:absolute;top:0;left:0;width:100%;background:#fff}
   .reportPanelBar{display:none}
+  body.printingCert #gradeResult,body.printingCert #gradeResult *{visibility:visible}
+  body.printingCert #gradeResult{position:absolute;top:0;left:0;width:100%;background:#fff}
 }
 
 .heroPills{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.heroPill{border:1px solid #ffffff4a;background:#ffffff14;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:750}
@@ -916,7 +918,13 @@ function renderReport(report){
     ${weakHtml}
     ${bonusHtml}
     <div class="reportDisclaimer">※ 이 등급은 AI가 기록을 바탕으로 참고용으로 생성한 피드백이며, 절대적인 평가나 확정 성적이 아닙니다. 학습 과정을 돌아보는 참고 자료로만 활용하시고, 실제 성적은 담당 교수의 별도 평가를 따릅니다.</div>
-    <div class="actions"><button class="ghost" onclick="downloadReport()">셀프평가 결과 다운로드</button></div>`;
+    <div class="actions"><button class="primary" onclick="printCertificate()">1장 파일로 저장 (인쇄 · PDF)</button><button class="ghost" onclick="downloadReport()">텍스트로 다운로드</button></div>`;
+}
+function printCertificate(){
+  if(!window.__lastReport){alert('먼저 셀프평가를 받아주세요.');return;}
+  document.body.classList.add('printingCert');
+  window.print();
+  setTimeout(()=>document.body.classList.remove('printingCert'),500);
 }
 function downloadReport(){
   const report=window.__lastReport;

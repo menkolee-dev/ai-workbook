@@ -36,9 +36,55 @@ function doPost(e) {
 
     const report = gradeWithAI(payload);
     notifyAdmin(payload, report);
+    logToRoster(payload, report);
     return jsonResponse({ ok: true, report: report });
   } catch (err) {
     return jsonResponse({ ok: false, error: String((err && err.message) || err) });
+  }
+}
+
+// 응시자 명단을 모아 보는 구글 시트를 가져오거나, 없으면 처음 한 번만 새로 만든다.
+function getOrCreateRosterSheet() {
+  const props = PropertiesService.getScriptProperties();
+  let sheetId = props.getProperty('ROSTER_SHEET_ID');
+  let ss = null;
+  if (sheetId) {
+    try { ss = SpreadsheetApp.openById(sheetId); } catch (e) { ss = null; }
+  }
+  if (!ss) {
+    ss = SpreadsheetApp.create('Architecture AX Expert - 응시 기록');
+    props.setProperty('ROSTER_SHEET_ID', ss.getId());
+    const sheet = ss.getSheets()[0];
+    sheet.appendRow(['채점 시각', '이름', '학번', '코어 미션 완료', '종합 등급', '총평', '보완 필요 미션']);
+    sheet.setFrozenRows(1);
+    if (ADMIN_EMAIL) {
+      try {
+        MailApp.sendEmail(ADMIN_EMAIL, '[AX Expert] 응시 기록 시트가 생성되었습니다',
+          '학생이 셀프평가를 받을 때마다 아래 시트에 이름·학번·시각·결과가 한 줄씩 자동으로 쌓입니다.\n\n' + ss.getUrl() +
+          '\n\n이 메일은 시트가 맨 처음 만들어질 때 한 번만 발송됩니다. 링크를 즐겨찾기 해두세요.');
+      } catch (e) { /* 메일 실패는 무시 */ }
+    }
+  }
+  return ss.getSheets()[0];
+}
+
+// 채점 결과를 응시 기록 시트에 한 줄 추가한다. 실패해도 학생의 채점 응답에는 영향을 주지 않는다.
+function logToRoster(payload, report) {
+  try {
+    const sheet = getOrCreateRosterSheet();
+    const student = payload.student || {};
+    const when = Utilities.formatDate(new Date(), Session.getScriptTimeZone() || 'Asia/Seoul', 'yyyy-MM-dd HH:mm');
+    sheet.appendRow([
+      when,
+      student.name || '미기재',
+      student.studentId || '미기재',
+      report.completedCount || '-',
+      report.overallTier || '-',
+      report.overallComment || '',
+      (report.weakMissions || []).join(', ')
+    ]);
+  } catch (e) {
+    // 시트 기록 실패(권한, 일시적 오류 등)는 조용히 무시한다.
   }
 }
 
