@@ -277,7 +277,7 @@ function gradeWithAI(payload) {
 
   if (status !== 200) {
     if (RETRY_STATUSES.indexOf(status) !== -1) {
-      throw new Error('AI 서버가 지금 일시적으로 혼잡합니다 (' + MAX_ATTEMPTS + '번 재시도 후에도 응답 없음). 30초~1분 후 "검증서 받기"를 다시 눌러주세요.');
+      throw new Error('AI 서버가 지금 일시적으로 혼잡합니다 (' + MAX_ATTEMPTS + '번 재시도 후에도 응답 없음). 30초~1분 후 "셀프평가하기"를 다시 눌러주세요.');
     }
     throw new Error('Gemini API 오류 (' + status + '): ' + text.substring(0, 300));
   }
