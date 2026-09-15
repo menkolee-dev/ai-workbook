@@ -49,7 +49,12 @@ function doPost(e) {
 // 권한이 없으면 조용히 실패하기 때문에, 반드시 이 함수를 먼저 한 번 수동으로 실행해 권한을 승인해야 합니다.
 function setupRosterSheet() {
   const sheet = getOrCreateRosterSheet();
-  Logger.log('응시 기록 시트 준비 완료: ' + sheet.getParent().getUrl());
+  const ss = sheet.getParent();
+  // 이미 만들어져 있던 시트라도, 지금 실행하는 계정과 관리자 계정이 다르면 다시 공유 권한을 부여한다.
+  if (ADMIN_EMAIL) {
+    try { DriveApp.getFileById(ss.getId()).addEditor(ADMIN_EMAIL); } catch (e) { /* 무시 */ }
+  }
+  Logger.log('응시 기록 시트 준비 완료: ' + ss.getUrl());
 }
 
 // 응시자 명단을 모아 보는 구글 시트를 가져오거나, 없으면 처음 한 번만 새로 만든다.
@@ -75,6 +80,11 @@ function getOrCreateRosterSheet() {
     sheet.setColumnWidth(7, 260);
     sheet.setColumnWidth(8, 160);
     if (ADMIN_EMAIL) {
+      // 이 스크립트를 실행한 계정이 관리자 계정과 다를 수 있으므로(예: 개발용 개인 계정으로 실행),
+      // 시트 소유자와 무관하게 관리자 계정에 편집 권한을 명시적으로 부여해둔다.
+      try {
+        DriveApp.getFileById(ss.getId()).addEditor(ADMIN_EMAIL);
+      } catch (e) { /* 이미 같은 계정이거나 공유가 불가능한 경우 무시 */ }
       try {
         MailApp.sendEmail(ADMIN_EMAIL, '[AX Expert] 응시 기록 시트가 생성되었습니다',
           '학생이 셀프평가를 받을 때마다 아래 시트에 날짜·시각·이름·학번·결과가 한 줄씩 자동으로 쌓입니다.\n\n' + ss.getUrl() +
