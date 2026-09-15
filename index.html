@@ -286,6 +286,8 @@ function renderLesson10Submission(l){
     <textarea data-field="finalLearning" placeholder="예: AI는 빠르게 대안을 보여주는 도우미이며, 최종 판단과 검증은 사람의 역할이다."></textarea>
   `;
   if(humanCard) humanCard.parentNode.insertBefore(c,humanCard);
+  const s10=loadState(current);
+  for(let n=1;n<=5;n++) restoreSavedImage('slideBox'+n,'slidePh'+n,s10['slideImage'+n]);
 }
 
 function renderChallengeWorkspace(l){
@@ -293,33 +295,64 @@ function renderChallengeWorkspace(l){
   host.innerHTML='';
   if(l.id==='11'){
     host.innerHTML=`<div class="card challengeWorkspace"><div class="eyebrow">과제 11 · 작업공간</div><div class="challengeRibbon"><span class="statusChip violet">보너스 과제</span><span class="statusChip safe">정규 채점 제외 · 완료 시 최대 +5%</span></div><h3>공공건축 프로젝트 분석 카드</h3><p class="small">완성된 산출물을 요구하지 않습니다. 아래 실행 화면 스크린샷 1장이면 제출로 충분합니다.</p><div class="grid2"><div><label><span class="requiredMark">필수</span> 내가 정한 검색 질문</label><textarea data-field="g2bQuestion" placeholder="예: 교내 노후 학습공간 개선에 참고할 경기도 교육시설 리모델링 공고를 찾는다."></textarea><label>검색 조건</label><input data-field="g2bConditions" placeholder="업무구분 · 키워드 · 지역 · 기간 · 비교 건수"></div><div><label>선택한 공고와 원문 근거</label><textarea data-field="g2bEvidence" placeholder="공고번호·차수·기관·조회시각·원문 링크와 확인한 사실을 기록"></textarea><label>설계에 반영하거나 제외할 조건</label><textarea data-field="g2bDecision" placeholder="건축디자인 관점에서 선택한 조건과 그 이유"></textarea></div></div><div class="slideLabel" style="margin-top:12px">MCP 실행 화면 스크린샷</div><div class="slideUploadGrid" style="grid-template-columns:220px"><div class="slideUpload" id="refBoxMcp"><div id="refPhMcp">＋ 스크린샷 첨부<br><span class="small">실행 결과 화면 캡처</span></div><input type="file" accept="image/*" onchange="previewReference(event,'Mcp')"></div></div><div class="safetyNotice" style="margin-top:12px"><b>읽기 전용 실습</b> · 공개정보만 조회합니다. 로그인, 공동인증서, 입찰 참가, 투찰, 낙찰 판단, 계약 행위 및 첨부파일 자동 실행은 수행하지 않습니다. 저장된 시연 데이터를 사용하면 반드시 ‘예시 데이터(DEMO DATA)’로 표시하세요.</div></div>`;
+    restoreSavedImage('refBoxMcp','refPhMcp',loadState(current).refImageMcp);
   }
   if(l.id==='12'){
     host.innerHTML=`<div class="card challengeWorkspace"><div class="eyebrow">과제 12 · 공간 검증</div><div class="challengeRibbon"><span class="statusChip violet">보너스 과제</span><span class="statusChip safe">정규 채점 제외 · 완료 시 최대 +5%</span></div><h3>외부–내부 공간 경험 검증 보드</h3><p class="small">완성된 영상 제작은 선택 사항입니다. 아래 3장면 스크린샷만 제출해도 충분합니다.</p><div class="grid3"><div><div class="slideLabel">진입</div><div class="slideUpload" id="refBoxStart"><div id="refPhStart">＋ 진입 장면<br><span class="small">출입구·접근 동선</span></div><input type="file" accept="image/*" onchange="previewReference(event,'Start')"></div></div><div><div class="slideLabel">외관</div><div class="slideUpload" id="refBoxMiddle"><div id="refPhMiddle">＋ 외관 장면<br><span class="small">매스·입면 일관성</span></div><input type="file" accept="image/*" onchange="previewReference(event,'Middle')"></div></div><div><div class="slideLabel">내부</div><div class="slideUpload" id="refBoxFinal"><div id="refPhFinal">＋ 내부 장면<br><span class="small">활동·채광·동선</span></div><input type="file" accept="image/*" onchange="previewReference(event,'Final')"></div></div></div><div class="grid2" style="margin-top:12px"><div><label><span class="requiredMark">필수</span> 공간 의도와 이용 시나리오</label><textarea data-field="videoIntent" placeholder="누가, 어디로 진입해, 어떤 공간을 이용하는지 한 문장으로 정의"></textarea><label>6컷 카메라 경로</label><textarea data-field="cameraPath" placeholder="진입 → 외관 → 입면·테라스 → 전이 → 내부 활동 → 최종 장면"></textarea></div><div><label>모든 장면에서 유지할 조건</label><textarea data-field="modelLocks" placeholder="층수, 출입구, 창호 모듈, 재료, 조경, 채광 방향, 사람의 비례"></textarea><label><span class="requiredMark">필수</span> 발견한 오류와 최종 판단</label><textarea data-field="spatialAudit" placeholder="오류 3가지 이상과 수정 방법, 최종 결과의 채택·수정·거부 및 이유"></textarea></div></div><div class="safetyNotice"><b>설계 검증 원칙</b> · AI 영상은 공간 아이디어를 빠르게 비교하는 자료입니다. 구조·피난·접근성·설비·에너지 성능은 도면, 법규와 전문 검토로 다시 확인하고, 얼굴·차량번호·비공개 도면은 외부 AI에 업로드하지 않습니다.</div></div>`;
+    const s12=loadState(current);
+    ['Start','Middle','Final'].forEach(k=>restoreSavedImage('refBox'+k,'refPh'+k,s12['refImage'+k]));
   }
+}
+function restoreSavedImage(boxId,phId,dataUrl){
+  if(!dataUrl) return;
+  const box=document.getElementById(boxId),ph=document.getElementById(phId);
+  if(!box) return;
+  if(ph) ph.style.display='none';
+  box.querySelectorAll('img').forEach(x=>x.remove());
+  const img=document.createElement('img');
+  img.src=dataUrl;
+  box.appendChild(img);
 }
 function previewReference(e,key){
   const f=e.target.files[0];
   if(!f) return;
+  if(f.size>20*1024*1024){alert('파일이 너무 큽니다 (20MB 이하만 가능). 더 작은 이미지를 선택해주세요.');e.target.value='';return}
   const box=document.getElementById('refBox'+key);
   const ph=document.getElementById('refPh'+key);
   if(ph) ph.style.display='none';
   box.querySelectorAll('img').forEach(x=>x.remove());
+  const tempUrl=URL.createObjectURL(f);
   const img=document.createElement('img');
-  img.src=URL.createObjectURL(f);
+  img.src=tempUrl;
   img.alt=key+' 기준 이미지 미리보기';
   box.appendChild(img);
+  compressImageToBase64(f,480,0.6).then(dataUrl=>{
+    let s=loadState(current);
+    s['refImage'+key]=dataUrl;
+    saveState(current,s);
+    img.src=dataUrl;
+    URL.revokeObjectURL(tempUrl);
+  }).catch(()=>{});
 }
 function previewSlide(e,n){
   const f=e.target.files[0];
   if(!f) return;
+  if(f.size>20*1024*1024){alert('파일이 너무 큽니다 (20MB 이하만 가능). 더 작은 이미지를 선택해주세요.');e.target.value='';return}
   const box=document.getElementById('slideBox'+n);
   const ph=document.getElementById('slidePh'+n);
   if(ph) ph.style.display='none';
   box.querySelectorAll('img').forEach(x=>x.remove());
+  const tempUrl=URL.createObjectURL(f);
   const img=document.createElement('img');
-  img.src=URL.createObjectURL(f);
+  img.src=tempUrl;
   box.appendChild(img);
+  compressImageToBase64(f,480,0.6).then(dataUrl=>{
+    let s=loadState(current);
+    s['slideImage'+n]=dataUrl;
+    saveState(current,s);
+    img.src=dataUrl;
+    URL.revokeObjectURL(tempUrl);
+  }).catch(()=>{});
 }
 function renderSteps(l){let h=document.getElementById('steps');h.innerHTML='';l.steps.forEach((st,idx)=>{let c=document.createElement('div');c.className='card';c.innerHTML=`<div class="eyebrow">${st[0]}</div><h3>${st[1]}</h3><p>${st[2]}</p><label>나의 기록</label><textarea data-field="step${idx+1}" placeholder="관찰, 프롬프트, 결과, 수정사항 등을 기록"></textarea>`;h.appendChild(c)})}
 function renderPrompt(l){let h=document.getElementById('promptBlock');h.innerHTML='';if(!l.prompt)return;h.innerHTML=`<div class="card"><div class="eyebrow">프롬프트 복사하기</div><h3>예제 프롬프트</h3><div class="prompt" id="promptText">${l.prompt}</div><div class="actions"><button class="primary" onclick="copyPrompt()">프롬프트 복사</button></div></div>`}
@@ -521,6 +554,58 @@ function exportRecord(){
   const info=saveStudentInfo();
   const safe=(s)=>String(s||'').trim().replace(/\s+/g,'_')||'record';
   downloadTextFile(`ArchitectureAXExpert_${safe(info.name)}_${safe(info.studentId)}.txt`,buildRecordText());
+}
+
+// ===== 기록 백업 · 복원 (JSON) =====
+const BACKUP_APP_ID='architecture-ax-expert';
+function buildBackupData(){
+  const data={appId:BACKUP_APP_ID,schemaVersion:1,exportedAt:new Date().toISOString(),
+    studentInfo:loadStudentInfo(),selfEval:loadSelfEval(),finalSubmit:loadFinalSubmitInfo(),missions:{}};
+  for(let i=0;i<LESSONS.length;i++) data.missions[key(i)]=loadState(i);
+  return data;
+}
+function exportBackupJSON(){
+  collectState();
+  collectSelfEval();
+  const info=saveStudentInfo();
+  const safe=(s)=>String(s||'').trim().replace(/\s+/g,'_')||'record';
+  downloadTextFile(`ArchitectureAXExpert_backup_${safe(info.name)}_${safe(info.studentId)}.json`,JSON.stringify(buildBackupData(),null,2));
+}
+function importBackupJSON(e){
+  const f=e.target.files[0];
+  if(!f) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    let data;
+    try{ data=JSON.parse(ev.target.result); }
+    catch(err){ alert('올바른 JSON 파일이 아닙니다. 파일을 다시 확인해주세요.'); e.target.value=''; return; }
+    if(!data||data.appId!==BACKUP_APP_ID||typeof data.missions!=='object'){
+      alert('이 사이트의 백업 파일이 아닌 것 같습니다. 다른 파일을 선택해주세요.');
+      e.target.value=''; return;
+    }
+    const missionCount=Object.keys(data.missions).length;
+    const ok=confirm('백업 파일을 확인했습니다.\n\n생성 시각: '+(data.exportedAt||'알 수 없음')+'\n포함된 기록: '+missionCount+'개\n\n지금 불러오면 현재 브라우저의 기록을 덮어씁니다. 계속하시겠습니까?\n(만약을 위해 지금 상태를 먼저 자동으로 백업해 둡니다.)');
+    if(!ok){ e.target.value=''; return; }
+    try{ localStorage.setItem('aivis_pre_restore_backup',JSON.stringify(buildBackupData())); }catch(err){}
+    Object.keys(data.missions).forEach(k=>{
+      try{ localStorage.setItem(k,JSON.stringify(data.missions[k])); }catch(err){}
+    });
+    if(data.studentInfo) localStorage.setItem('aivis_student_info',JSON.stringify(data.studentInfo));
+    if(data.selfEval) localStorage.setItem('aivis_self_eval',JSON.stringify(data.selfEval));
+    if(data.finalSubmit) localStorage.setItem('aivis_final_submit',JSON.stringify(data.finalSubmit));
+    // 완료 상태는 그대로 신뢰하지 않고 현재 규칙으로 다시 계산한다
+    LESSONS.forEach((l,i)=>{
+      if(l.id==='00') return;
+      let s=loadState(i);
+      const checklist=lessonCompletionChecklist(l);
+      s.completed=checklist.every(item=>item.ok(s));
+      saveState(i,s);
+    });
+    alert('기록을 불러왔습니다. 완료 상태는 현재 기준으로 다시 확인되었습니다.');
+    e.target.value='';
+    render();
+  };
+  reader.readAsText(f);
 }
 
 // ===== AI 채점표 받기 (Google Apps Script 백엔드 호출) =====
@@ -802,6 +887,16 @@ render();
       <b>나의 전체 기록 + 자기평가서 내보내기</b><br>
       <span class="small">12개 미션의 관찰·프롬프트·판단 기록과 위 자기평가서를 하나의 텍스트 파일로 즉시 저장합니다. 서버 연결 없이 작동하며, 이 파일을 지정된 LMS/공유폴더에 제출하세요.</span>
       <div class="actions"><button class="ghost" onclick="exportRecord()">기록+평가서 내보내기 (.txt)</button></div>
+    </div>
+
+    <div class="finalItem">
+      <b>기록 백업 · 복원 (JSON)</b><br>
+      <span class="small">12개 미션의 모든 기록과 첨부 이미지를 하나의 JSON 파일로 저장합니다. 기기를 바꾸거나 브라우저 데이터가 초기화될 경우, 이 파일로 같은 사이트에서 그대로 복원할 수 있습니다.</span>
+      <div class="actions">
+        <button class="ghost" onclick="exportBackupJSON()">전체 기록 백업 (.json)</button>
+        <button class="ghost" onclick="document.getElementById('backupImportInput').click()">백업 파일 불러오기</button>
+        <input type="file" id="backupImportInput" accept=".json,application/json" style="display:none" onchange="importBackupJSON(event)">
+      </div>
     </div>
 
     <div class="finalItem">
