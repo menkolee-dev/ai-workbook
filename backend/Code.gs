@@ -90,56 +90,85 @@ function jsonResponse(obj) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-// 텍스트 요약에서는 제외하고 별도로 이미지 파트로 첨부할 필드명
-const IMAGE_FIELD_KEY = 'imageData';
+// 텍스트 요약에서는 제외하고 별도로 이미지 파트로 첨부할 필드명들
+// (imageData=1~9번 메인 이미지, slideImage*=10번 슬라이드, refImage*=11·12번 스크린샷, cmpImage*=05번 비교 이미지)
+const IMAGE_FIELD_KEYS = ['imageData', 'slideImage1', 'slideImage2', 'slideImage3', 'refImageStart', 'refImageMiddle', 'refImageFinal', 'refImageMcp', 'cmpImageBefore', 'cmpImageAfter', 'cmpImageFinal'];
 // 안전장치: 이미지 1장당 base64 용량 상한(약 1.2MB 원본 기준). 이보다 크면 손상되었거나 비정상 데이터로 보고 건너뛴다.
 const MAX_IMAGE_BASE64_CHARS = 1600000;
+// 30명 규모 학급에서도 한 요청이 오래 걸리거나 실패하지 않도록, 한 번의 채점 요청에 실제로 첨부하는 이미지 수를 제한한다.
+// (학생이 더 많이 올려도, 초과분은 이미지 없이 텍스트 기준으로만 채점되며 감점 사유가 되지 않는다.)
+const MAX_IMAGES_PER_REQUEST = 6;
+
+function hasAnyImage(f) {
+  return !!(f && IMAGE_FIELD_KEYS.some(function (k) { return f[k]; }));
+}
 
 function buildSummary(payload) {
   const student = payload.student || {};
   const missions = payload.missions || [];
   const core = missions.filter(function (m) { return m.id !== '11' && m.id !== '12'; });
   const completedCount = core.filter(function (m) { return m.completed; }).length;
-  const imageCount = core.filter(function (m) { return m.fields && m.fields[IMAGE_FIELD_KEY]; }).length;
+  const imageMissionCount = missions.filter(function (m) { return hasAnyImage(m.fields); }).length;
 
   const lines = [];
   lines.push('학생 이름: ' + (student.name || '미기재'));
   lines.push('학번: ' + (student.studentId || '미기재'));
   lines.push('코어 미션(01~10) 완료 개수: ' + completedCount + ' / ' + core.length);
-  lines.push('첨부된 실습 이미지 개수: ' + imageCount + ' (아래 이미지들은 이 프롬프트 뒤에 [미션 NN 첨부 이미지] 라벨과 함께 순서대로 첨부됨)');
+  lines.push('이미지가 첨부된 미션 수: ' + imageMissionCount + ' (실제로 이 요청에 첨부되는 이미지는 최대 ' + MAX_IMAGES_PER_REQUEST + '장이며, [미션 NN 첨부 이미지] 라벨과 함께 순서대로 첨부됨. 초과분은 텍스트 기록만으로 판단할 것)');
   lines.push('');
   missions.forEach(function (m) {
     lines.push('[미션 ' + m.id + '] ' + m.title + ' - ' + (m.completed ? '완료' : '미완료'));
     const f = m.fields || {};
     let hasField = false;
     Object.keys(f).forEach(function (k) {
-      if (k === 'completed' || k === IMAGE_FIELD_KEY) return;
+      if (k === 'completed' || k === 'compareHistory' || IMAGE_FIELD_KEYS.indexOf(k) !== -1) return;
       const v = f[k];
       if (v === undefined || v === null || v === '') return;
+      if (k === 'compare' && typeof v === 'object') {
+        lines.push('  - 비교 판단(확인 항목): ' + (v.checked || ''));
+        lines.push('  - 비교 판단(문제 유무): ' + (v.verdict || ''));
+        lines.push('  - 비교 판단(근거): ' + (v.reason || ''));
+        lines.push('  - 비교 판단(조치): ' + (v.action || ''));
+        hasField = true;
+        return;
+      }
+      if (typeof v === 'object') return; // 예상치 못한 객체 필드는 건너뛴다
       lines.push('  - ' + k + ': ' + v);
       hasField = true;
     });
-    if (f[IMAGE_FIELD_KEY]) lines.push('  - (첨부 이미지 있음, 아래 참고)');
-    if (!hasField && !f[IMAGE_FIELD_KEY]) lines.push('  (기록 없음)');
+    if (hasAnyImage(f)) lines.push('  - (첨부 이미지 있음, 아래 참고)');
+    if (!hasField && !hasAnyImage(f)) lines.push('  (기록 없음)');
     lines.push('');
   });
   return lines.join('\n');
 }
 
 // 미션별 첨부 이미지를 Gemini 멀티모달 파트(라벨 텍스트 + inlineData)로 변환한다.
+// 코어 미션(01~10)을 보너스(11~12)보다 우선 포함하고, 전체 개수는 MAX_IMAGES_PER_REQUEST로 제한한다.
 function buildImageParts(payload) {
   const missions = payload.missions || [];
   const parts = [];
-  missions.forEach(function (m) {
-    const dataUrl = m.fields && m.fields[IMAGE_FIELD_KEY];
-    if (!dataUrl || typeof dataUrl !== 'string') return;
-    const match = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
-    if (!match) return;
-    const mimeType = match[1];
-    const base64 = match[2];
-    if (base64.length > MAX_IMAGE_BASE64_CHARS) return; // 비정상적으로 큰 데이터는 건너뛴다
-    parts.push({ text: '[미션 ' + m.id + ' 첨부 이미지]' });
-    parts.push({ inlineData: { mimeType: mimeType, data: base64 } });
+  let count = 0;
+  const ordered = missions.slice().sort(function (a, b) {
+    const aBonus = (a.id === '11' || a.id === '12') ? 1 : 0;
+    const bBonus = (b.id === '11' || b.id === '12') ? 1 : 0;
+    return aBonus - bBonus;
+  });
+  ordered.forEach(function (m) {
+    const f = m.fields || {};
+    IMAGE_FIELD_KEYS.forEach(function (key) {
+      if (count >= MAX_IMAGES_PER_REQUEST) return;
+      const dataUrl = f[key];
+      if (!dataUrl || typeof dataUrl !== 'string') return;
+      const match = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+      if (!match) return;
+      const mimeType = match[1];
+      const base64 = match[2];
+      if (base64.length > MAX_IMAGE_BASE64_CHARS) return; // 비정상적으로 큰 데이터는 건너뛴다
+      parts.push({ text: '[미션 ' + m.id + ' 첨부 이미지]' });
+      parts.push({ inlineData: { mimeType: mimeType, data: base64 } });
+      count++;
+    });
   });
   return parts;
 }

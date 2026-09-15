@@ -309,11 +309,11 @@ function renderLesson10Submission(l){
   c.id='lesson10Submission';
   c.innerHTML=`
     <div class="eyebrow">제출 폼</div>
-    <h3>발표 슬라이드 5장</h3>
-    <p class="small">각 슬라이드 이미지를 선택하면 이 브라우저에 자동 저장되어, 새로고침하거나 나중에 다시 열어도 남아있습니다.</p>
+    <h3>발표 슬라이드 대표 3장</h3>
+    <p class="small">전체 발표는 위 5개 텍스트 항목(경험·강점·어려움·사람의 판단·배움)으로 기록하고, 여기에는 대표 장면 3장만 이미지로 첨부하면 충분합니다. 선택하면 이 브라우저에 자동 저장되어, 새로고침하거나 나중에 다시 열어도 남아있습니다.</p>
 
     <div class="slideUploadGrid">
-      ${[1,2,3,4,5].map(n=>`
+      ${[1,2,3].map(n=>`
         <div>
           <div class="slideLabel">슬라이드 ${n}</div>
           <div class="slideUpload" id="slideBox${n}">
@@ -328,7 +328,7 @@ function renderLesson10Submission(l){
   `;
   if(humanCard) humanCard.parentNode.insertBefore(c,humanCard);
   const s10=loadState(current);
-  for(let n=1;n<=5;n++) restoreSavedImage('slideBox'+n,'slidePh'+n,s10['slideImage'+n]);
+  for(let n=1;n<=3;n++) restoreSavedImage('slideBox'+n,'slidePh'+n,s10['slideImage'+n]);
 }
 
 // ===== 05번 전용 — 원본/AI결과/수정본 비교 기록 =====
