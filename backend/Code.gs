@@ -55,12 +55,20 @@ function getOrCreateRosterSheet() {
     ss = SpreadsheetApp.create('Architecture AX Expert - 응시 기록');
     props.setProperty('ROSTER_SHEET_ID', ss.getId());
     const sheet = ss.getSheets()[0];
-    sheet.appendRow(['채점 시각', '이름', '학번', '코어 미션 완료', '종합 등급', '총평', '보완 필요 미션']);
+    sheet.setName('응시 기록');
+    const headers = ['날짜', '시각', '이름', '학번', '코어 미션 완료', '종합 등급', '총평', '보완 필요 미션'];
+    sheet.appendRow(headers);
+    const headerRange = sheet.getRange(1, 1, 1, headers.length);
+    headerRange.setFontWeight('bold').setBackground('#174c43').setFontColor('#ffffff');
     sheet.setFrozenRows(1);
+    sheet.setColumnWidths(1, 2, 100);
+    sheet.setColumnWidths(3, 4, 110);
+    sheet.setColumnWidth(7, 260);
+    sheet.setColumnWidth(8, 160);
     if (ADMIN_EMAIL) {
       try {
         MailApp.sendEmail(ADMIN_EMAIL, '[AX Expert] 응시 기록 시트가 생성되었습니다',
-          '학생이 셀프평가를 받을 때마다 아래 시트에 이름·학번·시각·결과가 한 줄씩 자동으로 쌓입니다.\n\n' + ss.getUrl() +
+          '학생이 셀프평가를 받을 때마다 아래 시트에 날짜·시각·이름·학번·결과가 한 줄씩 자동으로 쌓입니다.\n\n' + ss.getUrl() +
           '\n\n이 메일은 시트가 맨 처음 만들어질 때 한 번만 발송됩니다. 링크를 즐겨찾기 해두세요.');
       } catch (e) { /* 메일 실패는 무시 */ }
     }
@@ -73,9 +81,13 @@ function logToRoster(payload, report) {
   try {
     const sheet = getOrCreateRosterSheet();
     const student = payload.student || {};
-    const when = Utilities.formatDate(new Date(), Session.getScriptTimeZone() || 'Asia/Seoul', 'yyyy-MM-dd HH:mm');
+    const now = new Date();
+    const tz = Session.getScriptTimeZone() || 'Asia/Seoul';
+    const dateStr = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
+    const timeStr = Utilities.formatDate(now, tz, 'HH:mm');
     sheet.appendRow([
-      when,
+      dateStr,
+      timeStr,
       student.name || '미기재',
       student.studentId || '미기재',
       report.completedCount || '-',
