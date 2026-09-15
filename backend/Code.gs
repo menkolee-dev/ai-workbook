@@ -43,6 +43,15 @@ function doPost(e) {
   }
 }
 
+// [수동 실행 전용] 응시 기록 시트에 필요한 "스프레드시트 생성" 권한을 처음 한 번 승인받기 위한 함수.
+// 이 화면(script.google.com) 상단의 함수 선택 목록에서 "setupRosterSheet"를 고른 뒤 ▶ 실행 버튼을 눌러
+// 딱 한 번 직접 실행해주세요. 학생이 웹사이트에서 채점을 요청할 때는 승인 창을 띄울 사람이 없어서
+// 권한이 없으면 조용히 실패하기 때문에, 반드시 이 함수를 먼저 한 번 수동으로 실행해 권한을 승인해야 합니다.
+function setupRosterSheet() {
+  const sheet = getOrCreateRosterSheet();
+  Logger.log('응시 기록 시트 준비 완료: ' + sheet.getParent().getUrl());
+}
+
 // 응시자 명단을 모아 보는 구글 시트를 가져오거나, 없으면 처음 한 번만 새로 만든다.
 function getOrCreateRosterSheet() {
   const props = PropertiesService.getScriptProperties();
