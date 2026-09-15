@@ -14,7 +14,8 @@ const CLASS_SECRET = '원하는-비밀번호로-변경';
 // 3) 하루 최대 채점 횟수. 무단 대량 호출로 무료 할당량이 소진되는 것을 막는 안전장치입니다.
 const MAX_DAILY_REQUESTS = 300;
 
-// 4) 학생이 채점을 받을 때마다 응시 시각과 결과를 알려줄 관리자 이메일. 비워두면 알림을 보내지 않습니다.
+// 4) 응시 기록 시트가 처음 만들어질 때 링크를 한 번 받을 관리자 이메일. 비워두면 이 알림을 보내지 않습니다.
+//    (학생이 채점받을 때마다 매번 메일이 오지는 않습니다 — 전체 명단은 아래 응시 기록 시트에서 확인하세요.)
 const ADMIN_EMAIL = 'kwlee@kbu.ac.kr';
 
 const CRITERIA = [
@@ -35,7 +36,6 @@ function doPost(e) {
     checkAndIncrementDailyQuota();
 
     const report = gradeWithAI(payload);
-    notifyAdmin(payload, report);
     logToRoster(payload, report);
     return jsonResponse({ ok: true, report: report });
   } catch (err) {
@@ -85,31 +85,6 @@ function logToRoster(payload, report) {
     ]);
   } catch (e) {
     // 시트 기록 실패(권한, 일시적 오류 등)는 조용히 무시한다.
-  }
-}
-
-// 관리자에게 응시 시각과 결과를 이메일로 알려준다. 실패해도 학생의 채점 결과 응답에는 영향을 주지 않는다.
-function notifyAdmin(payload, report) {
-  if (!ADMIN_EMAIL) return;
-  try {
-    const student = payload.student || {};
-    const when = Utilities.formatDate(new Date(), Session.getScriptTimeZone() || 'Asia/Seoul', 'yyyy-MM-dd HH:mm');
-    const subject = '[AX Expert] ' + (student.name || '이름 미기재') + ' (' + (student.studentId || '학번 미기재') + ') 채점 완료 · ' + (report.overallTier || '-');
-    const lines = [
-      '학생: ' + (student.name || '미기재') + ' / ' + (student.studentId || '미기재'),
-      '응시(채점) 시각: ' + when,
-      '코어 미션 완료: ' + (report.completedCount || '-'),
-      '종합 등급: ' + (report.overallTier || '-'),
-      '총평: ' + (report.overallComment || ''),
-      '',
-      '보완하면 좋을 미션: ' + ((report.weakMissions || []).join(', ') || '없음'),
-      '',
-      '이 메일은 채점이 실행될 때마다 자동으로 발송되며, 같은 학생이 여러 번 채점을 받으면 그때마다 다시 발송됩니다.',
-      '이 등급은 참고용 AI 피드백이며 확정 성적이 아닙니다.'
-    ];
-    MailApp.sendEmail(ADMIN_EMAIL, subject, lines.join('\n'));
-  } catch (e) {
-    // 메일 발송 실패(할당량 초과 등)는 조용히 무시한다 — 학생의 채점 흐름을 막지 않는다.
   }
 }
 
