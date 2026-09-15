@@ -359,6 +359,8 @@ function showFinalSubmission(){
   const nameEl=document.getElementById('studentName'),idEl=document.getElementById('studentId');
   if(nameEl) nameEl.value=info.name||'';
   if(idEl) idEl.value=info.studentId||'';
+  const linkEl=document.getElementById('finalSubmitLink');
+  if(linkEl) linkEl.value=loadFinalSubmitInfo().link||'';
   document.getElementById('gradeResult').innerHTML='';
   renderSelfEval();
   p.classList.add('open');
@@ -369,15 +371,21 @@ function closeFinalSubmission(){
   p.classList.remove('open');
   document.body.style.overflow='';
 }
+function coreMissionsStatus(){
+  const core=LESSONS.map((l,i)=>({l,i})).filter(x=>!['00','11','12'].includes(x.l.id));
+  const missing=core.filter(x=>!loadState(x.i).completed).map(x=>x.l.id+'번 · '+x.l.title);
+  return {total:core.length,completedCount:core.length-missing.length,missing};
+}
+function loadFinalSubmitInfo(){try{return JSON.parse(localStorage.getItem('aivis_final_submit')||'{}')}catch(e){return{}}}
 function markAllSubmitted(){
-  let finalIndex=LESSONS.length-1;
-  let s=loadState(finalIndex);
-  s.completed=true;
-  s.finalSubmitLink=document.getElementById('finalSubmitLink').value||'';
-  saveState(finalIndex,s);
-  updateProgress();
-  renderSidebar();
-  alert('12개 미션의 최종 제출 준비를 완료로 표시했습니다. 실제 파일 제출은 지정된 LMS 또는 공유 폴더에서 진행하세요.');
+  const status=coreMissionsStatus();
+  if(status.missing.length){
+    alert('아직 제출 준비가 완료되지 않았습니다.\n\n다음 코어 미션을 먼저 완료해주세요:\n\n• '+status.missing.join('\n• '));
+    return;
+  }
+  const info={link:document.getElementById('finalSubmitLink').value||'',submittedAt:new Date().toISOString()};
+  localStorage.setItem('aivis_final_submit',JSON.stringify(info));
+  alert('코어 미션 10개 완료를 확인했습니다. 최종 제출 준비가 완료로 표시되었습니다. 실제 파일 제출은 지정된 LMS 또는 공유 폴더에서 진행하세요.');
   closeFinalSubmission();
 }
 
@@ -645,6 +653,15 @@ function render(){
   let s=loadState(current);
   document.querySelectorAll('[data-field]').forEach(el=>{let v=s[el.dataset.field];el.type==='checkbox'?el.checked=!!v:el.value=v||''});
   document.getElementById('completeBtn').textContent=s.completed?'완료 취소':'완료하기';
+  const ruleEl=document.querySelector('#humanCheckCard .completionRule');
+  if(ruleEl){
+    if(s.completed){
+      ruleEl.textContent='✓ 작성조건 충족 · 내용 정확성은 별도 확인';
+    }else{
+      const labels=lessonCompletionChecklist(l).map(item=>item.label);
+      ruleEl.textContent='완료 조건: '+labels.join(' + ');
+    }
+  }
   document.getElementById('prevBtn').disabled=current===0;
   const nextBtn=document.getElementById('nextBtn');
   nextBtn.disabled=false;
@@ -672,16 +689,36 @@ function updateProgress(){
   const bonusEl=document.getElementById('bonusProgressText');
   if(bonusEl) bonusEl.textContent=`보너스 ${b} / ${bonus.length} 완료`;
 }
+const EXTRA_REQUIRED_FIELDS={
+  '10':[{key:'finalLearning',label:'발표 한 줄 결론'}],
+  '11':[{key:'g2bQuestion',label:'내가 정한 검색 질문'}],
+  '12':[{key:'videoIntent',label:'공간 의도와 이용 시나리오'},{key:'spatialAudit',label:'발견한 오류와 최종 판단'}]
+};
+function lessonCompletionChecklist(l){
+  const items=[
+    {ok:s=>s.check1&&s.check2&&s.check3&&s.check4,label:'Human Check 4개 항목',selector:'.checks'},
+    {ok:s=>(s.step1||'').trim(),label:'AI 사용 전 나의 첫 판단 기록',selector:'[data-field="step1"]'},
+    {ok:s=>s.decisionType,label:'채택·수정·거부 중 최종 결정',selector:'[data-field="decisionType"]'},
+    {ok:s=>(s.decision||'').trim(),label:'오류·판단 근거',selector:'[data-field="decision"]'}
+  ];
+  (EXTRA_REQUIRED_FIELDS[l.id]||[]).forEach(f=>{
+    items.push({ok:s=>(s[f.key]||'').trim(),label:f.label,selector:'[data-field="'+f.key+'"]'});
+  });
+  return items;
+}
 function toggleCompletion(){
   collectState();
+  let l=LESSONS[current];
   let s=loadState(current);
   if(s.completed){s.completed=false;saveState(current,s);render();return;}
-  const missing=[];
-  if(!s.check1||!s.check2||!s.check3||!s.check4) missing.push('Human Check 4개 항목');
-  if(!(s.step1||'').trim()) missing.push('AI 사용 전 나의 첫 판단 기록');
-  if(!s.decisionType) missing.push('채택·수정·거부 중 최종 결정');
-  if(!(s.decision||'').trim()) missing.push('오류·판단 근거');
-  if(missing.length){alert('아직 완료할 수 없습니다.\n\n• '+missing.join('\n• ')+'\n\n완성 이미지보다 판단 과정이 이 실습의 핵심입니다.');return;}
+  const checklist=lessonCompletionChecklist(l);
+  const missing=checklist.filter(item=>!item.ok(s));
+  if(missing.length){
+    alert('아직 완료할 수 없습니다.\n\n• '+missing.map(m=>m.label).join('\n• ')+'\n\n완성 이미지보다 판단 과정이 이 실습의 핵심입니다.');
+    const el=document.querySelector(missing[0].selector);
+    if(el){el.scrollIntoView({behavior:'smooth',block:'center'});if(el.focus)el.focus();}
+    return;
+  }
   s.completed=true;saveState(current,s);render();
 }
 document.getElementById('completeBtn').onclick=toggleCompletion;document.getElementById('resetBtn').onclick=()=>{if(confirm('현재 과제의 입력 내용을 초기화할까요?')){localStorage.removeItem(key(current));render()}};document.getElementById('prevBtn').onclick=()=>{collectState();if(current>0){current--;localStorage.setItem('aivis_current_v08',current);render()}};document.getElementById('nextBtn').onclick=()=>{
@@ -775,7 +812,7 @@ render();
     </div>
 
     <label style="margin-top:16px">제출 폴더 또는 LMS 링크 메모</label>
-    <input data-field="finalSubmitLink" id="finalSubmitLink" placeholder="지정된 제출 위치 또는 공유 링크">
+    <input id="finalSubmitLink" placeholder="지정된 제출 위치 또는 공유 링크">
 
     <div class="actions">
       <button class="primary" onclick="markAllSubmitted()">제출 준비 완료 표시</button>
