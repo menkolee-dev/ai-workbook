@@ -66,6 +66,27 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 .reportBadgeTodo{background:#f4f0f0;color:var(--muted);border-radius:999px;padding:2px 9px;font-size:11px;font-weight:800}
 .reportThumb{max-width:220px;max-height:160px;display:block;border-radius:8px;border:1px solid var(--line);margin-bottom:8px;object-fit:cover}
 .reportNoImage{font-size:11px;color:var(--muted);margin-bottom:6px}
+.reportCoverBanner{position:relative;overflow:hidden;background:linear-gradient(135deg,#173f39,#2f675d);color:#fff;border-radius:16px;padding:20px 22px;display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:10px;break-inside:avoid}
+.reportCoverBannerText{position:relative;z-index:1}
+.reportCoverLogo{background:#fff;border-radius:8px;padding:5px 10px;display:inline-block;line-height:0;margin-bottom:10px}
+.reportCoverLogo img{height:22px;display:block}
+.reportCoverEyebrow{font-size:11px;letter-spacing:.08em;font-weight:800;color:#bfe0d6;text-transform:uppercase;margin-bottom:2px}
+.reportCoverBannerText h2{margin:0 0 4px;font-size:22px;color:#fff}
+.reportCoverBannerText .reportStudentId{color:#dce8e5}
+.reportCoverBannerText .small{color:#dce8e5}
+.reportCoverArt{max-width:130px;max-height:110px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 6px 12px rgba(0,0,0,.35));position:relative;z-index:1}
+.reportAISummary{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:#fafaf8;margin-top:8px}
+.reportTierHero{display:flex;align-items:baseline;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.reportTierEmoji{font-size:44px;line-height:1}
+.reportTierText{font-size:30px;font-weight:900;color:var(--accent)}
+.reportTierSub{font-size:13px;color:var(--muted)}
+.reportPageBreak{break-after:page;page-break-after:always}
+.reportMissionGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.reportMissionRow{border:1px solid var(--line);border-radius:9px;padding:8px 10px;display:flex;gap:8px;align-items:center;break-inside:avoid}
+.reportThumbSmall{width:40px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0}
+.reportMissionRowBody{display:flex;flex-direction:column;gap:3px;font-size:11.5px;min-width:0}
+.reportMissionRowBody b{font-size:12px;line-height:1.3}
+.reportDecisionBadge{display:inline-block;background:var(--accent2);color:var(--accent);border-radius:999px;padding:1px 7px;font-size:10px;font-weight:800;width:fit-content}
 .reportField{display:flex;gap:8px;font-size:12.5px;line-height:1.6;margin-top:4px}
 .reportFieldLabel{color:var(--muted);min-width:120px;flex-shrink:0}
 .reportFieldValue{white-space:pre-wrap;word-break:break-word}
@@ -219,6 +240,7 @@ function renderExamples(l){
       <div class="introFlowStep"><svg class="introFlowIcon" viewBox="0 0 44 44" aria-hidden="true"><rect x="6" y="8" width="32" height="28" rx="3" fill="none" stroke="var(--accent)" stroke-width="1.5" opacity=".5"/><path d="M14 28l6-12 6 12z" fill="none" stroke="var(--accent)" stroke-width="1.3" opacity=".45"/><circle cx="32" cy="30" r="7" fill="none" stroke="var(--danger)" stroke-width="1.6"/><line x1="32" y1="26.5" x2="32" y2="30.5" stroke="var(--danger)" stroke-width="1.6" stroke-linecap="round"/><circle cx="32" cy="33.3" r=".9" fill="var(--danger)"/></svg><b>④ 오류 대응</b><span>AI가 틀린 부분 찾기</span></div>
       <div class="introFlowStep"><svg class="introFlowIcon" viewBox="0 0 44 44" aria-hidden="true"><path d="M8 30V16l14-9 14 9v14" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linejoin="round"/><line x1="8" y1="30" x2="36" y2="30" stroke="var(--accent)" stroke-width="1.6"/><rect x="18" y="20" width="8" height="10" fill="none" stroke="var(--accent)" stroke-width="1.3" opacity=".6"/><circle cx="34" cy="12" r="7" fill="var(--accent)"/><path d="M31 12l2 2 4-4" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><b>⑤ 결정</b><span>내가 채택·수정·거부</span></div>
     </div>
+    <div class="safetyNotice">⚠ 입력한 내용은 이 브라우저에만 저장됩니다(서버 저장 없음) — 기기나 브라우저를 바꾸면 사라지니, 중간중간 "전체 기록 백업"(JSON)으로 내려받아 두세요.</div>
     <div class="introClosing"><b>완성 이미지보다, 판단 과정이 중요합니다.</b><br>이제 길을 떠나볼까요?</div>
     <div class="introStart"><button class="primary" onclick="startMissions()">시작하기 →</button></div>`;
    return;
@@ -548,7 +570,7 @@ function markAllSubmitted(){
   }
   const info={link:document.getElementById('finalSubmitLink').value||'',submittedAt:new Date().toISOString()};
   localStorage.setItem('aivis_final_submit',JSON.stringify(info));
-  alert('코어 미션 10개 완료를 확인했습니다. 최종 제출 준비가 완료로 표시되었습니다. 실제 파일 제출은 지정된 LMS 또는 공유 폴더에서 진행하세요.');
+  alert('코어 미션 10개 완료를 확인했습니다. 최종 제출 준비가 완료로 표시되었습니다.\n\n⚠ 작성한 내용은 서버에 저장되지 않으니, 화면을 닫기 전에 꼭 백업하거나 제출해두세요.');
   closeFinalSubmission();
 }
 
@@ -650,34 +672,29 @@ const REPORT_FIELD_LABELS={
 };
 const REPORT_IMAGE_KEYS=['imageData','slideImage1','slideImage2','slideImage3','slideImage4','slideImage5','refImageStart','refImageMiddle','refImageFinal','refImageMcp','cmpImageBefore','cmpImageAfter','cmpImageFinal'];
 const REPORT_SKIP_KEYS=['completed','compare','compareHistory'];
-function renderReportMissionBlock(m){
-  let b='<div class="reportMission"><div class="reportMissionHead"><b>['+esc(m.id)+'] '+esc(m.title)+'</b><span class="'+(m.completed?'reportBadgeDone':'reportBadgeTodo')+'">'+(m.completed?'완료':'미완료')+'</span></div>';
+// 인쇄본은 학생이 쓴 자유서술(STEP 기록·소감 등)을 다시 보여주지 않는다 — 그 내용은 이미 AI가 읽고
+// 판단했고, 위쪽 종합 요약에 반영되어 있다. 여기서는 완료 여부와 최종 결정(있는 경우)만 한 줄로 표시한다.
+function renderReportMissionRow(m){
   const fields=m.fields||{};
   const imageKeys=REPORT_IMAGE_KEYS.filter(k=>fields[k]);
-  if(imageKeys.length){ imageKeys.forEach(k=>{ b+='<img class="reportThumb" src="'+fields[k]+'" alt="'+esc(m.id)+'번 첨부 이미지" style="margin-right:8px">'; }); }
-  else{ b+='<div class="reportNoImage">이미지 별도 첨부</div>'; }
-  if(fields.compare&&(fields.compare.checked||fields.compare.verdict||fields.compare.reason||fields.compare.action)){
-    const cmp=fields.compare;
-    b+='<div class="reportField"><span class="reportFieldLabel">확인한 항목</span><span class="reportFieldValue">'+(esc(cmp.checked)||'미작성')+'</span></div>';
-    b+='<div class="reportField"><span class="reportFieldLabel">판단</span><span class="reportFieldValue">'+(esc(cmp.verdict)||'미작성')+'</span></div>';
-    b+='<div class="reportField"><span class="reportFieldLabel">판단 근거</span><span class="reportFieldValue">'+(esc(cmp.reason)||'미작성')+'</span></div>';
-    b+='<div class="reportField"><span class="reportFieldLabel">조치 내용</span><span class="reportFieldValue">'+(esc(cmp.action)||'미작성')+'</span></div>';
-    if(fields.compareHistory&&fields.compareHistory.length){
-      b+='<div class="reportField"><span class="reportFieldLabel">이전 기록</span><span class="reportFieldValue">'+fields.compareHistory.length+'개 보관됨 (최신 판단 기준 위 내용 반영)</span></div>';
-    }
-  }
-  let any=!!fields.compare;
-  Object.keys(fields).forEach(k=>{
-    if(REPORT_IMAGE_KEYS.includes(k)||REPORT_SKIP_KEYS.includes(k)) return;
-    const v=fields[k];
-    if(v===undefined||v===null||v==='') return;
-    if(k.startsWith('check')&&typeof v==='boolean') return;
-    any=true;
-    b+='<div class="reportField"><span class="reportFieldLabel">'+esc(REPORT_FIELD_LABELS[k]||k)+'</span><span class="reportFieldValue">'+esc(v)+'</span></div>';
-  });
-  if(!any) b+='<div class="reportEmpty">미작성</div>';
-  b+='</div>';
-  return b;
+  const thumb=imageKeys.length?'<img class="reportThumbSmall" src="'+fields[imageKeys[0]]+'" alt="'+esc(m.id)+'번 첨부 이미지">':'';
+  const decision=fields.decisionType?'<span class="reportDecisionBadge">'+esc(fields.decisionType)+'</span>':'';
+  return '<div class="reportMissionRow">'+thumb+
+    '<div class="reportMissionRowBody"><b>['+esc(m.id)+'] '+esc(m.title)+'</b>'+
+    '<span class="'+(m.completed?'reportBadgeDone':'reportBadgeTodo')+'">'+(m.completed?'완료':'미완료')+'</span>'+decision+
+    '</div></div>';
+}
+// 이미 셀프평가하기로 받아둔 AI 총평이 있으면 보고서 맨 위에 그대로 재사용한다(다시 채점 요청하지 않음).
+function renderReportAISummary(){
+  const report=window.__lastReport;
+  if(!report) return '<div class="reportDraftNotice">아직 "셀프평가하기"를 받지 않았습니다 — 먼저 셀프평가를 받으면 이 자리에 AI 총평 요약이 표시됩니다.</div>';
+  const crit=(report.criteria||[]).map(c=>'<div class="reportField"><span class="reportFieldLabel">'+esc(c.name)+'</span><span class="reportFieldValue">'+esc(c.tier)+' — '+esc(c.comment)+'</span></div>').join('');
+  const weak=(report.weakMissions||[]).length?'<div class="reportField"><span class="reportFieldLabel">보완하면 좋을 미션</span><span class="reportFieldValue">'+esc(report.weakMissions.join(' · '))+'번</span></div>':'';
+  return '<div class="reportAISummary">'+
+    '<div class="reportTierHero"><span class="reportTierEmoji">'+tierEmoji(report.overallTier)+'</span><span class="reportTierText">'+esc(report.overallTier)+'</span><span class="reportTierSub">코어 미션 '+esc(report.completedCount||'-')+'</span></div>'+
+    '<div class="reportField"><span class="reportFieldLabel">총평</span><span class="reportFieldValue">'+esc(report.overallComment)+'</span></div>'+
+    crit+weak+
+  '</div>';
 }
 function buildReportHTML(){
   collectState();
@@ -686,24 +703,28 @@ function buildReportHTML(){
   const core=missions.filter(m=>!['11','12'].includes(m.id));
   const bonus=missions.filter(m=>['11','12'].includes(m.id));
   const missingCore=core.filter(m=>!m.completed);
-  let html='<div class="reportHead"><div class="reportHeadTop"><b>Architecture AX Expert · 학습 보고서</b><span>APP '+APP_VERSION+'</span></div>';
+  let html='<div class="reportCoverBanner"><div class="reportCoverBannerText">';
+  html+='<div class="reportCoverLogo"><img src="assets/kbu-logo.png" alt="경복대학교" onerror="this.parentNode.style.display=\'none\'"></div>';
+  html+='<div class="reportCoverEyebrow">Architecture AX Expert · 학습 보고서 · APP '+APP_VERSION+'</div>';
   html+='<h2>'+esc(info.name||'(이름 미기재)')+'<span class="reportStudentId">'+esc(info.studentId||'(학번 미기재)')+'</span></h2>';
   html+='<div class="small">작성일: '+esc(new Date().toLocaleString('ko-KR'))+'</div></div>';
+  html+='<img class="reportCoverArt" src="assets/ai-building-hero.png" alt="" onerror="this.style.display=\'none\'"></div>';
   if(missingCore.length){
     html+='<div class="reportDraftNotice"><b>⚠ 미완성 초안</b><br>다음 코어 미션이 아직 완료되지 않았습니다: '+missingCore.map(m=>esc(m.id)+'번').join(', ')+'</div>';
   }
   html+='<div class="reportProgress">코어 미션 진행: '+(core.length-missingCore.length)+' / '+core.length+' 완료</div>';
+  html+='<h3 class="reportSectionTitle">종합 요약</h3>';
+  html+=renderReportAISummary();
+  html+='<div class="reportPageBreak"></div>';
   html+='<h3 class="reportSectionTitle">코어 스튜디오 · 01–10</h3>';
-  core.forEach(m=>{ html+=renderReportMissionBlock(m); });
+  html+='<div class="reportMissionGrid">'+core.map(renderReportMissionRow).join('')+'</div>';
   html+='<h3 class="reportSectionTitle">보너스 과제 · 11–12 (정규 채점 제외)</h3>';
-  bonus.forEach(m=>{ html+=renderReportMissionBlock(m); });
+  html+='<div class="reportMissionGrid">'+bonus.map(renderReportMissionRow).join('')+'</div>';
   const selfEval=loadSelfEval();
-  html+='<h3 class="reportSectionTitle">자기평가서</h3>';
+  html+='<h3 class="reportSectionTitle">자기평가서 (학생 자체 채점)</h3>';
   if(selfEval&&Object.keys(selfEval).length){
-    SELF_EVAL_CRITERIA.forEach(c=>{
-      const score=selfEval[c.key+'_score'],note=selfEval[c.key+'_note'];
-      html+='<div class="reportField"><span class="reportFieldLabel">'+esc(c.label)+'</span><span class="reportFieldValue">'+(score?esc(score)+'점':'(미평가)')+(note?' — '+esc(note):'')+'</span></div>';
-    });
+    const scoreLine=SELF_EVAL_CRITERIA.map(c=>esc(c.label)+' '+(selfEval[c.key+'_score']||'-')+'점').join(' · ');
+    html+='<div class="reportField"><span class="reportFieldLabel">항목별 점수</span><span class="reportFieldValue">'+scoreLine+'</span></div>';
     html+='<div class="reportField"><span class="reportFieldLabel">종합 소감</span><span class="reportFieldValue">'+(selfEval.overall?esc(selfEval.overall):'미작성')+'</span></div>';
   }else{
     html+='<div class="reportEmpty">미작성</div>';
@@ -714,7 +735,7 @@ function buildReportHTML(){
   }else{
     html+='<div class="small">코어 미션 10개 모두 완료되었습니다.</div>';
   }
-  html+='<div class="reportFooterNote">이 보고서는 학생이 작성한 판단 과정을 확인하는 용도이며, AI 등급(있다면)은 참고 자료입니다. 실제 결과물 원본과 본 보고서는 지정된 LMS 또는 공유 폴더에 별도로 제출하세요.</div>';
+  html+='<div class="reportFooterNote">⚠ 작성한 원문·이미지는 서버에 저장되지 않습니다 — 화면을 닫으면 사라질 수 있으니 "전체 기록 백업"(JSON)으로 내려받거나 지정된 곳에 제출해 보관하세요.</div>';
   return html;
 }
 function showReportPanel(){

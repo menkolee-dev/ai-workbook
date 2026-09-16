@@ -22,12 +22,12 @@ const ACTIVE_PROVIDER = 'openai'; // 'gemini' | 'openai'
 // --- OpenAI(GPT-5.6 Terra) 설정: 대회 심사 전용 ---
 // 결제수단이 등록된 OpenAI 계정의 키가 필요합니다(위 스크립트 속성 안내 참고).
 const OPENAI_MODEL = 'gpt-5.6-terra';
-// 체감 1분을 넘기면 참가자가 이탈한다고 판단해 'medium'(기본값)으로 설정. 이미지를 실제로 보고
-// 판단하는 품질은 reasoning_effort가 아니라 아래 IMAGE_RULES_DEEP 프롬프트가 담당하므로,
-// 속도를 늦추지 않고도 이미지 분석 자체는 그대로 유지됩니다. 응답이 충분히 빠르고 더 깊게 보고
-// 싶으면 'high'로, 반대로 여전히 느리면 'low'로 낮추세요('xhigh'/'max'/mode:'pro'는 비용·시간이
-// 급격히 늘어나므로 권장하지 않습니다).
-const OPENAI_REASONING_EFFORT = 'medium';
+// 정확도보다 응답 속도를 우선하기로 하여 'low'로 낮췄습니다. 이미지를 실제로 보고 판단하는 품질은
+// reasoning_effort가 아니라 아래 IMAGE_RULES_DEEP 프롬프트가 담당하므로, 추론 강도를 낮춰도
+// 이미지 분석 자체(무엇을 보는지)는 그대로 유지되고 "얼마나 깊이 따져보는지"만 줄어듭니다.
+// 그래도 느리면 'minimal'이나 'none'까지 낮출 수 있고(단, 이 모델이 해당 값을 지원하는지는
+// 실제로 한 번 호출해봐야 확인됩니다), 반대로 정확도를 다시 올리고 싶으면 'medium'/'high'로.
+const OPENAI_REASONING_EFFORT = 'low';
 // [예산 안전장치] 심사 기간(30일) 전체 누적 요청 수 상한. 요청 1건당 비용을 넉넉히 잡아(약 $0.06~$0.08)
 // 예산 $10 안에서 역산한 값이라 여유를 둔 추정치입니다 — 진짜 상한은 반드시 platform.openai.com
 // 계정 설정(Settings → Limits)에서 $10 하드 리밋을 별도로 걸어두세요. 이 카운터는 2차 안전장치입니다.
@@ -143,6 +143,86 @@ function logToRoster(payload, report) {
   } catch (e) {
     // 시트 기록 실패(권한, 일시적 오류 등)는 조용히 무시한다.
   }
+}
+
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// 지난 7일간 응시 기록을 요약해 관리자에게 메일로 보낸다. setupWeeklyDigestTrigger()로 등록한
+// 트리거가 매주 월요일에 이 함수를 자동으로 실행한다. 활동이 없던 주에도 "0건"으로 보내서
+// 트리거 자체가 살아있는지 확인할 수 있게 한다.
+// 학생용 학습 보고서와 비슷하게 "누가 어떤 등급을 받았는지" 한눈에 보이는 표로 구성하되,
+// 제목·톤은 학생이 아니라 관리자가 보는 것임을 분명히 한다.
+function sendWeeklyDigest() {
+  if (!ADMIN_EMAIL) return;
+  const sheet = getOrCreateRosterSheet();
+  const values = sheet.getDataRange().getValues();
+  const rows = values.slice(1); // 헤더 제외: [날짜,시각,이름,학번,코어미션완료,종합등급,총평,보완필요미션]
+  const tz = Session.getScriptTimeZone() || 'Asia/Seoul';
+  const now = new Date();
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  const recent = rows.filter(function (r) {
+    const d = new Date(r[0]);
+    return !isNaN(d) && d >= weekAgo;
+  });
+
+  const tierCounts = {};
+  recent.forEach(function (r) {
+    const tier = r[5] || '(미상)';
+    tierCounts[tier] = (tierCounts[tier] || 0) + 1;
+  });
+  const tierSummary = Object.keys(tierCounts).map(function (t) { return t + ' ' + tierCounts[t] + '명'; }).join(' · ') || '활동 없음';
+  const periodLabel = Utilities.formatDate(weekAgo, tz, 'M월 d일') + ' ~ ' + Utilities.formatDate(now, tz, 'M월 d일');
+  const rosterUrl = sheet.getParent().getUrl();
+
+  const rowsHtml = recent.map(function (r) {
+    return '<tr style="border-bottom:1px solid #e5e5e0">' +
+      '<td style="padding:6px 8px;white-space:nowrap">' + escHtml(r[0]) + ' ' + escHtml(r[1]) + '</td>' +
+      '<td style="padding:6px 8px">' + escHtml(r[2]) + '</td>' +
+      '<td style="padding:6px 8px">' + escHtml(r[3]) + '</td>' +
+      '<td style="padding:6px 8px">' + escHtml(r[4]) + '</td>' +
+      '<td style="padding:6px 8px"><b>' + escHtml(r[5]) + '</b></td>' +
+      '<td style="padding:6px 8px;color:#62676a">' + escHtml(r[7]) + '</td>' +
+      '</tr>';
+  }).join('');
+
+  const htmlBody =
+    '<div style="font-family:-apple-system,Arial,sans-serif;max-width:640px">' +
+    '<div style="background:linear-gradient(135deg,#173f39,#2f675d);color:#fff;border-radius:12px;padding:16px 18px;margin-bottom:14px">' +
+    '<div style="font-size:11px;letter-spacing:.08em;color:#bfe0d6;text-transform:uppercase;font-weight:800">Architecture AX Expert · 관리자 전용 주간 요약</div>' +
+    '<div style="font-size:18px;font-weight:800;margin-top:4px">' + periodLabel + '</div>' +
+    '</div>' +
+    '<p style="font-size:13px;color:#333">이번 주 셀프평가 요청 <b>' + recent.length + '건</b> · 등급 분포: ' + tierSummary + '</p>' +
+    (recent.length
+      ? '<table style="width:100%;border-collapse:collapse;font-size:12.5px"><tr style="background:#f2f6f4;text-align:left">' +
+        '<th style="padding:6px 8px">일시</th><th style="padding:6px 8px">이름</th><th style="padding:6px 8px">학번</th>' +
+        '<th style="padding:6px 8px">완료</th><th style="padding:6px 8px">등급</th><th style="padding:6px 8px">보완 미션</th></tr>' + rowsHtml + '</table>'
+      : '<p style="color:#888;font-size:13px">이번 주는 활동이 없었습니다.</p>') +
+    '<p style="margin-top:16px;font-size:12px;color:#888">전체 명단(관리자 전용 시트): <a href="' + rosterUrl + '">' + rosterUrl + '</a></p>' +
+    '</div>';
+
+  const plainBody = '[관리자 전용] 지난 7일간(' + periodLabel + ') 셀프평가 요청: ' + recent.length + '건\n등급 분포: ' + tierSummary + '\n\n전체 명단: ' + rosterUrl;
+  const dateLabel = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
+  MailApp.sendEmail({ to: ADMIN_EMAIL, subject: '[AX Expert 관리자] 주간 채점 현황 (' + dateLabel + ')', body: plainBody, htmlBody: htmlBody });
+}
+
+// [수동 실행 전용] 매주 월요일 오전에 sendWeeklyDigest()가 자동 실행되도록 트리거를 등록한다.
+// script.google.com 상단 함수 선택 목록에서 "setupWeeklyDigestTrigger"를 고른 뒤 ▶ 실행 버튼을
+// 딱 한 번 눌러주세요(재실행해도 중복 등록되지 않도록 기존 트리거를 먼저 지우고 새로 만듭니다).
+// 정확히 9시 정각이 아니라 9~10시 사이 임의 시각에 실행되며(Apps Script 트리거의 특성),
+// 프로젝트 설정의 시간대가 Asia/Seoul로 되어 있는지 함께 확인하세요.
+function setupWeeklyDigestTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'sendWeeklyDigest') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('sendWeeklyDigest')
+    .timeBased()
+    .onWeekDay(ScriptApp.WeekDay.MONDAY)
+    .atHour(9)
+    .create();
+  Logger.log('매주 월요일 오전(9~10시경) 주간 요약 메일 트리거가 등록되었습니다.');
 }
 
 // 하루 호출 횟수를 세어 MAX_DAILY_REQUESTS를 넘으면 예외를 던진다.
