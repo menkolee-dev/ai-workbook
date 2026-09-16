@@ -544,8 +544,6 @@ function showFinalSubmission(){
   const nameEl=document.getElementById('studentName'),idEl=document.getElementById('studentId');
   if(nameEl) nameEl.value=info.name||'';
   if(idEl) idEl.value=info.studentId||'';
-  const linkEl=document.getElementById('finalSubmitLink');
-  if(linkEl) linkEl.value=loadFinalSubmitInfo().link||'';
   document.getElementById('gradeResult').innerHTML='';
   renderSelfEval();
   p.classList.add('open');
@@ -568,7 +566,7 @@ function markAllSubmitted(){
     alert('아직 제출 준비가 완료되지 않았습니다.\n\n다음 코어 미션을 먼저 완료해주세요:\n\n• '+status.missing.join('\n• '));
     return;
   }
-  const info={link:document.getElementById('finalSubmitLink').value||'',submittedAt:new Date().toISOString()};
+  const info={submittedAt:new Date().toISOString()};
   localStorage.setItem('aivis_final_submit',JSON.stringify(info));
   alert('코어 미션 10개 완료를 확인했습니다. 최종 제출 준비가 완료로 표시되었습니다.\n\n⚠ 작성한 내용은 서버에 저장되지 않으니, 화면을 닫기 전에 꼭 백업하거나 제출해두세요.');
   closeFinalSubmission();
@@ -1171,9 +1169,6 @@ render();
       <div class="actions"><button class="primary" id="gradeBtn" onclick="requestGrading()">셀프평가하기</button></div>
       <div id="gradeResult" style="margin-top:10px"></div>
     </div>
-
-    <label style="margin-top:16px">제출 폴더 또는 LMS 링크 메모</label>
-    <input id="finalSubmitLink" placeholder="지정된 제출 위치 또는 공유 링크">
 
     <div class="actions">
       <button class="primary" onclick="markAllSubmitted()">제출 준비 완료 표시</button>
