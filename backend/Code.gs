@@ -147,9 +147,10 @@ function jsonResponse(obj) {
 const IMAGE_FIELD_KEYS = ['imageData', 'slideImage1', 'slideImage2', 'slideImage3', 'refImageStart', 'refImageMiddle', 'refImageFinal', 'refImageMcp', 'cmpImageBefore', 'cmpImageAfter', 'cmpImageFinal'];
 // 안전장치: 이미지 1장당 base64 용량 상한(약 1.2MB 원본 기준). 이보다 크면 손상되었거나 비정상 데이터로 보고 건너뛴다.
 const MAX_IMAGE_BASE64_CHARS = 1600000;
-// 30명 규모 학급에서도 한 요청이 오래 걸리거나 실패하지 않도록, 한 번의 채점 요청에 실제로 첨부하는 이미지 수를 제한한다.
+// 코어 미션 01~09번은 대표 이미지 1장씩(최대 9장)을 모두 검토한다. 10번(발표자료 슬라이드)은
+// 건축 사진 관련성 판단 대상이 아니므로 이미지 채점에서 제외한다(buildImageParts 참고).
 // (학생이 더 많이 올려도, 초과분은 이미지 없이 텍스트 기준으로만 채점되며 감점 사유가 되지 않는다.)
-const MAX_IMAGES_PER_REQUEST = 6;
+const MAX_IMAGES_PER_REQUEST = 9;
 
 function hasAnyImage(f) {
   return !!(f && IMAGE_FIELD_KEYS.some(function (k) { return f[k]; }));
@@ -160,13 +161,13 @@ function buildSummary(payload) {
   const missions = payload.missions || [];
   const core = missions.filter(function (m) { return m.id !== '11' && m.id !== '12'; });
   const completedCount = core.filter(function (m) { return m.completed; }).length;
-  const imageMissionCount = missions.filter(function (m) { return hasAnyImage(m.fields); }).length;
+  const imageMissionCount = missions.filter(function (m) { return m.id !== '10' && hasAnyImage(m.fields); }).length;
 
   const lines = [];
   lines.push('학생 이름: ' + (student.name || '미기재'));
   lines.push('학번: ' + (student.studentId || '미기재'));
   lines.push('코어 미션(01~10) 완료 개수: ' + completedCount + ' / ' + core.length);
-  lines.push('이미지가 첨부된 미션 수: ' + imageMissionCount + ' (실제로 이 요청에 첨부되는 이미지는 최대 ' + MAX_IMAGES_PER_REQUEST + '장이며, [미션 NN 첨부 이미지] 라벨과 함께 순서대로 첨부됨. 초과분은 텍스트 기록만으로 판단할 것)');
+  lines.push('이미지가 첨부된 미션 수(01~09번 기준): ' + imageMissionCount + ' (최대 ' + MAX_IMAGES_PER_REQUEST + '장까지 [미션 NN 첨부 이미지] 라벨과 함께 순서대로 첨부됨. 10번은 이미지 없이 텍스트로만 판단할 것)');
   lines.push('');
   missions.forEach(function (m) {
     lines.push('[미션 ' + m.id + '] ' + m.title + ' - ' + (m.completed ? '완료' : '미완료'));
@@ -189,38 +190,40 @@ function buildSummary(payload) {
       hasField = true;
     });
     if (hasAnyImage(f)) lines.push('  - (첨부 이미지 있음, 아래 참고)');
-    if (!hasField && !hasAnyImage(f)) lines.push('  (기록 없음)');
+    if (!hasField) lines.push('  (기록 없음 — 이미지 첨부 여부와 무관하게 텍스트 기준으로 판단)');
     lines.push('');
   });
   return lines.join('\n');
 }
 
 // 미션별 첨부 이미지를 Gemini 멀티모달 파트(라벨 텍스트 + inlineData)로 변환한다.
-// 코어 미션(01~10)을 보너스(11~12)보다 우선 포함하고, 전체 개수는 MAX_IMAGES_PER_REQUEST로 제한한다.
+// 미션당 대표 이미지 1장만 사용하고, 10번(발표자료 슬라이드)은 건축 사진 관련성 판단 대상이 아니므로 제외한다.
+// 코어 미션(01~09)을 보너스(11~12)보다 우선 포함하고, 전체 개수는 MAX_IMAGES_PER_REQUEST로 제한한다.
 function buildImageParts(payload) {
   const missions = payload.missions || [];
   const parts = [];
   let count = 0;
-  const ordered = missions.slice().sort(function (a, b) {
+  const ordered = missions.slice().filter(function (m) { return m.id !== '10'; }).sort(function (a, b) {
     const aBonus = (a.id === '11' || a.id === '12') ? 1 : 0;
     const bBonus = (b.id === '11' || b.id === '12') ? 1 : 0;
     return aBonus - bBonus;
   });
   ordered.forEach(function (m) {
+    if (count >= MAX_IMAGES_PER_REQUEST) return;
     const f = m.fields || {};
-    IMAGE_FIELD_KEYS.forEach(function (key) {
-      if (count >= MAX_IMAGES_PER_REQUEST) return;
-      const dataUrl = f[key];
-      if (!dataUrl || typeof dataUrl !== 'string') return;
+    for (let i = 0; i < IMAGE_FIELD_KEYS.length; i++) {
+      const dataUrl = f[IMAGE_FIELD_KEYS[i]];
+      if (!dataUrl || typeof dataUrl !== 'string') continue;
       const match = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
-      if (!match) return;
+      if (!match) continue;
       const mimeType = match[1];
       const base64 = match[2];
-      if (base64.length > MAX_IMAGE_BASE64_CHARS) return; // 비정상적으로 큰 데이터는 건너뛴다
+      if (base64.length > MAX_IMAGE_BASE64_CHARS) continue; // 비정상적으로 큰 데이터는 건너뛴다
       parts.push({ text: '[미션 ' + m.id + ' 첨부 이미지]' });
       parts.push({ inlineData: { mimeType: mimeType, data: base64 } });
       count++;
-    });
+      break; // 미션당 대표 이미지 1장만 사용
+    }
   });
   return parts;
 }
@@ -257,10 +260,13 @@ function gradeWithAI(payload) {
     '7) "(기록 없음)"으로 표시된 미완료 미션은 해당 내용이 전혀 없는 것이므로 관련 criteria 판단 시 낮은 근거로 반영해라.\n' +
     '8) 여러 미션의 답변 문장이 서로 거의 동일하거나 복사해서 붙여넣은 것처럼 보이면(미션 내용이 다른데 문장이 같은 경우), 이는 실제 관찰·실험이 이루어지지 않았다는 신호이므로 해당 부분을 "보통" 이하로 평가하고 overallComment에 이 점을 짧게 언급해라.\n' +
     '9) 학생이 고른 최종 결정(decisionType: 채택/수정/거부)과 실제로 적은 근거(decision) 내용이 서로 모순되면(예: 채택을 선택했는데 근거는 문제점만 나열) "오류 대응" 기준 평가에 반영해라.\n' +
-    '10) [중요] 프롬프트 뒤에 [미션 NN 첨부 이미지] 라벨과 함께 이미지가 첨부된 경우, 그 이미지의 주된 용도는 "이 미션을 실제로 수행했는지 확인하는 필터"다. ' +
-    '건축·공간·인테리어·도면·모델링·건물 관련 이미지가 아니라 명백히 무관한 이미지(예: 사람 얼굴 셀카, 음식, 동물, 밈, 스크린샷이 아닌 채팅 화면, 완전한 단색/빈 이미지, 미션 주제와 전혀 상관없는 사진)라면, ' +
-    '텍스트 답변이 아무리 그럴듯해도 해당 미션 관련 criteria(특히 "사전 관찰", "기록의 구체성")를 반드시 "노력 필요"로 낮추고, overallComment에 "이미지가 미션 주제와 맞지 않습니다" 라고 짧게 언급해라. ' +
-    '반대로 이미지가 건축/공간 관련 내용이 맞고 텍스트 설명과 대체로 일치하면 이미지 자체의 미적 완성도는 채점하지 말고(완성 이미지가 아니라 판단 과정이 핵심이므로) 정상적으로 텍스트 기준을 그대로 적용해라.\n\n' +
+    '10) [중요] 프롬프트 뒤에 [미션 NN 첨부 이미지] 라벨과 함께 이미지가 첨부된 경우(01~09번만 해당, 10번은 이미지 없이 텍스트로만 판단), 그 이미지의 용도는 단 하나, "이 미션과 전혀 무관한 이미지를 올리지 않았는지" 확인하는 필터다. ' +
+    '이미지는 속도를 위해 저해상도로 전송되니 세부 디자인 품질이나 텍스트 설명과의 정밀한 일치 여부는 판단하지 말고, 큰 범주(건축·공간·인테리어·도면·모델링·건물 관련인지)만 확인해라. ' +
+    '건축·공간과 명백히 무관한 이미지(예: 사람 얼굴 셀카, 음식, 동물, 밈, 미션 주제와 전혀 상관없는 사진)일 때만 해당 미션 관련 criteria(특히 "사전 관찰", "기록의 구체성")를 "노력 필요"로 낮추고, overallComment에 "이미지가 미션 주제와 맞지 않습니다"라고 짧게 언급해라. ' +
+    '이미지가 건축·공간 관련 내용이 맞다면 그 이상 따지지 말고 정상적으로 텍스트 기준을 그대로 적용해라.\n\n' +
+    '11) [중요] 이미지는 어디까지나 "완전히 무관한 이미지는 아닌지" 확인하는 참고 자료일 뿐, 그 자체가 평가 근거가 될 수 없다. ' +
+    '이미지가 첨부된 미션이라도 학생의 텍스트가 그 이미지 속 건물/공간이 무엇인지, 무엇을 관찰했는지를 전혀 언급하지 않거나 어떤 이미지에나 붙일 수 있는 뻔한 문장뿐이라면, ' +
+    '이미지가 있다는 이유로 후하게 평가하지 말고 "사전 관찰"과 "기록의 구체성"을 낮게 평가해라. 평가는 반드시 학생이 글로 남긴 관찰과 판단의 구체성에 근거해야 한다.\n\n' +
     '채점 기준 (미션 01~10 전용):\n' + criteriaList + '\n\n' +
     '반드시 아래 JSON 형식으로만 응답하고 다른 텍스트는 절대 포함하지 마라 (숫자 점수 필드를 절대 추가하지 마라):\n' +
     '{"completedCount":"N/10 형식의 문자열","overallTier":' + tierOptions + ',"overallComment":"총평 2문장 이내","criteria":[{"name":"기준명","tier":' + tierOptions + ',"comment":"코멘트 1문장"}],' +

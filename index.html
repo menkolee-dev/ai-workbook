@@ -348,7 +348,7 @@ function previewCompareImage(e,slot){
   const img=document.createElement('img');
   img.src=tempUrl;
   box.appendChild(img);
-  compressImageToBase64(f,480,0.6).then(dataUrl=>{
+  compressImageToBase64(f,256,0.5).then(dataUrl=>{
     let s=loadState(current);
     s['cmpImage'+slot]=dataUrl;
     saveState(current,s);
@@ -456,7 +456,7 @@ function previewReference(e,key){
   img.src=tempUrl;
   img.alt=key+' 기준 이미지 미리보기';
   box.appendChild(img);
-  compressImageToBase64(f,480,0.6).then(dataUrl=>{
+  compressImageToBase64(f,256,0.5).then(dataUrl=>{
     let s=loadState(current);
     s['refImage'+key]=dataUrl;
     saveState(current,s);
@@ -476,7 +476,7 @@ function previewSlide(e,n){
   const img=document.createElement('img');
   img.src=tempUrl;
   box.appendChild(img);
-  compressImageToBase64(f,480,0.6).then(dataUrl=>{
+  compressImageToBase64(f,256,0.5).then(dataUrl=>{
     let s=loadState(current);
     s['slideImage'+n]=dataUrl;
     saveState(current,s);
@@ -1083,7 +1083,7 @@ document.getElementById('imageInput').addEventListener('change',e=>{
   let box=document.getElementById('uploadBox');box.querySelectorAll('img').forEach(x=>x.remove());
   document.getElementById('uploadPlaceholder').style.display='none';
   let img=document.createElement('img');img.src=previewURL;box.appendChild(img);
-  compressImageToBase64(f,480,0.6).then(dataUrl=>{
+  compressImageToBase64(f,256,0.5).then(dataUrl=>{
     let s=loadState(current);s.imageData=dataUrl;saveState(current,s);
   }).catch(()=>{});
 });
