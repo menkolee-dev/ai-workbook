@@ -3,9 +3,35 @@
  * 배포 방법: 저장소 루트의 DEPLOY.md 참고
  */
 
-// 1) https://aistudio.google.com/apikey 에서 무료로 발급받은 Gemini API 키를 아래에 붙여넣으세요.
-const GEMINI_API_KEY = '여기에_발급받은_Gemini_API_키를_붙여넣으세요';
+// 1) API 키는 이 파일에 직접 적지 않고 "스크립트 속성"에 저장합니다 — 이 저장소는 공개(public) GitHub
+//    저장소라서, 코드에 실제 키를 적으면 그대로 인터넷에 노출됩니다.
+//    설정 방법: script.google.com에서 이 프로젝트 열기 → 왼쪽 톱니바퀴(프로젝트 설정) → 맨 아래
+//    "스크립트 속성" → "스크립트 속성 추가"에서 아래 두 속성을 각각 등록하세요.
+//      속성 이름: GEMINI_API_KEY   값: https://aistudio.google.com/apikey 에서 발급받은 키
+//      속성 이름: OPENAI_API_KEY   값: https://platform.openai.com/api-keys 에서 발급받은 키
+function getApiKey(propName) {
+  return PropertiesService.getScriptProperties().getProperty(propName) || '';
+}
 const GEMINI_MODEL = 'gemini-3.6-flash';
+
+// === 채점 제공자 전환 스위치 ===
+// 'gemini' = 평소 학생 셀프평가 기본값(무료, 빠름). 'openai' = 대회 심사 전용(유료, GPT-5.6 Terra, 느리지만 더 깊게 판단).
+// [중요] 대회 심사 기간(약 30일)이 끝나면 반드시 'gemini'로 되돌려서 학생 공개용 기본값으로 복귀할 것.
+const ACTIVE_PROVIDER = 'openai'; // 'gemini' | 'openai'
+
+// --- OpenAI(GPT-5.6 Terra) 설정: 대회 심사 전용 ---
+// 결제수단이 등록된 OpenAI 계정의 키가 필요합니다(위 스크립트 속성 안내 참고).
+const OPENAI_MODEL = 'gpt-5.6-terra';
+// 체감 1분을 넘기면 참가자가 이탈한다고 판단해 'medium'(기본값)으로 설정. 이미지를 실제로 보고
+// 판단하는 품질은 reasoning_effort가 아니라 아래 IMAGE_RULES_DEEP 프롬프트가 담당하므로,
+// 속도를 늦추지 않고도 이미지 분석 자체는 그대로 유지됩니다. 응답이 충분히 빠르고 더 깊게 보고
+// 싶으면 'high'로, 반대로 여전히 느리면 'low'로 낮추세요('xhigh'/'max'/mode:'pro'는 비용·시간이
+// 급격히 늘어나므로 권장하지 않습니다).
+const OPENAI_REASONING_EFFORT = 'medium';
+// [예산 안전장치] 심사 기간(30일) 전체 누적 요청 수 상한. 요청 1건당 비용을 넉넉히 잡아(약 $0.06~$0.08)
+// 예산 $10 안에서 역산한 값이라 여유를 둔 추정치입니다 — 진짜 상한은 반드시 platform.openai.com
+// 계정 설정(Settings → Limits)에서 $10 하드 리밋을 별도로 걸어두세요. 이 카운터는 2차 안전장치입니다.
+const OPENAI_MAX_TOTAL_REQUESTS = 120;
 
 // 2) 무작위 봇의 무단 호출을 막기 위한 간단한 공유 비밀번호. 원하는 문자열로 바꾸세요.
 //    (index.html의 GAS_SECRET 값도 반드시 이 값과 동일하게 맞춰야 합니다.)
@@ -137,6 +163,24 @@ function checkAndIncrementDailyQuota() {
   }
 }
 
+// 심사 기간(30일) 전체 누적 OpenAI 요청 수를 세어 OPENAI_MAX_TOTAL_REQUESTS를 넘으면 예외를 던진다.
+// 날짜별로 리셋되는 checkAndIncrementDailyQuota와 달리, 이건 기간 전체 누적치다.
+function checkAndIncrementOpenAIQuota() {
+  const props = PropertiesService.getScriptProperties();
+  const lock = LockService.getScriptLock();
+  lock.waitLock(5000);
+  try {
+    const key = 'openaiReqCount_total';
+    const count = Number(props.getProperty(key) || '0');
+    if (count >= OPENAI_MAX_TOTAL_REQUESTS) {
+      throw new Error('심사용 채점 예산 한도(' + OPENAI_MAX_TOTAL_REQUESTS + '회)를 모두 사용했습니다. 관리자에게 문의하세요.');
+    }
+    props.setProperty(key, String(count + 1));
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function jsonResponse(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
@@ -196,20 +240,19 @@ function buildSummary(payload) {
   return lines.join('\n');
 }
 
-// 미션별 첨부 이미지를 Gemini 멀티모달 파트(라벨 텍스트 + inlineData)로 변환한다.
+// 미션별 첨부 이미지를 제공자 중립적인 형태({missionId, mimeType, base64})로 모은다.
 // 미션당 대표 이미지 1장만 사용하고, 10번(발표자료 슬라이드)은 건축 사진 관련성 판단 대상이 아니므로 제외한다.
 // 코어 미션(01~09)을 보너스(11~12)보다 우선 포함하고, 전체 개수는 MAX_IMAGES_PER_REQUEST로 제한한다.
-function buildImageParts(payload) {
+function collectMissionImages(payload) {
   const missions = payload.missions || [];
-  const parts = [];
-  let count = 0;
+  const images = [];
   const ordered = missions.slice().filter(function (m) { return m.id !== '10'; }).sort(function (a, b) {
     const aBonus = (a.id === '11' || a.id === '12') ? 1 : 0;
     const bBonus = (b.id === '11' || b.id === '12') ? 1 : 0;
     return aBonus - bBonus;
   });
   ordered.forEach(function (m) {
-    if (count >= MAX_IMAGES_PER_REQUEST) return;
+    if (images.length >= MAX_IMAGES_PER_REQUEST) return;
     const f = m.fields || {};
     for (let i = 0; i < IMAGE_FIELD_KEYS.length; i++) {
       const dataUrl = f[IMAGE_FIELD_KEYS[i]];
@@ -219,25 +262,60 @@ function buildImageParts(payload) {
       const mimeType = match[1];
       const base64 = match[2];
       if (base64.length > MAX_IMAGE_BASE64_CHARS) continue; // 비정상적으로 큰 데이터는 건너뛴다
-      parts.push({ text: '[미션 ' + m.id + ' 첨부 이미지]' });
-      parts.push({ inlineData: { mimeType: mimeType, data: base64 } });
-      count++;
+      images.push({ missionId: m.id, mimeType: mimeType, base64: base64 });
       break; // 미션당 대표 이미지 1장만 사용
     }
+  });
+  return images;
+}
+
+// Gemini 멀티모달 파트(라벨 텍스트 + inlineData) 형식으로 변환한다.
+function buildImagePartsGemini(images) {
+  const parts = [];
+  images.forEach(function (img) {
+    parts.push({ text: '[미션 ' + img.missionId + ' 첨부 이미지]' });
+    parts.push({ inlineData: { mimeType: img.mimeType, data: img.base64 } });
   });
   return parts;
 }
 
-function gradeWithAI(payload) {
-  if (!GEMINI_API_KEY || GEMINI_API_KEY.indexOf('여기에_발급받은') !== -1) {
-    throw new Error('GEMINI_API_KEY가 설정되지 않았습니다. DEPLOY.md를 참고해 먼저 API 키를 설정하세요.');
-  }
+// OpenAI Responses API의 content 파트(input_text + input_image) 형식으로 변환한다.
+// detail:'low'로 고정해 이미 저해상도로 압축된 이미지의 토큰 비용을 추가로 낮춘다.
+function buildImagePartsOpenAI(images) {
+  const parts = [];
+  images.forEach(function (img) {
+    parts.push({ type: 'input_text', text: '[미션 ' + img.missionId + ' 첨부 이미지]' });
+    parts.push({ type: 'input_image', image_url: 'data:' + img.mimeType + ';base64,' + img.base64, detail: 'low' });
+  });
+  return parts;
+}
 
-  const summary = buildSummary(payload);
+// 'fast'(Gemini, 학생 공개용): 이미지는 무관 여부만 가볍게 필터링, 평가는 텍스트 중심 — 속도·비용 우선.
+// 'deep'(OpenAI 심사 전용): 이미지를 실제로 관찰해 텍스트와 대조까지 하는 더 꼼꼼한 판단 — 품질 우선.
+const IMAGE_RULES_FAST =
+  '10) [중요] 프롬프트 뒤에 [미션 NN 첨부 이미지] 라벨과 함께 이미지가 첨부된 경우(01~09번만 해당, 10번은 이미지 없이 텍스트로만 판단), 그 이미지의 용도는 단 하나, "이 미션과 전혀 무관한 이미지를 올리지 않았는지" 확인하는 필터다. ' +
+  '이미지는 속도를 위해 저해상도로 전송되니 세부 디자인 품질이나 텍스트 설명과의 정밀한 일치 여부는 판단하지 말고, 큰 범주(건축·공간·인테리어·도면·모델링·건물 관련인지)만 확인해라. ' +
+  '건축·공간과 명백히 무관한 이미지(예: 사람 얼굴 셀카, 음식, 동물, 밈, 미션 주제와 전혀 상관없는 사진)일 때만 해당 미션 관련 criteria(특히 "사전 관찰", "기록의 구체성")를 "노력 필요"로 낮추고, overallComment에 "이미지가 미션 주제와 맞지 않습니다"라고 짧게 언급해라. ' +
+  '이미지가 건축·공간 관련 내용이 맞다면 그 이상 따지지 말고 정상적으로 텍스트 기준을 그대로 적용해라.\n\n' +
+  '11) [중요] 이미지는 어디까지나 "완전히 무관한 이미지는 아닌지" 확인하는 참고 자료일 뿐, 그 자체가 평가 근거가 될 수 없다. ' +
+  '이미지가 첨부된 미션이라도 학생의 텍스트가 그 이미지 속 건물/공간이 무엇인지, 무엇을 관찰했는지를 전혀 언급하지 않거나 어떤 이미지에나 붙일 수 있는 뻔한 문장뿐이라면, ' +
+  '이미지가 있다는 이유로 후하게 평가하지 말고 "사전 관찰"과 "기록의 구체성"을 낮게 평가해라. 평가는 반드시 학생이 글로 남긴 관찰과 판단의 구체성에 근거해야 한다.\n\n';
+
+const IMAGE_RULES_DEEP =
+  '10) [중요] 프롬프트 뒤에 [미션 NN 첨부 이미지] 라벨과 함께 이미지가 첨부된 경우(01~09번만 해당, 10번은 텍스트로만 판단), 이번 심사에서는 이미지를 실제로 꼼꼼히 관찰하고 판단 근거로 적극 사용해라. ' +
+  '건축·공간과 명백히 무관한 이미지(예: 사람 얼굴 셀카, 음식, 동물, 밈)라면 관련 criteria(특히 "사전 관찰", "기록의 구체성")를 "노력 필요"로 낮추고 이유를 언급해라. ' +
+  '무관하지 않다면, 이미지에 실제로 드러나는 매스·재료·입면·공간 구성·완성도를 관찰하고, 학생이 텍스트(STEP 기록 등)에 적은 관찰·판단 내용과 이미지가 실제로 일치하는지 대조해라.\n\n' +
+  '11) [중요] 텍스트와 이미지 내용이 뚜렷이 다르면(예: 텍스트는 "유리와 콘크리트"라 했는데 이미지는 전혀 다른 재료·형태) 이는 신뢰성 문제이므로 "근거 대조" 기준을 낮추고 근거를 comment에 짧게 밝혀라. ' +
+  '가능하면 각 criteria의 comment에 이미지에서 실제로 관찰한 구체적 요소를 최소 한 곳 언급해서, 텍스트만이 아니라 이미지를 실제로 보고 판단했다는 근거를 남겨라. ' +
+  '단, 모든 comment는 기준당 1~2문장으로 간결하게 유지해라 — 장황한 서술은 평가 시간을 늘리므로 금지한다.\n\n';
+
+// 두 제공자(Gemini/OpenAI)가 공유하는 채점 지시문. 핵심 채점 기준(1~9)은 동일하고,
+// 이미지 처리 방식(10~11)만 mode('fast'|'deep')에 따라 달라진다.
+function buildGradingPrompt(summary, mode) {
   const criteriaList = CRITERIA.map(function (c) { return '- ' + c.name; }).join('\n');
-
   const tierOptions = '"매우 잘함" | "잘함" | "보통" | "노력 필요"';
-  const prompt =
+  const imageRules = mode === 'deep' ? IMAGE_RULES_DEEP : IMAGE_RULES_FAST;
+  return (
     '너는 건축·공간디자인 AI 활용 수업의 채점 조교다. 아래 학생의 미션 실습 기록을 읽고 참고용 피드백 카드를 작성해라.\n\n' +
     '중요한 규칙:\n' +
     '1) 반드시 세부 점수나 숫자 점수를 매기지 말고, 아래 4단계 등급 중 하나로만 평가해라: ' + tierOptions + '\n' +
@@ -260,23 +338,77 @@ function gradeWithAI(payload) {
     '7) "(기록 없음)"으로 표시된 미완료 미션은 해당 내용이 전혀 없는 것이므로 관련 criteria 판단 시 낮은 근거로 반영해라.\n' +
     '8) 여러 미션의 답변 문장이 서로 거의 동일하거나 복사해서 붙여넣은 것처럼 보이면(미션 내용이 다른데 문장이 같은 경우), 이는 실제 관찰·실험이 이루어지지 않았다는 신호이므로 해당 부분을 "보통" 이하로 평가하고 overallComment에 이 점을 짧게 언급해라.\n' +
     '9) 학생이 고른 최종 결정(decisionType: 채택/수정/거부)과 실제로 적은 근거(decision) 내용이 서로 모순되면(예: 채택을 선택했는데 근거는 문제점만 나열) "오류 대응" 기준 평가에 반영해라.\n' +
-    '10) [중요] 프롬프트 뒤에 [미션 NN 첨부 이미지] 라벨과 함께 이미지가 첨부된 경우(01~09번만 해당, 10번은 이미지 없이 텍스트로만 판단), 그 이미지의 용도는 단 하나, "이 미션과 전혀 무관한 이미지를 올리지 않았는지" 확인하는 필터다. ' +
-    '이미지는 속도를 위해 저해상도로 전송되니 세부 디자인 품질이나 텍스트 설명과의 정밀한 일치 여부는 판단하지 말고, 큰 범주(건축·공간·인테리어·도면·모델링·건물 관련인지)만 확인해라. ' +
-    '건축·공간과 명백히 무관한 이미지(예: 사람 얼굴 셀카, 음식, 동물, 밈, 미션 주제와 전혀 상관없는 사진)일 때만 해당 미션 관련 criteria(특히 "사전 관찰", "기록의 구체성")를 "노력 필요"로 낮추고, overallComment에 "이미지가 미션 주제와 맞지 않습니다"라고 짧게 언급해라. ' +
-    '이미지가 건축·공간 관련 내용이 맞다면 그 이상 따지지 말고 정상적으로 텍스트 기준을 그대로 적용해라.\n\n' +
-    '11) [중요] 이미지는 어디까지나 "완전히 무관한 이미지는 아닌지" 확인하는 참고 자료일 뿐, 그 자체가 평가 근거가 될 수 없다. ' +
-    '이미지가 첨부된 미션이라도 학생의 텍스트가 그 이미지 속 건물/공간이 무엇인지, 무엇을 관찰했는지를 전혀 언급하지 않거나 어떤 이미지에나 붙일 수 있는 뻔한 문장뿐이라면, ' +
-    '이미지가 있다는 이유로 후하게 평가하지 말고 "사전 관찰"과 "기록의 구체성"을 낮게 평가해라. 평가는 반드시 학생이 글로 남긴 관찰과 판단의 구체성에 근거해야 한다.\n\n' +
+    imageRules +
     '채점 기준 (미션 01~10 전용):\n' + criteriaList + '\n\n' +
     '반드시 아래 JSON 형식으로만 응답하고 다른 텍스트는 절대 포함하지 마라 (숫자 점수 필드를 절대 추가하지 마라):\n' +
     '{"completedCount":"N/10 형식의 문자열","overallTier":' + tierOptions + ',"overallComment":"총평 2문장 이내","criteria":[{"name":"기준명","tier":' + tierOptions + ',"comment":"코멘트 1문장"}],' +
     '"weakMissions":["보완이 필요한 미션 번호(01~10)만 배열로, 없으면 빈 배열"],' +
     '"bonusMissions":[{"id":"11","label":"11번 · 공공건축 MCP 분석","completed":true 또는 false,"comment":"코멘트 1문장"},{"id":"12","label":"12번 · AI 건축 모델링 검증","completed":true 또는 false,"comment":"코멘트 1문장"}]}\n' +
     '(criteria 배열은 반드시 위 5개 기준 각각에 대해 하나씩, 총 5개 항목. bonusMissions는 반드시 11번, 12번 각각 하나씩 총 2개 항목)\n\n' +
-    '학생 기록:\n' + summary;
+    '학생 기록:\n' + summary
+  );
+}
 
-  const imageParts = buildImageParts(payload);
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + GEMINI_API_KEY;
+// OpenAI Structured Outputs용 JSON 스키마. criteria/bonusMissions 항목 형식을 강제해 응답 파싱 실패를 막는다.
+const GRADING_JSON_SCHEMA = {
+  type: 'object',
+  properties: {
+    completedCount: { type: 'string' },
+    overallTier: { type: 'string', enum: ['매우 잘함', '잘함', '보통', '노력 필요'] },
+    overallComment: { type: 'string' },
+    criteria: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          tier: { type: 'string', enum: ['매우 잘함', '잘함', '보통', '노력 필요'] },
+          comment: { type: 'string' }
+        },
+        required: ['name', 'tier', 'comment'],
+        additionalProperties: false
+      }
+    },
+    weakMissions: { type: 'array', items: { type: 'string' } },
+    bonusMissions: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          label: { type: 'string' },
+          completed: { type: 'boolean' },
+          comment: { type: 'string' }
+        },
+        required: ['id', 'label', 'completed', 'comment'],
+        additionalProperties: false
+      }
+    }
+  },
+  required: ['completedCount', 'overallTier', 'overallComment', 'criteria', 'weakMissions', 'bonusMissions'],
+  additionalProperties: false
+};
+
+// ACTIVE_PROVIDER 설정에 따라 Gemini 또는 OpenAI(GPT-5.6 Terra)로 채점 요청을 분기한다.
+function gradeWithAI(payload) {
+  const summary = buildSummary(payload);
+  const isOpenAI = ACTIVE_PROVIDER === 'openai';
+  const prompt = buildGradingPrompt(summary, isOpenAI ? 'deep' : 'fast');
+  const images = collectMissionImages(payload);
+  if (isOpenAI) {
+    return gradeWithOpenAI(prompt, images);
+  }
+  return gradeWithGemini(prompt, images);
+}
+
+function gradeWithGemini(prompt, images) {
+  const apiKey = getApiKey('GEMINI_API_KEY');
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY가 스크립트 속성에 설정되지 않았습니다. DEPLOY.md를 참고해 먼저 설정하세요.');
+  }
+
+  const imageParts = buildImagePartsGemini(images);
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + apiKey;
   const body = {
     contents: [{ parts: [{ text: prompt }].concat(imageParts) }],
     generationConfig: { temperature: 0.3, responseMimeType: 'application/json' }
@@ -318,4 +450,58 @@ function gradeWithAI(payload) {
 
   const cleaned = raw.replace(/```json/g, '').replace(/```/g, '').trim();
   return JSON.parse(cleaned);
+}
+
+// 대회 심사 전용: GPT-5.6 Terra(OpenAI Responses API)로 채점 요청을 보낸다.
+function gradeWithOpenAI(prompt, images) {
+  const apiKey = getApiKey('OPENAI_API_KEY');
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY가 스크립트 속성에 설정되지 않았습니다. ACTIVE_PROVIDER를 openai로 쓰려면 먼저 설정하세요.');
+  }
+  checkAndIncrementOpenAIQuota();
+
+  const imageParts = buildImagePartsOpenAI(images);
+  const content = [{ type: 'input_text', text: prompt }].concat(imageParts);
+  const url = 'https://api.openai.com/v1/responses';
+  const body = {
+    model: OPENAI_MODEL,
+    input: [{ role: 'user', content: content }],
+    reasoning: { effort: OPENAI_REASONING_EFFORT },
+    text: { format: { type: 'json_schema', name: 'grading_report', schema: GRADING_JSON_SCHEMA } },
+    max_output_tokens: 8000
+  };
+
+  // Gemini와 동일한 방식으로, 일시적 혼잡(429/500/503)에는 점점 더 길게 쉬었다가 자동 재시도한다.
+  const RETRY_STATUSES = [503, 429, 500];
+  const MAX_ATTEMPTS = 4;
+  let status, text;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const res = UrlFetchApp.fetch(url, {
+      method: 'post',
+      contentType: 'application/json',
+      headers: { Authorization: 'Bearer ' + apiKey },
+      payload: JSON.stringify(body),
+      muteHttpExceptions: true
+    });
+    status = res.getResponseCode();
+    text = res.getContentText();
+    if (status === 200) break;
+    if (RETRY_STATUSES.indexOf(status) === -1 || attempt === MAX_ATTEMPTS) break;
+    Utilities.sleep(1500 * Math.pow(2, attempt - 1));
+  }
+
+  if (status !== 200) {
+    if (RETRY_STATUSES.indexOf(status) !== -1) {
+      throw new Error('AI 서버가 지금 일시적으로 혼잡합니다 (' + MAX_ATTEMPTS + '번 재시도 후에도 응답 없음). 30초~1분 후 다시 눌러주세요.');
+    }
+    throw new Error('OpenAI API 오류 (' + status + '): ' + text.substring(0, 300));
+  }
+
+  const data = JSON.parse(text);
+  const messageItem = (data.output || []).filter(function (o) { return o.type === 'message'; })[0];
+  const textItem = messageItem && (messageItem.content || []).filter(function (c) { return c.type === 'output_text'; })[0];
+  const raw = textItem && textItem.text;
+  if (!raw) throw new Error('AI 응답을 읽을 수 없습니다 (reasoning에 출력 토큰을 모두 사용했을 수 있습니다 — max_output_tokens를 늘려보세요).');
+
+  return JSON.parse(raw);
 }
