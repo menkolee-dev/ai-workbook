@@ -33,9 +33,9 @@ const OPENAI_REASONING_EFFORT = 'low';
 // 계정 설정(Settings → Limits)에서 $10 하드 리밋을 별도로 걸어두세요. 이 카운터는 2차 안전장치입니다.
 const OPENAI_MAX_TOTAL_REQUESTS = 120;
 
-// 2) 무작위 봇의 무단 호출을 막기 위한 간단한 공유 비밀번호. 원하는 문자열로 바꾸세요.
-//    (index.html의 GAS_SECRET 값도 반드시 이 값과 동일하게 맞춰야 합니다.)
-const CLASS_SECRET = '원하는-비밀번호로-변경';
+// 2) 무작위 봇의 무단 호출을 막기 위한 간단한 공유 비밀번호. index.html의 GAS_SECRET 값과
+//    반드시 동일해야 합니다 — 바꾸려면 두 파일 모두 같은 값으로 함께 수정하세요.
+const CLASS_SECRET = 'kbu2026';
 
 // 3) 하루 최대 채점 횟수. 무단 대량 호출로 무료 할당량이 소진되는 것을 막는 안전장치입니다.
 const MAX_DAILY_REQUESTS = 300;
