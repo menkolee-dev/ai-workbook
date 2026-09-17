@@ -870,7 +870,7 @@ async function requestGrading(){
   let stepIdx=0,elapsed=0;
   const renderLoading=()=>{
     const pct=Math.min(95,Math.round(elapsed/ESTIMATED_SECONDS*100)); // 실제로 끝나기 전엔 100%까지 채우지 않는다(응답이 늦어져도 자연스럽게).
-    box.innerHTML=`<div class="gradeLoading"><div class="gradeLoadingMsg">${loadingSteps[stepIdx%loadingSteps.length]}</div><div class="gradeProgressBar"><div class="gradeProgressFill" style="width:${pct}%"></div></div><div class="gradeLoadingSub">${pct}% · ${elapsed}초 경과 · 멈춘 게 아니에요, 진행 중입니다</div></div>`;
+    box.innerHTML=`<div class="gradeLoading"><div class="gradeLoadingMsg">${loadingSteps[stepIdx%loadingSteps.length]}</div><div class="gradeProgressBar"><div class="gradeProgressFill" style="width:${pct}%"></div></div><div class="gradeLoadingSub">${pct}% · ${elapsed}초 경과</div></div>`;
   };
   renderLoading();
   const loadingTimer=setInterval(()=>{elapsed++;if(elapsed%3===0)stepIdx++;renderLoading()},1000);
