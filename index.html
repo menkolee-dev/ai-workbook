@@ -15,7 +15,7 @@ h2{font-size:28px;margin:0 0 6px}h3{font-size:18px;margin:0 0 10px}.sub{color:va
 .exampleCard{background:#f7f7f3;border:1px solid var(--line);border-radius:14px;padding:14px}.exampleImg{aspect-ratio:4/3;background:#ecece7;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#777;text-align:center}.exampleImg img{width:100%;height:100%;object-fit:cover}
 .upload{border:1.5px dashed #bdbdb7;background:var(--soft);border-radius:14px;padding:16px;text-align:center;min-height:150px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.upload img{max-width:100%;max-height:260px;border-radius:10px}.upload input{position:absolute;inset:0;opacity:0;cursor:pointer}
 label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,input,select{width:100%;border:1px solid var(--line);border-radius:11px;padding:12px;font:inherit;background:#fff}textarea{min-height:95px}
-.prompt{background:#f2f6f4;border-left:4px solid var(--accent);border-radius:11px;padding:14px;line-height:1.6}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}button.primary,button.ghost{border-radius:10px;padding:10px 14px;font-weight:750;cursor:pointer}button.primary{background:var(--accent);color:#fff;border:1px solid var(--accent)}button.ghost{background:#fff;border:1px solid var(--line)}
+.prompt{background:#f2f6f4;border-left:4px solid var(--accent);border-radius:11px;padding:14px;line-height:1.6}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}button.primary,button.ghost{border-radius:10px;padding:10px 14px;font-weight:750;cursor:pointer}button.primary{background:var(--accent);color:#fff;border:1px solid var(--accent)}button.ghost{background:#fff;border:1px solid var(--line)}button.primaryLg{font-size:16px;padding:14px 26px}
 .checks label{font-weight:500;padding:7px 0;margin:0;border-bottom:1px solid #f0f0ed}.checks input{width:auto;margin-right:7px}.footer{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);display:flex;justify-content:center;gap:10px;background:#fff;padding:10px 14px;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.18);border:1px solid var(--line);z-index:40}.footer button{white-space:nowrap}.small{font-size:12px;color:var(--muted);line-height:1.5}.notice{background:var(--warn);border-radius:14px;padding:16px;line-height:1.55}
 .sidebarToggleBtn{display:none}
 @media(max-width:850px){.hero,.layout,.grid2,.grid3{grid-template-columns:1fr}.sidebar{position:static;max-height:none}.footer{position:static;left:auto;bottom:auto;transform:none;box-shadow:none;margin:18px 0 0;width:fit-content}.sidebarToggleBtn{display:flex;width:100%;justify-content:space-between;align-items:center;background:var(--accent2);color:var(--accent);border:0;border-radius:10px;padding:12px 14px;font-weight:800;font-size:13px;margin-bottom:6px;min-height:44px;box-sizing:border-box}.sidebar.collapsed .sectionLabel{display:none}.sidebar.collapsed .lessonBtn:not(.active){display:none}button.primary,button.ghost{min-height:44px}}
@@ -1175,12 +1175,12 @@ render();
     <div class="finalItem">
       <b>나의 건축AI 활용능력 셀프평가</b><br>
       <span class="small">1~10번 미션 기록을 채점 기준(사전 관찰 · AI 실험 체계성 · 근거 대조 · 오류 대응 · 기록의 구체성)에 따라 AI가 매우 잘함/잘함/보통/노력 필요 4단계로 평가합니다. 11·12번 보너스 과제는 완료 여부만 별도로 표시됩니다. 이 등급은 참고용이며 절대적인 평가가 아닙니다.</span>
-      <div class="actions"><button class="primary" id="gradeBtn" onclick="requestGrading()">셀프평가하기</button></div>
+      <div class="actions"><button class="primary primaryLg" id="gradeBtn" onclick="requestGrading()">셀프평가하기</button></div>
       <div id="gradeResult" style="margin-top:10px"></div>
     </div>
 
     <div class="actions">
-      <button class="primary" onclick="markAllSubmitted()">완료 확인 표시</button>
+      <button class="ghost" onclick="markAllSubmitted()">과제완료현황</button>
       <button class="ghost" onclick="closeFinalSubmission()">닫기</button>
     </div>
   </div>
