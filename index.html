@@ -565,12 +565,12 @@ function loadFinalSubmitInfo(){try{return JSON.parse(localStorage.getItem('aivis
 function markAllSubmitted(){
   const status=coreMissionsStatus();
   if(status.missing.length){
-    alert('아직 제출 준비가 완료되지 않았습니다.\n\n다음 코어 미션을 먼저 완료해주세요:\n\n• '+status.missing.join('\n• '));
+    alert('아직 완료되지 않았습니다.\n\n다음 코어 미션을 먼저 완료해주세요:\n\n• '+status.missing.join('\n• '));
     return;
   }
   const info={submittedAt:new Date().toISOString()};
   localStorage.setItem('aivis_final_submit',JSON.stringify(info));
-  alert('코어 미션 10개 완료를 확인했습니다. 최종 제출 준비가 완료로 표시되었습니다.\n\n⚠ 작성한 내용은 서버에 저장되지 않으니, 화면을 닫기 전에 꼭 백업하거나 제출해두세요.');
+  alert('코어 미션 10개 완료를 확인했습니다.\n\n⚠ 작성한 내용은 서버에 저장되지 않으니, 화면을 닫기 전에 꼭 백업해두세요.');
   closeFinalSubmission();
 }
 
@@ -1180,7 +1180,7 @@ render();
     </div>
 
     <div class="actions">
-      <button class="primary" onclick="markAllSubmitted()">제출 준비 완료 표시</button>
+      <button class="primary" onclick="markAllSubmitted()">완료 확인 표시</button>
       <button class="ghost" onclick="closeFinalSubmission()">닫기</button>
     </div>
   </div>
