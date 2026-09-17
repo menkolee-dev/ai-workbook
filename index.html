@@ -111,6 +111,8 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 @keyframes gradeSpin{to{transform:rotate(360deg)}}
 .gradeLoadingMsg{font-weight:700;color:var(--accent)}
 .gradeLoadingSub{font-size:12px;color:var(--muted)}
+.gradeProgressBar{width:100%;max-width:260px;height:8px;background:var(--accent2);border-radius:999px;overflow:hidden;margin:2px 0}
+.gradeProgressFill{height:100%;width:0%;background:var(--accent);border-radius:999px;transition:width 1s linear}
 .reportCertificate{position:relative;overflow:hidden;background:linear-gradient(135deg,#173f39,#2f675d);color:#fff;border-radius:18px;padding:26px 28px;display:flex;flex-direction:column;gap:10px;margin-bottom:16px;break-inside:avoid}
 .reportCertTop{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;position:relative;z-index:1}
 .reportCertTitle{font-size:12px;letter-spacing:.09em;font-weight:800;color:#bfe0d6;text-transform:uppercase}
@@ -864,8 +866,12 @@ async function requestGrading(){
   }
   btn.disabled=true;const prevText=btn.textContent;btn.textContent='AI 채점 중…';
   const loadingSteps=['기록을 서버로 전송하는 중…','AI가 12개 미션 기록을 읽는 중…','건축 이미지와 판단 근거를 대조하는 중…','등급과 코멘트를 정리하는 중…','거의 다 됐어요…'];
+  const ESTIMATED_SECONDS=30; // 실제 소요 시간은 매번 다르지만, 대략 이 정도를 기준으로 막대를 채워 대기 시간을 예측할 수 있게 한다.
   let stepIdx=0,elapsed=0;
-  const renderLoading=()=>{box.innerHTML=`<div class="gradeLoading"><div class="gradeSpinner"></div><div class="gradeLoadingMsg">${loadingSteps[stepIdx%loadingSteps.length]}</div><div class="gradeLoadingSub">멈춘 게 아니에요, 진행 중입니다 · ${elapsed}초 경과</div></div>`};
+  const renderLoading=()=>{
+    const pct=Math.min(95,Math.round(elapsed/ESTIMATED_SECONDS*100)); // 실제로 끝나기 전엔 100%까지 채우지 않는다(응답이 늦어져도 자연스럽게).
+    box.innerHTML=`<div class="gradeLoading"><div class="gradeLoadingMsg">${loadingSteps[stepIdx%loadingSteps.length]}</div><div class="gradeProgressBar"><div class="gradeProgressFill" style="width:${pct}%"></div></div><div class="gradeLoadingSub">${pct}% · ${elapsed}초 경과 · 멈춘 게 아니에요, 진행 중입니다</div></div>`;
+  };
   renderLoading();
   const loadingTimer=setInterval(()=>{elapsed++;if(elapsed%3===0)stepIdx++;renderLoading()},1000);
   try{
@@ -876,6 +882,9 @@ async function requestGrading(){
     window.__lastReport=data.report;
     window.__lastReportSnapshot=JSON.stringify(collectAllMissionData());
     gradingAutoRetried=false;
+    clearInterval(loadingTimer);
+    const fillEl=box.querySelector('.gradeProgressFill');
+    if(fillEl){fillEl.style.width='100%';await new Promise(r=>setTimeout(r,300));}
     renderReport(data.report);
   }catch(err){
     clearInterval(loadingTimer);
