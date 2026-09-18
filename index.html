@@ -169,7 +169,7 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 </style></head><body>
 <header><div class="top"><div style="display:flex;align-items:center;gap:10px"><img src="assets/kbu-logo.png" alt="경복대학교" style="height:30px;object-fit:contain" onerror="this.style.display='none'"><div class="brand">Architecture AX Expert</div></div><div><span class="badge">12개 미션 · 사람 검증 완료</span> <span id="saveState">자동 저장</span></div></div></header>
 <main>
-<section class="hero"><div><div class="eyebrow" style="color:#dcebe7">건축 × AI 활용 테스트</div><h1>나는 AI를 얼마나<br>잘 쓰는 건축인일까?</h1><p>12개 미션을 하나씩 해보면 자연스럽게 확인됩니다.</p><div class="heroPills"><span class="heroPill">🧭 10개의 기본미션과 2개의 도전미션</span><span class="heroPill">🎯 완료 시 나의 AI 활용 능력 평가</span></div></div><div class="heroArt"><img src="assets/ai-building-hero.png" alt="AI로 상상한 미래 건축 이미지"></div><div class="progressWrap"><b>나의 진행률</b><div class="bar"><div id="progressBar"></div></div><div id="progressText">기본미션 0 / 10 완료</div><div class="small" id="bonusProgressText" style="color:#dce8e5;margin-top:6px">도전미션 0 / 2 완료</div><div class="small" style="color:#dce8e5;margin-top:8px">자동 저장되니 언제든 이어서 할 수 있어요.</div></div></section>
+<section class="hero"><div><div class="eyebrow" style="color:#dcebe7">건축 × AI 활용 테스트</div><h1>나는 AI를 얼마나<br>잘 쓰는 건축인일까?</h1><p>12개 미션을 하나씩 해보면 자연스럽게 확인됩니다.</p><div class="heroPills"><span class="heroPill">🧭 10개의 기본미션과 2개의 도전미션</span><span class="heroPill">🎯 완료 시 나의 AI 활용 능력 평가</span></div></div><div class="heroArt"><img src="assets/ai-building-hero.png" alt="AI로 상상한 미래 건축 이미지"></div><div class="progressWrap"><b>나의 진행률</b><div class="bar"><div id="progressBar"></div></div><div id="progressText">기본미션 0 / 10 완료</div><div class="small" id="bonusProgressText" style="color:#dce8e5;margin-top:6px">도전미션 0 / 2 완료</div><div class="small" style="color:#dce8e5;margin-top:8px">이 브라우저에 자동 저장됩니다. 다른 기기에서 이어가려면 "전체 기록 백업" 파일이 필요해요.</div></div></section>
 
 <div class="layout"><aside class="sidebar" id="sidebar"></aside><section class="content">
 <div class="card principleTip" id="principleCard"><span>💡 <b>따라 만들기보다, 왜 그렇게 선택했는지가 중요해요.</b></span><span class="small">관찰 → AI 실험 → 근거 대조 → 오류 찾기 → 결정</span></div>
@@ -265,7 +265,7 @@ function renderExamples(l){
       <div class="introFlowStep"><svg class="introFlowIcon" viewBox="0 0 44 44" aria-hidden="true"><path d="M8 30V16l14-9 14 9v14" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linejoin="round"/><line x1="8" y1="30" x2="36" y2="30" stroke="var(--accent)" stroke-width="1.6"/><rect x="18" y="20" width="8" height="10" fill="none" stroke="var(--accent)" stroke-width="1.3" opacity=".6"/><circle cx="34" cy="12" r="7" fill="var(--accent)"/><path d="M31 12l2 2 4-4" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><b>⑤ 결정</b><span>내가 채택·수정·거부</span></div>
     </div>
     <div class="small" style="margin-top:12px;padding:10px 14px;background:#f2f6f4;border-radius:10px;color:var(--text)">🛠 이미지 생성·수정은 사용하는 외부 AI 도구에서 하고, 이 사이트에는 <b>관찰과 판단을 기록</b>합니다. 어떤 AI를 쓰는지는 자유이고, 같은 조건이라도 AI마다 결과가 달라지는 점을 함께 살펴봅니다.</div>
-    <div class="safetyNotice">⚠ 작성한 내용은 이 브라우저에만 저장됩니다 — 화면을 닫거나 기기·브라우저를 바꾸면 사라지니 "전체 기록 백업"으로 내려받아 두세요.</div>
+    <div class="safetyNotice">⚠ 작성한 내용은 이 브라우저에만 저장됩니다 — 기기나 브라우저를 바꾸거나 브라우저 데이터를 지우면 사라지니 "전체 기록 백업"으로 내려받아 두세요.</div>
     <div class="introClosing"><b>완성 이미지보다, 판단 과정이 중요합니다.</b><br>이제 길을 떠나볼까요?</div>
     <div class="introStart"><button class="primary" onclick="startMissions()">시작하기 →</button></div>`;
    return;
@@ -608,7 +608,7 @@ function markAllSubmitted(){
   }
   const info={submittedAt:new Date().toISOString()};
   localStorage.setItem('aivis_final_submit',JSON.stringify(info));
-  alert('기본미션 10개 완료를 확인했습니다.\n\n⚠ 작성한 내용은 이 브라우저에만 저장됩니다 — 화면을 닫거나 기기·브라우저를 바꾸면 사라지니 "전체 기록 백업"으로 내려받아 두세요.');
+  alert('기본미션 10개 완료를 확인했습니다.\n\n⚠ 작성한 내용은 이 브라우저에만 저장됩니다 — 기기나 브라우저를 바꾸거나 브라우저 데이터를 지우면 사라지니 "전체 기록 백업"으로 내려받아 두세요.');
 }
 
 // ===== 학생 정보 =====
@@ -780,7 +780,7 @@ function buildReportHTML(){
   }else{
     html+='<div class="small">기본미션 10개 모두 완료되었습니다.</div>';
   }
-  html+='<div class="reportFooterNote">⚠ 작성한 내용은 이 브라우저에만 저장됩니다 — 화면을 닫거나 기기·브라우저를 바꾸면 사라지니 "전체 기록 백업"으로 내려받아 두세요.</div>';
+  html+='<div class="reportFooterNote">⚠ 작성한 내용은 이 브라우저에만 저장됩니다 — 기기나 브라우저를 바꾸거나 브라우저 데이터를 지우면 사라지니 "전체 기록 백업"으로 내려받아 두세요.</div>';
   return html;
 }
 function showReportPanel(){
