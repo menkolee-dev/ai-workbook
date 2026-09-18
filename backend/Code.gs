@@ -138,7 +138,7 @@ function logToRoster(payload, report) {
       report.completedCount || '-',
       report.overallTier || '-',
       report.overallComment || '',
-      (report.weakMissions || []).join(', ')
+      (report.missionNotes || []).filter(function (n) { return n.tier === '노력 필요'; }).map(function (n) { return n.id; }).join(', ')
     ]);
   } catch (e) {
     // 시트 기록 실패(권한, 일시적 오류 등)는 조용히 무시한다.
@@ -268,7 +268,7 @@ function jsonResponse(obj) {
 
 // 텍스트 요약에서는 제외하고 별도로 이미지 파트로 첨부할 필드명들
 // (imageData=1~9번 메인 이미지, slideImage*=10번 슬라이드, refImage*=11·12번 스크린샷, cmpImage*=05번 비교 이미지)
-const IMAGE_FIELD_KEYS = ['imageData', 'slideImage1', 'slideImage2', 'slideImage3', 'refImageStart', 'refImageMiddle', 'refImageFinal', 'refImageMcp', 'cmpImageBefore', 'cmpImageAfter', 'cmpImageFinal'];
+const IMAGE_FIELD_KEYS = ['imageData', 'slideImage1', 'slideImage2', 'slideImage3', 'slideImage4', 'slideImage5', 'refImageStart', 'refImageMiddle', 'refImageFinal', 'refImageMcp', 'cmpImageBefore', 'cmpImageAfter', 'cmpImageFinal'];
 // 안전장치: 이미지 1장당 base64 용량 상한(약 1.2MB 원본 기준). 이보다 크면 손상되었거나 비정상 데이터로 보고 건너뛴다.
 const MAX_IMAGE_BASE64_CHARS = 1600000;
 // 코어 미션 01~09번은 대표 이미지 1장씩(최대 9장)을 모두 검토한다. 10번(발표자료 슬라이드)은
