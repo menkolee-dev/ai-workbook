@@ -57,7 +57,7 @@ function doPost(e) {
     const payload = JSON.parse(e.postData.contents);
 
     if (CLASS_SECRET && payload.secret !== CLASS_SECRET) {
-      return jsonResponse({ ok: false, error: '인증 실패: secret 값이 올바르지 않습니다.' });
+      return jsonResponse({ ok: false, error: safeErrorMessage('인증 실패: secret 값이 올바르지 않습니다.') });
     }
     checkAndIncrementDailyQuota();
 
@@ -65,8 +65,18 @@ function doPost(e) {
     logToRoster(payload, report);
     return jsonResponse({ ok: true, report: report });
   } catch (err) {
-    return jsonResponse({ ok: false, error: String((err && err.message) || err) });
+    return jsonResponse({ ok: false, error: safeErrorMessage(err) });
   }
+}
+
+// 채점 실패 메시지는 학생 화면에 그대로 표시되므로, 예산·한도·API 오류 원문 같은 내부 운영 정보는
+// 내보내지 않는다. 실제 원인은 Apps Script 실행 로그(보기 → 실행)에만 남겨 관리자가 확인한다.
+// 단, 일시적 혼잡 안내는 프론트엔드의 자동 재시도 조건('혼잡')이라 문구를 그대로 통과시킨다.
+function safeErrorMessage(err) {
+  const raw = String((err && err.message) || err);
+  try { Logger.log('채점 실패: ' + raw); } catch (e) { /* 무시 */ }
+  if (raw.indexOf('혼잡') !== -1) return raw;
+  return '지금은 채점을 받을 수 없습니다. 잠시 후 다시 한번 시도해 보시겠어요?\n같은 화면이 계속 나오면 담당 교수에게 알려주세요.';
 }
 
 // [수동 실행 전용] 응시 기록 시트에 필요한 "스프레드시트 생성" 권한을 처음 한 번 승인받기 위한 함수.
@@ -578,7 +588,7 @@ function gradeWithGemini(prompt, images) {
 
   if (status !== 200) {
     if (RETRY_STATUSES.indexOf(status) !== -1) {
-      throw new Error('AI 서버가 지금 일시적으로 혼잡합니다 (' + MAX_ATTEMPTS + '번 재시도 후에도 응답 없음). 30초~1분 후 "셀프평가하기"를 다시 눌러주세요.');
+      throw new Error('AI 서버가 지금 일시적으로 혼잡합니다. 잠시 후 다시 한번 시도해 보시겠어요?');
     }
     throw new Error('Gemini API 오류 (' + status + '): ' + text.substring(0, 300));
   }
@@ -636,7 +646,7 @@ function gradeWithOpenAI(prompt, images) {
 
   if (status !== 200) {
     if (RETRY_STATUSES.indexOf(status) !== -1) {
-      throw new Error('AI 서버가 지금 일시적으로 혼잡합니다 (' + MAX_ATTEMPTS + '번 재시도 후에도 응답 없음). 30초~1분 후 다시 눌러주세요.');
+      throw new Error('AI 서버가 지금 일시적으로 혼잡합니다. 잠시 후 다시 한번 시도해 보시겠어요?');
     }
     throw new Error('OpenAI API 오류 (' + status + '): ' + text.substring(0, 300));
   }

@@ -954,7 +954,7 @@ async function requestGrading(){
       return;
     }
     gradingAutoRetried=false;
-    box.innerHTML=`<div class="safetyNotice"><b>채점 요청 실패</b><br><span class="small">${esc(msg)}</span></div><div class="actions" style="margin-top:10px"><button class="primary" onclick="requestGrading()">다시 시도</button></div>`;
+    box.innerHTML=`<div class="safetyNotice"><b>채점 결과를 받지 못했어요</b><br><span class="small" style="white-space:pre-line">${esc(msg)}</span></div><div class="actions" style="margin-top:10px"><button class="primary" onclick="requestGrading()">다시 시도</button></div>`;
     btn.disabled=false;btn.textContent=prevText;
     return;
   }
