@@ -6,6 +6,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["--yes", "serve", "-l", "8796", "."],
       "port": 8796
+    },
+    {
+      "name": "static-preview-2",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "serve", "-l", "8797", "."],
+      "port": 8797
     }
   ]
 }

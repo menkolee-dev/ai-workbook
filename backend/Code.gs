@@ -422,9 +422,9 @@ function buildGradingPrompt(summary, mode) {
     '채점 기준 (미션 01~10 전용):\n' + criteriaList + '\n\n' +
     '반드시 아래 JSON 형식으로만 응답하고 다른 텍스트는 절대 포함하지 마라 (숫자 점수 필드를 절대 추가하지 마라):\n' +
     '{"completedCount":"N/10 형식의 문자열","overallTier":' + tierOptions + ',"overallComment":"총평 2문장 이내","criteria":[{"name":"기준명","tier":' + tierOptions + ',"comment":"코멘트 1문장"}],' +
-    '"weakMissions":["보완이 필요한 미션 번호(01~10)만 배열로, 없으면 빈 배열"],' +
+    '"missionNotes":[{"id":"01","tier":' + tierOptions + ',"note":"15자 내외 짧은 이유"}],' +
     '"bonusMissions":[{"id":"11","label":"11번 · 공공건축 MCP 분석","completed":true 또는 false,"comment":"코멘트 1문장"},{"id":"12","label":"12번 · AI 건축 모델링 검증","completed":true 또는 false,"comment":"코멘트 1문장"}]}\n' +
-    '(criteria 배열은 반드시 위 5개 기준 각각에 대해 하나씩, 총 5개 항목. bonusMissions는 반드시 11번, 12번 각각 하나씩 총 2개 항목)\n\n' +
+    '(criteria 배열은 반드시 위 5개 기준 각각에 대해 하나씩, 총 5개 항목. missionNotes는 반드시 미션 "01"~"10" 각각 하나씩 총 10개 항목을 빠짐없이 채워라 — note는 그 미션에서 실제로 관찰한 근거나 부족한 이유를 구체적으로 15자 내외로 적고 "잘했습니다"처럼 근거 없는 말은 금지. bonusMissions는 반드시 11번, 12번 각각 하나씩 총 2개 항목)\n\n' +
     '학생 기록:\n' + summary
   );
 }
@@ -449,7 +449,19 @@ const GRADING_JSON_SCHEMA = {
         additionalProperties: false
       }
     },
-    weakMissions: { type: 'array', items: { type: 'string' } },
+    missionNotes: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          tier: { type: 'string', enum: ['매우 잘함', '잘함', '보통', '노력 필요'] },
+          note: { type: 'string' }
+        },
+        required: ['id', 'tier', 'note'],
+        additionalProperties: false
+      }
+    },
     bonusMissions: {
       type: 'array',
       items: {
@@ -465,7 +477,7 @@ const GRADING_JSON_SCHEMA = {
       }
     }
   },
-  required: ['completedCount', 'overallTier', 'overallComment', 'criteria', 'weakMissions', 'bonusMissions'],
+  required: ['completedCount', 'overallTier', 'overallComment', 'criteria', 'missionNotes', 'bonusMissions'],
   additionalProperties: false
 };
 
