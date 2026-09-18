@@ -81,7 +81,7 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 .reportTierText{font-size:30px;font-weight:900;color:var(--accent)}
 .reportTierSub{font-size:13px;color:var(--muted)}
 .reportPageBreak{break-after:page;page-break-after:always}
-.reportMissionGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.reportMissionGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
 .reportMissionRow{border:1px solid var(--line);border-radius:9px;padding:8px;display:flex;flex-direction:column;gap:6px;break-inside:avoid}
 .reportThumbSmall{width:100%;height:100px;object-fit:cover;border-radius:6px;flex-shrink:0;background:#f0f0ec}
 .reportMissionRowBody{display:flex;flex-direction:column;gap:3px;font-size:11.5px;min-width:0}
@@ -135,10 +135,17 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 .bonusRow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13.5px;gap:8px}
 .bonusRow:not(:last-child){border-bottom:1px dashed #dce8e3}
 .bonusComment{font-size:12px;color:var(--muted);margin:-2px 0 8px;padding-left:2px}
-.missionNoteGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.missionNoteGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
 .missionNoteItem{display:flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:12px;min-width:0}
 .missionNoteId{font-weight:800;color:var(--muted);flex-shrink:0}
-.missionNoteText{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
+.missionNoteText{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.reportHighlights{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;margin:-6px 0 14px;padding:10px 14px;border:1px solid var(--line);border-radius:11px;background:#fafaf8}
+.reportHighlights b{color:var(--accent)}
+.goodExample{margin-top:10px;border:1px dashed #cdded8;border-radius:10px;background:#f6faf8;padding:8px 12px;font-size:12.5px;line-height:1.6}
+.goodExample summary{cursor:pointer;font-weight:800;color:var(--accent)}
+.goodExample p{margin:6px 0 0}
+.privacyNote{font-size:11.5px;color:var(--muted);line-height:1.55;margin-top:8px}
+@media(max-width:600px){.reportMissionGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.missionNoteGrid{grid-template-columns:1fr}.reportCertificate{padding:20px}.reportCertTop{flex-direction:column-reverse;align-items:flex-start;gap:10px}.reportCertComment{max-width:100%}.reportCertMotif{display:none}}
 .reportDisclaimer{font-size:12px;color:var(--muted);line-height:1.6;background:#fafaf7;border:1px solid var(--line);border-radius:11px;padding:13px 15px;margin-bottom:14px;break-inside:avoid}
 .sectionLabel{padding:13px 10px 5px;color:#8a8f92;font-size:11px;letter-spacing:.12em;font-weight:900}.lessonBtn.advanced{margin-top:4px;background:#f2f5f8;border:1px solid #dbe3ea}.lessonBtn.advanced.active{background:var(--navy);color:#fff}.lessonBtn.advanced .n{border-color:#94a7b8}.lessonBtn.advanced.active .n{border-color:#fff}.advancedTag{display:block;color:#7d4ac7;font-size:9px;letter-spacing:.08em;margin-top:3px}.lessonBtn.advanced.active .advancedTag{color:#ded1ff}
 .challengeRibbon{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:13px}.statusChip{display:inline-flex;align-items:center;gap:5px;border:1px solid #ccd7df;background:#f2f6f9;color:var(--navy);border-radius:999px;padding:6px 9px;font-size:11px;font-weight:850}.statusChip.safe{background:#eaf4ef;border-color:#cce1d7;color:#176047}.statusChip.violet{background:#f1edfb;border-color:#ddd2f6;color:#603fad}
@@ -157,7 +164,7 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 </style></head><body>
 <header><div class="top"><div style="display:flex;align-items:center;gap:10px"><img src="assets/kbu-logo.png" alt="경복대학교" style="height:30px;object-fit:contain" onerror="this.style.display='none'"><div class="brand">Architecture AX Expert</div></div><div><span class="badge">12개 미션 · 사람 검증 완료</span> <span id="saveState">자동 저장</span></div></div></header>
 <main>
-<section class="hero"><div><div class="eyebrow" style="color:#dcebe7">건축 × AI 활용 테스트</div><h1>나는 AI를 얼마나<br>잘 쓰는 건축인일까?</h1><p>12개 미션을 하나씩 해보면 자연스럽게 확인됩니다.</p><div class="heroPills"><span class="heroPill">⏱ 미션당 1~5분</span><span class="heroPill">🎯 완료 시 나의 AI활용 등급평가</span><span class="heroPill">🎁 보너스 2개</span></div></div><div class="heroArt"><img src="assets/ai-building-hero.png" alt="AI로 상상한 미래 건축 이미지"></div><div class="progressWrap"><b>나의 진행률</b><div class="bar"><div id="progressBar"></div></div><div id="progressText">0 / 10 완료</div><div class="small" id="bonusProgressText" style="color:#dce8e5;margin-top:6px">보너스 0 / 2</div><div class="small" style="color:#dce8e5;margin-top:8px">자동 저장되니 언제든 이어서 할 수 있어요.</div></div></section>
+<section class="hero"><div><div class="eyebrow" style="color:#dcebe7">건축 × AI 활용 테스트</div><h1>나는 AI를 얼마나<br>잘 쓰는 건축인일까?</h1><p>12개 미션을 하나씩 해보면 자연스럽게 확인됩니다.</p><div class="heroPills"><span class="heroPill">⏱ 기록 작성 미션당 5분 내외</span><span class="heroPill">🎯 완료 시 나의 AI활용 등급평가</span><span class="heroPill">🎁 보너스 2개</span></div></div><div class="heroArt"><img src="assets/ai-building-hero.png" alt="AI로 상상한 미래 건축 이미지"></div><div class="progressWrap"><b>나의 진행률</b><div class="bar"><div id="progressBar"></div></div><div id="progressText">0 / 10 완료</div><div class="small" id="bonusProgressText" style="color:#dce8e5;margin-top:6px">보너스 0 / 2</div><div class="small" style="color:#dce8e5;margin-top:8px">자동 저장되니 언제든 이어서 할 수 있어요.</div></div></section>
 
 <div class="layout"><aside class="sidebar" id="sidebar"></aside><section class="content">
 <div class="card principleTip" id="principleCard"><span>💡 <b>따라 만들기보다, 왜 그렇게 선택했는지가 중요해요.</b></span><span class="small">관찰 → AI 실험 → 근거 대조 → 오류 찾기 → 결정</span></div>
@@ -193,7 +200,7 @@ function checkReportStale(){
   if(!box||!window.__lastReportSnapshot) return;
   const cert=box.querySelector('.reportCertificate');
   if(!cert||box.querySelector('.reportStaleNotice')) return;
-  if(JSON.stringify(collectAllMissionData())===window.__lastReportSnapshot) return;
+  if(gradingSnapshot()===window.__lastReportSnapshot) return;
   const notice=document.createElement('div');
   notice.className='safetyNotice reportStaleNotice';
   notice.style.marginBottom='10px';
@@ -219,7 +226,7 @@ function renderExamples(l){
       <div class="introStats">
         <div class="introStat"><strong>12</strong><span>프로젝트 미션</span></div>
         <div class="introStat"><strong>31+</strong><span>비주얼 예제</span></div>
-        <div class="introStat"><strong>1~5분</strong><span>미션당 소요</span></div>
+        <div class="introStat"><strong>5분 내외</strong><span>미션당 기록 작성</span></div>
         <div class="introStat"><strong>100%</strong><span>사람 검증 완료</span></div>
       </div>
     </div>
@@ -250,6 +257,7 @@ function renderExamples(l){
       <div class="introFlowStep"><svg class="introFlowIcon" viewBox="0 0 44 44" aria-hidden="true"><rect x="6" y="8" width="32" height="28" rx="3" fill="none" stroke="var(--accent)" stroke-width="1.5" opacity=".5"/><path d="M14 28l6-12 6 12z" fill="none" stroke="var(--accent)" stroke-width="1.3" opacity=".45"/><circle cx="32" cy="30" r="7" fill="none" stroke="var(--danger)" stroke-width="1.6"/><line x1="32" y1="26.5" x2="32" y2="30.5" stroke="var(--danger)" stroke-width="1.6" stroke-linecap="round"/><circle cx="32" cy="33.3" r=".9" fill="var(--danger)"/></svg><b>④ 오류 대응</b><span>AI가 틀린 부분 찾기</span></div>
       <div class="introFlowStep"><svg class="introFlowIcon" viewBox="0 0 44 44" aria-hidden="true"><path d="M8 30V16l14-9 14 9v14" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linejoin="round"/><line x1="8" y1="30" x2="36" y2="30" stroke="var(--accent)" stroke-width="1.6"/><rect x="18" y="20" width="8" height="10" fill="none" stroke="var(--accent)" stroke-width="1.3" opacity=".6"/><circle cx="34" cy="12" r="7" fill="var(--accent)"/><path d="M31 12l2 2 4-4" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><b>⑤ 결정</b><span>내가 채택·수정·거부</span></div>
     </div>
+    <div class="small" style="margin-top:12px;padding:10px 14px;background:#f2f6f4;border-radius:10px;color:var(--text)">🛠 이미지 생성·수정은 Nano Banana, ChatGPT 같은 외부 AI 도구에서 하고, 이 사이트에는 <b>관찰과 판단을 기록</b>합니다.</div>
     <div class="safetyNotice">⚠ 작성한 내용은 이 브라우저에만 저장됩니다 — 화면을 닫거나 기기·브라우저를 바꾸면 사라지니 "전체 기록 백업"으로 내려받아 두세요.</div>
     <div class="introClosing"><b>완성 이미지보다, 판단 과정이 중요합니다.</b><br>이제 길을 떠나볼까요?</div>
     <div class="introStart"><button class="primary" onclick="startMissions()">시작하기 →</button></div>`;
@@ -516,7 +524,11 @@ function previewSlide(e,n){
     URL.revokeObjectURL(tempUrl);
   }).catch(()=>{});
 }
-function renderSteps(l){let h=document.getElementById('steps');h.innerHTML='';l.steps.forEach((st,idx)=>{let c=document.createElement('div');c.className='card';c.innerHTML=`<div class="eyebrow">${st[0]}</div><h3>${st[1]}</h3><p>${st[2]}</p><label>나의 기록</label><textarea data-field="step${idx+1}" placeholder="관찰, 프롬프트, 결과, 수정사항 등을 기록"></textarea>`;h.appendChild(c)})}
+const GOOD_EXAMPLE_HTML=`<details class="goodExample"><summary>💡 이렇게 쓰면 "구체적"으로 평가돼요 — 예시 보기</summary>
+<p><b>좋은 예</b> · "5층 규모의 노출콘크리트+유리 파사드 교육시설. 계단식 매스와 수평 밴드창이 특징이고, 주변이 저층 주거지라 매스가 상대적으로 커 보인다. 남측 외부계단이 입면의 리듬을 만든다."</p>
+<p><b>부족한 예</b> · "건물을 관찰함" / "완료" / "네"</p>
+<p class="small">AI는 글자 수가 아니라 <b>무엇을 봤고 어떤 근거로 판단했는지</b>가 드러나는지를 봅니다. 미션마다 같은 문장을 복사하면 낮게 평가됩니다.</p></details>`;
+function renderSteps(l){let h=document.getElementById('steps');h.innerHTML='';l.steps.forEach((st,idx)=>{let c=document.createElement('div');c.className='card';c.innerHTML=`<div class="eyebrow">${st[0]}</div><h3>${st[1]}</h3><p>${st[2]}</p><label>나의 기록</label><textarea data-field="step${idx+1}" placeholder="관찰, 프롬프트, 결과, 수정사항 등을 기록"></textarea>${(l.id==='01'&&idx===0)?GOOD_EXAMPLE_HTML:''}`;h.appendChild(c)})}
 function renderPrompt(l){let h=document.getElementById('promptBlock');h.innerHTML='';if(!l.prompt)return;h.innerHTML=`<div class="card"><div class="eyebrow">프롬프트 복사하기</div><h3>예제 프롬프트</h3><div class="prompt" id="promptText">${l.prompt}</div><div class="actions"><button class="primary" onclick="copyPrompt()">프롬프트 복사</button></div></div>`}
 function copyPrompt(){
   const text=document.getElementById('promptText').innerText;
@@ -554,8 +566,9 @@ function showFinalSubmission(){
   const nameEl=document.getElementById('studentName'),idEl=document.getElementById('studentId');
   if(nameEl) nameEl.value=info.name||'';
   if(idEl) idEl.value=info.studentId||'';
-  document.getElementById('gradeResult').innerHTML='';
+  if(window.__lastReport){renderReport(window.__lastReport);}else{document.getElementById('gradeResult').innerHTML='';}
   renderSelfEval();
+  checkReportStale();
   p.classList.add('open');
   document.body.style.overflow='hidden';
 }
@@ -579,7 +592,6 @@ function markAllSubmitted(){
   const info={submittedAt:new Date().toISOString()};
   localStorage.setItem('aivis_final_submit',JSON.stringify(info));
   alert('코어 미션 10개 완료를 확인했습니다.\n\n⚠ 작성한 내용은 이 브라우저에만 저장됩니다 — 화면을 닫거나 기기·브라우저를 바꾸면 사라지니 "전체 기록 백업"으로 내려받아 두세요.');
-  closeFinalSubmission();
 }
 
 // ===== 학생 정보 =====
@@ -607,6 +619,7 @@ function collectSelfEval(){
   s.overall=overallEl?overallEl.value:'';
   localStorage.setItem('aivis_self_eval',JSON.stringify(s));
   updateSelfEvalTotal(s);
+  checkReportStale();
 }
 function updateSelfEvalTotal(s){
   s=s||loadSelfEval();
@@ -698,12 +711,14 @@ function renderReportAISummary(){
   const report=window.__lastReport;
   if(!report) return '<div class="reportDraftNotice">아직 "셀프평가하기"를 받지 않았습니다 — 먼저 셀프평가를 받으면 이 자리에 AI 총평 요약이 표시됩니다.</div>';
   const crit=(report.criteria||[]).map(c=>'<div class="reportField"><span class="reportFieldLabel">'+esc(c.name)+'</span><span class="reportFieldValue">'+esc(c.tier)+' — '+esc(c.comment)+'</span></div>').join('');
+  const hl=summarizeStrengths(report);
+  const hlField=(hl.strong.length||hl.weak.length)?'<div class="reportField"><span class="reportFieldLabel">강점 / 보완</span><span class="reportFieldValue">강점: '+esc(hl.strong.length?hl.strong.join(' · '):'아직 없음')+' / 보완: '+esc(hl.weak.length?hl.weak.join(' · '):'없음')+'</span></div>':'';
   const selfCheck=report.selfEvalCheck;
   const selfCheckField=(selfCheck&&selfCheck.mismatch&&selfCheck.note)?'<div class="reportField"><span class="reportFieldLabel">자기평가 대조</span><span class="reportFieldValue">⚠ '+esc(selfCheck.note)+'</span></div>':'';
   return '<div class="reportAISummary">'+
     '<div class="reportTierHero"><span class="reportTierEmoji">'+tierEmoji(report.overallTier)+'</span><span class="reportTierText">'+esc(report.overallTier)+'</span><span class="reportTierSub">코어 미션 '+esc(report.completedCount||'-')+'</span></div>'+
     '<div class="reportField"><span class="reportFieldLabel">총평</span><span class="reportFieldValue">'+esc(report.overallComment)+'</span></div>'+
-    crit+selfCheckField+
+    hlField+crit+selfCheckField+
   '</div>';
 }
 function buildReportHTML(){
@@ -724,6 +739,9 @@ function buildReportHTML(){
   }
   html+='<div class="reportProgress">코어 미션 진행: '+(core.length-missingCore.length)+' / '+core.length+' 완료</div>';
   html+='<h3 class="reportSectionTitle">종합 요약</h3>';
+  if(window.__lastReport&&window.__lastReportSnapshot&&window.__lastReportSnapshot!==gradingSnapshot()){
+    html+='<div class="reportDraftNotice"><b>⚠ 이전 답안 기준 AI 총평</b><br>셀프평가를 받은 뒤 기록을 수정했습니다. "셀프평가하기"를 다시 받으면 최신 기록으로 갱신됩니다.</div>';
+  }
   html+=renderReportAISummary();
   html+='<div class="reportPageBreak"></div>';
   html+='<h3 class="reportSectionTitle">코어 스튜디오 · 01–10</h3>';
@@ -818,7 +836,7 @@ function exportRecord(){
 const BACKUP_APP_ID='architecture-ax-expert';
 function buildBackupData(){
   const data={appId:BACKUP_APP_ID,schemaVersion:1,exportedAt:new Date().toISOString(),
-    studentInfo:loadStudentInfo(),selfEval:loadSelfEval(),finalSubmit:loadFinalSubmitInfo(),missions:{}};
+    studentInfo:loadStudentInfo(),selfEval:loadSelfEval(),finalSubmit:loadFinalSubmitInfo(),lastReport:loadLastReportRaw(),missions:{}};
   for(let i=0;i<LESSONS.length;i++) data.missions[key(i)]=loadState(i);
   return data;
 }
@@ -851,6 +869,8 @@ function importBackupJSON(e){
     if(data.studentInfo) localStorage.setItem('aivis_student_info',JSON.stringify(data.studentInfo));
     if(data.selfEval) localStorage.setItem('aivis_self_eval',JSON.stringify(data.selfEval));
     if(data.finalSubmit) localStorage.setItem('aivis_final_submit',JSON.stringify(data.finalSubmit));
+    if(data.lastReport) localStorage.setItem('aivis_last_report',JSON.stringify(data.lastReport));
+    loadLastReport();
     // 완료 상태는 그대로 신뢰하지 않고 현재 규칙으로 다시 계산한다
     LESSONS.forEach((l,i)=>{
       if(l.id==='00') return;
@@ -872,11 +892,29 @@ const GAS_ENDPOINT='https://script.google.com/macros/s/AKfycbxdunxxPlYmU2lax52cY
 // backend/Code.gs의 CLASS_SECRET과 반드시 동일한 값으로 맞추세요.
 const GAS_SECRET='kbu2026';
 window.__lastReport=null;
+window.__lastReportSnapshot=null;
+// 미션 기록 + 자기평가서를 합친 스냅샷. 마지막 채점 이후 내용이 바뀌었는지 판단하는 기준.
+function gradingSnapshot(){return JSON.stringify({m:collectAllMissionData(),s:loadSelfEval()})}
+function saveLastReport(report,snapshot){try{localStorage.setItem('aivis_last_report',JSON.stringify({report,snapshot,at:new Date().toISOString()}))}catch(e){}}
+function loadLastReportRaw(){try{return JSON.parse(localStorage.getItem('aivis_last_report')||'null')}catch(e){return null}}
+function loadLastReport(){const d=loadLastReportRaw();if(d&&d.report){window.__lastReport=d.report;window.__lastReportSnapshot=d.snapshot||null;}}
+function summarizeStrengths(report){
+  const rank={'매우 잘함':3,'잘함':2,'보통':1,'노력 필요':0};
+  const cs=(report.criteria||[]).filter(c=>rank[c.tier]!==undefined);
+  const strong=cs.filter(c=>rank[c.tier]>=2).sort((a,b)=>rank[b.tier]-rank[a.tier]).map(c=>c.name);
+  let weak=cs.filter(c=>rank[c.tier]===0).map(c=>c.name);
+  if(!weak.length) weak=cs.filter(c=>rank[c.tier]===1).map(c=>c.name);
+  return {strong,weak};
+}
 let gradingAutoRetried=false;
 async function requestGrading(){
   collectState();
   const info=saveStudentInfo();
   if(!info.name||!info.studentId){alert('이름과 학번을 먼저 입력해주세요.');return;}
+  if(!gradingAutoRetried){
+    if(coreMissionsStatus().completedCount===0&&!confirm('아직 완료한 미션이 없습니다.\n\n지금 평가를 받으면 모든 항목이 "노력 필요"로 나옵니다. 그래도 진행할까요?')) return;
+    if(window.__lastReport&&window.__lastReportSnapshot===gradingSnapshot()&&!confirm('지난 평가 이후 기록이 바뀌지 않았습니다.\n\n같은 결과가 나올 가능성이 큰데 다시 받을까요?')) return;
+  }
   const btn=document.getElementById('gradeBtn'),box=document.getElementById('gradeResult');
   if(GAS_ENDPOINT.indexOf('여기에_배포된_스크립트_ID')!==-1){
     box.innerHTML='<div class="safetyNotice"><b>채점 서버가 아직 연결되지 않았습니다.</b><br><span class="small">DEPLOY.md 안내대로 Google Apps Script를 배포한 뒤 GAS_ENDPOINT 값을 실제 웹앱 주소로 바꿔주세요.</span></div>';
@@ -898,7 +936,8 @@ async function requestGrading(){
     const data=await res.json();
     if(!data.ok) throw new Error(data.error||'채점 서버 오류');
     window.__lastReport=data.report;
-    window.__lastReportSnapshot=JSON.stringify(collectAllMissionData());
+    window.__lastReportSnapshot=gradingSnapshot();
+    saveLastReport(data.report,window.__lastReportSnapshot);
     gradingAutoRetried=false;
     clearInterval(loadingTimer);
     const fillEl=box.querySelector('.gradeProgressFill');
@@ -951,6 +990,8 @@ function renderReport(report){
         ${notes.map(n=>`<div class="missionNoteItem"><span class="missionNoteId">${esc(n.id)}</span><span class="tierBadge sm">${tierEmoji(n.tier)} ${esc(n.tier)}</span><span class="missionNoteText">${esc(n.note)}</span></div>`).join('')}
       </div>
     </div>`:'';
+  const hl=summarizeStrengths(report);
+  const hlHtml=(hl.strong.length||hl.weak.length)?`<div class="reportHighlights"><span>💪 <b>강점</b> ${hl.strong.length?esc(hl.strong.join(' · ')):'아직 없음 — 아래 보완점부터'}</span><span>🌱 <b>보완</b> ${hl.weak.length?esc(hl.weak.join(' · ')):'없음'}</span></div>`:'';
   const selfCheck=report.selfEvalCheck;
   const selfCheckHtml=(selfCheck&&selfCheck.mismatch&&selfCheck.note)?`<div class="safetyNotice" style="margin-bottom:14px">⚠ 자기평가와 실제 기록에 차이가 있어요<br><span class="small">${esc(selfCheck.note)}</span></div>`:'';
   box.innerHTML=`
@@ -966,6 +1007,7 @@ function renderReport(report){
       </div>
       <p class="reportCertComment">${esc(report.overallComment)}</p>
     </div>
+    ${hlHtml}
     <div class="reportCriteriaGrid">${crit}</div>
     ${selfCheckHtml}
     ${notesHtml}
@@ -987,6 +1029,8 @@ function downloadReport(){
   let out=`Architecture AX Expert\n나의 건축AI 활용능력 셀프평가 결과\n${'='.repeat(44)}\n이름: ${info.name}\n학번: ${info.studentId}\n생성일시: ${new Date().toLocaleString('ko-KR')}\n${'='.repeat(44)}\n\n`;
   out+=`코어 미션 완료: ${report.completedCount||'-'}\n`;
   out+=`종합 등급: ${report.overallTier}\n${report.overallComment}\n\n`;
+  const hl=summarizeStrengths(report);
+  if(hl.strong.length||hl.weak.length) out+=`강점: ${hl.strong.length?hl.strong.join(' · '):'아직 없음'} / 보완: ${hl.weak.length?hl.weak.join(' · '):'없음'}\n\n`;
   (report.criteria||[]).forEach(c=>{out+=`- ${c.name}: ${c.tier}\n  ${c.comment}\n\n`});
   if(report.selfEvalCheck&&report.selfEvalCheck.mismatch&&report.selfEvalCheck.note) out+=`⚠ 자기평가와 실제 기록에 차이가 있어요: ${report.selfEvalCheck.note}\n\n`;
   if((report.missionNotes||[]).length){
@@ -1015,7 +1059,7 @@ function closeLightbox(e,force){
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){const lb=document.getElementById('lightbox');if(lb)lb.classList.remove('open');document.body.style.overflow='';}});
 function startMissions(){collectState();current=1;localStorage.setItem('aivis_current_v08',current);render()}
-function render(){
+function render(opts){
   let l=LESSONS[current];
   document.getElementById('lessonNo').textContent=(l.id==='00'?'프로젝트 소개 · ':(['11','12'].includes(l.id)?'심화 과제 ':'실습 '))+l.id;
   document.getElementById('title').textContent=l.title;
@@ -1057,7 +1101,7 @@ function render(){
   }else{
     document.getElementById('uploadPlaceholder').style.display='block';
   }
-  window.scrollTo({top:0,behavior:'smooth'});
+  if(!(opts&&opts.keepScroll)) window.scrollTo({top:0,behavior:'smooth'});
 }
 function updateProgress(){
   let core=LESSONS.map((l,i)=>({l,i})).filter(x=>!['00','11','12'].includes(x.l.id));
@@ -1090,7 +1134,7 @@ function toggleCompletion(){
   collectState();
   let l=LESSONS[current];
   let s=loadState(current);
-  if(s.completed){s.completed=false;saveState(current,s);render();return;}
+  if(s.completed){s.completed=false;saveState(current,s);render({keepScroll:true});return;}
   const checklist=lessonCompletionChecklist(l);
   const missing=checklist.filter(item=>!item.ok(s));
   if(missing.length){
@@ -1099,7 +1143,7 @@ function toggleCompletion(){
     if(el){el.scrollIntoView({behavior:'smooth',block:'center'});if(el.focus)el.focus();}
     return;
   }
-  s.completed=true;saveState(current,s);render();
+  s.completed=true;saveState(current,s);render({keepScroll:true});
 }
 document.getElementById('completeBtn').onclick=toggleCompletion;document.getElementById('resetBtn').onclick=()=>{if(confirm('현재 과제의 입력 내용을 초기화할까요?')){localStorage.removeItem(key(current));render()}};document.getElementById('prevBtn').onclick=()=>{collectState();if(current>0){current--;localStorage.setItem('aivis_current_v08',current);render()}};document.getElementById('nextBtn').onclick=()=>{
  collectState();
@@ -1143,6 +1187,7 @@ document.getElementById('imageInput').addEventListener('change',e=>{
     let s=loadState(current);s.imageData=dataUrl;saveState(current,s);
   }).catch(()=>{});
 });
+loadLastReport();
 render();
 </script>
 
@@ -1164,6 +1209,7 @@ render();
     <div class="finalItem">
       <b>나의 건축AI 활용능력 셀프평가</b><br>
       <span class="small">1~10번 미션 기록을 채점 기준(사전 관찰 · AI 실험 체계성 · 근거 대조 · 오류 대응 · 기록의 구체성)에 따라 AI가 매우 잘함/잘함/보통/노력 필요 4단계로 평가합니다. 11·12번 보너스 과제는 완료 여부만 별도로 표시됩니다. 이 등급은 참고용이며 절대적인 평가가 아닙니다.</span>
+      <div class="privacyNote">🔒 셀프평가를 누르면 미션 기록(이미지 포함)이 AI 채점을 위해 외부 AI 서버로 전송됩니다. 이름·학번·등급·총평은 담당 교수 확인용으로 기록되며, 기록 원문은 이 사이트 서버에 보관되지 않습니다.</div>
       <div class="actions"><button class="primary primaryLg" id="gradeBtn" onclick="requestGrading()">셀프평가하기</button></div>
       <div id="gradeResult" style="margin-top:10px"></div>
     </div>
