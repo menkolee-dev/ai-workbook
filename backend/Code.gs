@@ -106,7 +106,7 @@ function getOrCreateRosterSheet() {
     props.setProperty('ROSTER_SHEET_ID', ss.getId());
     const sheet = ss.getSheets()[0];
     sheet.setName('응시 기록');
-    const headers = ['날짜', '시각', '이름', '학번', '코어 미션 완료', '종합 등급', '총평', '보완 필요 미션'];
+    const headers = ['날짜', '시각', '이름', '학번', '기본미션 완료', '종합 등급', '총평', '보완 필요 미션'];
     sheet.appendRow(headers);
     const headerRange = sheet.getRange(1, 1, 1, headers.length);
     headerRange.setFontWeight('bold').setBackground('#174c43').setFontColor('#ffffff');
@@ -192,7 +192,7 @@ function sendWeeklyDigest() {
   if (!ADMIN_EMAIL) return;
   const sheet = getOrCreateRosterSheet();
   const values = sheet.getDataRange().getValues();
-  const rows = values.slice(1); // 헤더 제외: [날짜,시각,이름,학번,코어미션완료,종합등급,총평,보완필요미션]
+  const rows = values.slice(1); // 헤더 제외: [날짜,시각,이름,학번,기본미션완료,종합등급,총평,보완필요미션]
   const tz = Session.getScriptTimeZone() || 'Asia/Seoul';
   const now = new Date();
   const weekAgo = new Date();
@@ -309,7 +309,7 @@ function jsonResponse(obj) {
 const IMAGE_FIELD_KEYS = ['imageData', 'slideImage1', 'slideImage2', 'slideImage3', 'slideImage4', 'slideImage5', 'refImageStart', 'refImageMiddle', 'refImageFinal', 'refImageMcp', 'cmpImageBefore', 'cmpImageAfter', 'cmpImageFinal'];
 // 안전장치: 이미지 1장당 base64 용량 상한(약 1.2MB 원본 기준). 이보다 크면 손상되었거나 비정상 데이터로 보고 건너뛴다.
 const MAX_IMAGE_BASE64_CHARS = 1600000;
-// 코어 미션 01~09번은 대표 이미지 1장씩(최대 9장)을 모두 검토한다. 10번(발표자료 슬라이드)은
+// 기본미션 01~09번은 대표 이미지 1장씩(최대 9장)을 모두 검토한다. 10번(발표자료 슬라이드)은
 // 건축 사진 관련성 판단 대상이 아니므로 이미지 채점에서 제외한다(buildImageParts 참고).
 // (학생이 더 많이 올려도, 초과분은 이미지 없이 텍스트 기준으로만 채점되며 감점 사유가 되지 않는다.)
 const MAX_IMAGES_PER_REQUEST = 9;
@@ -328,7 +328,7 @@ function buildSummary(payload) {
   const lines = [];
   lines.push('학생 이름: ' + (student.name || '미기재'));
   lines.push('학번: ' + (student.studentId || '미기재'));
-  lines.push('코어 미션(01~10) 완료 개수: ' + completedCount + ' / ' + core.length);
+  lines.push('기본미션(01~10) 완료 개수: ' + completedCount + ' / ' + core.length);
   lines.push('이미지가 첨부된 미션 수(01~09번 기준): ' + imageMissionCount + ' (최대 ' + MAX_IMAGES_PER_REQUEST + '장까지 [미션 NN 첨부 이미지] 라벨과 함께 순서대로 첨부됨. 10번은 이미지 없이 텍스트로만 판단할 것)');
   lines.push('');
   missions.forEach(function (m) {
@@ -371,7 +371,7 @@ function buildSummary(payload) {
 
 // 미션별 첨부 이미지를 제공자 중립적인 형태({missionId, mimeType, base64})로 모은다.
 // 미션당 대표 이미지 1장만 사용하고, 10번(발표자료 슬라이드)은 건축 사진 관련성 판단 대상이 아니므로 제외한다.
-// 코어 미션(01~09)을 보너스(11~12)보다 우선 포함하고, 전체 개수는 MAX_IMAGES_PER_REQUEST로 제한한다.
+// 기본미션(01~09)을 도전미션(11~12)보다 우선 포함하고, 전체 개수는 MAX_IMAGES_PER_REQUEST로 제한한다.
 function collectMissionImages(payload) {
   const missions = payload.missions || [];
   const images = [];
@@ -448,7 +448,7 @@ function buildGradingPrompt(summary, mode) {
     '너는 건축·공간디자인 AI 활용 수업의 채점 조교다. 아래 학생의 미션 실습 기록을 읽고 참고용 피드백 카드를 작성해라.\n\n' +
     '중요한 규칙:\n' +
     '1) 반드시 세부 점수나 숫자 점수를 매기지 말고, 아래 4단계 등급 중 하나로만 평가해라: ' + tierOptions + '\n' +
-    '2) 미션 01~10(코어 스튜디오)만 아래 5개 기준으로 등급을 매기고, 그것을 종합해 전체 등급(overallTier)도 하나 정해라.\n' +
+    '2) 미션 01~10(기본미션)만 아래 5개 기준으로 등급을 매기고, 그것을 종합해 전체 등급(overallTier)도 하나 정해라.\n' +
     '3) 미션 11(공공건축 MCP 분석)과 미션 12(AI 건축 모델링 검증)는 "도전미션"이며 정규 등급 평가에는 절대 포함하지 않는다(코멘트에서도 "보너스"가 아니라 "도전미션"으로 불러라). ' +
     '완성된 결과물(실제 MCP 실행 화면이나 완성된 영상)은 요구하지 않는다 — 스크린샷과 판단 기록만으로 충분하다. ' +
     '다만 이 두 미션은 가점과 직결되므로 completed:true는 학생이 자기 언어로 남긴 판단 과정이 실제로 확인될 때만 부여해라. ' +
@@ -463,7 +463,7 @@ function buildGradingPrompt(summary, mode) {
     '   - 매우 잘함: 매우 구체적인 관찰/근거에 더해 실제 기준(시공·전공·현장 조건 등)과의 비교, 명확한 판단 이유까지 모두 드러나는 경우\n' +
     '   글자 수가 많다고 무조건 높은 등급을 주지 말고, 내용이 비어 있거나 성의 없이 짧으면 반드시 "노력 필요"로 평가해라.\n' +
     '6) 완성도(개수)를 종합 등급(overallTier)의 상한선으로 반드시 적용해라 — 아무리 내용이 훌륭해도 완료한 미션 수가 적으면 종합 등급을 그 이상 줄 수 없다:\n' +
-    '   - 코어 미션 10개 중 3개 이하 완료: overallTier는 "노력 필요"를 넘을 수 없다\n' +
+    '   - 기본미션 10개 중 3개 이하 완료: overallTier는 "노력 필요"를 넘을 수 없다\n' +
     '   - 4~6개 완료: "보통"을 넘을 수 없다\n' +
     '   - 7~8개 완료: "잘함"을 넘을 수 없다\n' +
     '   - 9~10개 완료해야만 "매우 잘함"이 가능하다\n' +

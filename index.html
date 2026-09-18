@@ -210,7 +210,7 @@ function checkReportStale(){
 function bindAutosave(){document.querySelectorAll('[data-field]').forEach(el=>{el.addEventListener('input',collectState);el.addEventListener('change',collectState)})}
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 let sidebarCollapsed=true;
-function renderSidebar(){let sb=document.getElementById('sidebar');sb.innerHTML='';sb.classList.toggle('collapsed',sidebarCollapsed);let toggleBtn=document.createElement('button');toggleBtn.type='button';toggleBtn.className='sidebarToggleBtn';toggleBtn.textContent=sidebarCollapsed?'▸ 전체 미션 목록 펼치기':'▾ 미션 목록 접기';toggleBtn.onclick=()=>{sidebarCollapsed=!sidebarCollapsed;renderSidebar()};sb.appendChild(toggleBtn);LESSONS.forEach((l,i)=>{if(i===0){let t=document.createElement('div');t.className='sectionLabel';t.textContent='시작하기 · 프로젝트 소개';sb.appendChild(t)}if(i===1){let t=document.createElement('div');t.className='sectionLabel';t.textContent='코어 스튜디오 · 01–10';sb.appendChild(t)}if(i===11){let t=document.createElement('div');t.className='sectionLabel';t.textContent='도전미션 · 11–12';sb.appendChild(t)}let s=loadState(i),b=document.createElement('button'),advanced=['11','12'].includes(l.id),intro=l.id==='00';b.className='lessonBtn'+(intro?' intro':'')+(advanced?' advanced':'')+(i===current?' active':'')+(s.completed?' done':'');b.innerHTML=`<span class="n">${l.id}</span><span class="lt">${l.title}${intro?'<span class="introTag">먼저 시청 · 영상 2편</span>':(advanced?'<span class="advancedTag">도전미션 · 근거 기반</span>':'')}</span>`;b.onclick=()=>{collectState();current=i;localStorage.setItem('aivis_current_v08',i);render()};sb.appendChild(b)})}
+function renderSidebar(){let sb=document.getElementById('sidebar');sb.innerHTML='';sb.classList.toggle('collapsed',sidebarCollapsed);let toggleBtn=document.createElement('button');toggleBtn.type='button';toggleBtn.className='sidebarToggleBtn';toggleBtn.textContent=sidebarCollapsed?'▸ 전체 미션 목록 펼치기':'▾ 미션 목록 접기';toggleBtn.onclick=()=>{sidebarCollapsed=!sidebarCollapsed;renderSidebar()};sb.appendChild(toggleBtn);LESSONS.forEach((l,i)=>{if(i===0){let t=document.createElement('div');t.className='sectionLabel';t.textContent='시작하기 · 프로젝트 소개';sb.appendChild(t)}if(i===1){let t=document.createElement('div');t.className='sectionLabel';t.textContent='기본미션 · 01–10';sb.appendChild(t)}if(i===11){let t=document.createElement('div');t.className='sectionLabel';t.textContent='도전미션 · 11–12';sb.appendChild(t)}let s=loadState(i),b=document.createElement('button'),advanced=['11','12'].includes(l.id),intro=l.id==='00';b.className='lessonBtn'+(intro?' intro':'')+(advanced?' advanced':'')+(i===current?' active':'')+(s.completed?' done':'');b.innerHTML=`<span class="n">${l.id}</span><span class="lt">${l.title}${intro?'<span class="introTag">먼저 시청 · 영상 2편</span>':(advanced?'<span class="advancedTag">도전미션 · 근거 기반</span>':'')}</span>`;b.onclick=()=>{collectState();current=i;localStorage.setItem('aivis_current_v08',i);render()};sb.appendChild(b)})}
 function renderExamples(l){
  let g=document.getElementById('exampleGrid');
  g.innerHTML='';
@@ -586,12 +586,12 @@ function loadFinalSubmitInfo(){try{return JSON.parse(localStorage.getItem('aivis
 function markAllSubmitted(){
   const status=coreMissionsStatus();
   if(status.missing.length){
-    alert('아직 완료되지 않았습니다.\n\n다음 코어 미션을 먼저 완료해주세요:\n\n• '+status.missing.join('\n• '));
+    alert('아직 완료되지 않았습니다.\n\n다음 기본미션을 먼저 완료해주세요:\n\n• '+status.missing.join('\n• '));
     return;
   }
   const info={submittedAt:new Date().toISOString()};
   localStorage.setItem('aivis_final_submit',JSON.stringify(info));
-  alert('코어 미션 10개 완료를 확인했습니다.\n\n⚠ 작성한 내용은 이 브라우저에만 저장됩니다 — 화면을 닫거나 기기·브라우저를 바꾸면 사라지니 "전체 기록 백업"으로 내려받아 두세요.');
+  alert('기본미션 10개 완료를 확인했습니다.\n\n⚠ 작성한 내용은 이 브라우저에만 저장됩니다 — 화면을 닫거나 기기·브라우저를 바꾸면 사라지니 "전체 기록 백업"으로 내려받아 두세요.');
 }
 
 // ===== 학생 정보 =====
@@ -716,7 +716,7 @@ function renderReportAISummary(){
   const selfCheck=report.selfEvalCheck;
   const selfCheckField=(selfCheck&&selfCheck.mismatch&&selfCheck.note)?'<div class="reportField"><span class="reportFieldLabel">자기평가 대조</span><span class="reportFieldValue">⚠ '+esc(selfCheck.note)+'</span></div>':'';
   return '<div class="reportAISummary">'+
-    '<div class="reportTierHero"><span class="reportTierEmoji">'+tierEmoji(report.overallTier)+'</span><span class="reportTierText">'+esc(report.overallTier)+'</span><span class="reportTierSub">코어 미션 '+esc(report.completedCount||'-')+'</span></div>'+
+    '<div class="reportTierHero"><span class="reportTierEmoji">'+tierEmoji(report.overallTier)+'</span><span class="reportTierText">'+esc(report.overallTier)+'</span><span class="reportTierSub">기본미션 '+esc(report.completedCount||'-')+'</span></div>'+
     '<div class="reportField"><span class="reportFieldLabel">총평</span><span class="reportFieldValue">'+esc(report.overallComment)+'</span></div>'+
     hlField+crit+selfCheckField+
   '</div>';
@@ -735,16 +735,16 @@ function buildReportHTML(){
   html+='<div class="small">작성일: '+esc(new Date().toLocaleString('ko-KR'))+'</div></div>';
   html+='<img class="reportCoverArt" src="assets/ai-building-hero.png" alt="" onerror="this.style.display=\'none\'"></div>';
   if(missingCore.length){
-    html+='<div class="reportDraftNotice"><b>⚠ 미완성 초안</b><br>다음 코어 미션이 아직 완료되지 않았습니다: '+missingCore.map(m=>esc(m.id)+'번').join(', ')+'</div>';
+    html+='<div class="reportDraftNotice"><b>⚠ 미완성 초안</b><br>다음 기본미션이 아직 완료되지 않았습니다: '+missingCore.map(m=>esc(m.id)+'번').join(', ')+'</div>';
   }
-  html+='<div class="reportProgress">코어 미션 진행: '+(core.length-missingCore.length)+' / '+core.length+' 완료</div>';
+  html+='<div class="reportProgress">기본미션 진행: '+(core.length-missingCore.length)+' / '+core.length+' 완료</div>';
   html+='<h3 class="reportSectionTitle">종합 요약</h3>';
   if(window.__lastReport&&window.__lastReportSnapshot&&window.__lastReportSnapshot!==gradingSnapshot()){
     html+='<div class="reportDraftNotice"><b>⚠ 이전 답안 기준 AI 총평</b><br>셀프평가를 받은 뒤 기록을 수정했습니다. "셀프평가하기"를 다시 받으면 최신 기록으로 갱신됩니다.</div>';
   }
   html+=renderReportAISummary();
   html+='<div class="reportPageBreak"></div>';
-  html+='<h3 class="reportSectionTitle">코어 스튜디오 · 01–10</h3>';
+  html+='<h3 class="reportSectionTitle">기본미션 · 01–10</h3>';
   html+='<div class="reportMissionGrid">'+core.map(renderReportMissionRow).join('')+'</div>';
   html+='<h3 class="reportSectionTitle">도전미션 · 11–12 (정규 채점 제외)</h3>';
   html+='<div class="reportMissionGrid">'+bonus.map(renderReportMissionRow).join('')+'</div>';
@@ -761,7 +761,7 @@ function buildReportHTML(){
   if(missingCore.length){
     html+='<ul class="reportIssueList">'+missingCore.map(m=>'<li>'+esc(m.id)+'번 — '+esc(m.title)+' 미완료</li>').join('')+'</ul>';
   }else{
-    html+='<div class="small">코어 미션 10개 모두 완료되었습니다.</div>';
+    html+='<div class="small">기본미션 10개 모두 완료되었습니다.</div>';
   }
   html+='<div class="reportFooterNote">⚠ 작성한 내용은 이 브라우저에만 저장됩니다 — 화면을 닫거나 기기·브라우저를 바꾸면 사라지니 "전체 기록 백업"으로 내려받아 두세요.</div>';
   return html;
@@ -1001,7 +1001,7 @@ function renderReport(report){
         <div>
           <div class="reportCertTitle">나의 건축AI 활용능력 셀프평가 결과</div>
           <div class="reportCertOverall">${tierEmoji(report.overallTier)} ${esc(report.overallTier)||'-'}</div>
-          ${report.completedCount?`<div class="small" style="color:#cfe4dc;margin-top:2px">코어 미션 완료 ${esc(report.completedCount)}</div>`:''}
+          ${report.completedCount?`<div class="small" style="color:#cfe4dc;margin-top:2px">기본미션 완료 ${esc(report.completedCount)}</div>`:''}
         </div>
         <div class="reportCertLogo"><img src="assets/kbu-logo.png" alt="경복대학교" onerror="this.parentNode.style.display='none'"></div>
       </div>
@@ -1027,7 +1027,7 @@ function downloadReport(){
   if(!report){alert('먼저 셀프평가를 받아주세요.');return;}
   const info=loadStudentInfo();
   let out=`Architecture AX Expert\n나의 건축AI 활용능력 셀프평가 결과\n${'='.repeat(44)}\n이름: ${info.name}\n학번: ${info.studentId}\n생성일시: ${new Date().toLocaleString('ko-KR')}\n${'='.repeat(44)}\n\n`;
-  out+=`코어 미션 완료: ${report.completedCount||'-'}\n`;
+  out+=`기본미션 완료: ${report.completedCount||'-'}\n`;
   out+=`종합 등급: ${report.overallTier}\n${report.overallComment}\n\n`;
   const hl=summarizeStrengths(report);
   if(hl.strong.length||hl.weak.length) out+=`강점: ${hl.strong.length?hl.strong.join(' · '):'아직 없음'} / 보완: ${hl.weak.length?hl.weak.join(' · '):'없음'}\n\n`;
