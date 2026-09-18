@@ -1189,6 +1189,8 @@ function lessonCompletionChecklist(l){
   (EXTRA_REQUIRED_FIELDS[l.id]||[]).forEach(f=>{
     items.push({ok:s=>(s[f.key]||'').trim(),label:f.label,selector:'[data-field="'+f.key+'"]'});
   });
+  // 10번은 "5장의 프레젠테이션"이 과제이므로 슬라이드가 한 장도 없으면 완료로 치지 않는다.
+  if(l.id==='10') items.push({ok:s=>[1,2,3,4,5].some(n=>s['slideImage'+n]),label:'발표 슬라이드 1장 이상',selector:'#slideBox1'});
   return items;
 }
 function toggleCompletion(){
