@@ -348,14 +348,17 @@ function jsonResponse(obj) {
 }
 
 // 텍스트 요약에서는 제외하고 별도로 이미지 파트로 첨부할 필드명들
-// (imageData=1~9번 메인 이미지, slideImage*=10번 슬라이드, refImage*=11·12번 스크린샷, cmpImage*=05번 비교 이미지)
-const IMAGE_FIELD_KEYS = ['imageData', 'slideImage1', 'slideImage2', 'slideImage3', 'slideImage4', 'slideImage5', 'refImageStart', 'refImageMiddle', 'refImageFinal', 'refImageMcp', 'cmpImageBefore', 'cmpImageAfter', 'cmpImageFinal'];
+// (imageData=1~9번 메인 이미지, imageData2=08번의 두 번째 AI 결과, slideImage*=10번 슬라이드,
+//  refImage*=11·12번 스크린샷, cmpImage*=05번 비교 이미지)
+const IMAGE_FIELD_KEYS = ['imageData', 'imageData2', 'slideImage1', 'slideImage2', 'slideImage3', 'slideImage4', 'slideImage5', 'refImageStart', 'refImageMiddle', 'refImageFinal', 'refImageMcp', 'cmpImageBefore', 'cmpImageAfter', 'cmpImageFinal'];
 // 안전장치: 이미지 1장당 base64 용량 상한(약 1.2MB 원본 기준). 이보다 크면 손상되었거나 비정상 데이터로 보고 건너뛴다.
 const MAX_IMAGE_BASE64_CHARS = 1600000;
-// 기본미션 01~09번은 대표 이미지 1장씩(최대 9장)을 모두 검토한다. 10번(발표자료 슬라이드)은
-// 건축 사진 관련성 판단 대상이 아니므로 이미지 채점에서 제외한다(buildImageParts 참고).
+// 기본미션 01~09번은 대표 이미지 1장씩 검토하되, 08번(서로 다른 AI 비교)만 두 장(A/B)을 받아 최대 10장이다.
+// 10번(발표자료 슬라이드)은 건축 사진 관련성 판단 대상이 아니므로 이미지 채점에서 제외한다.
 // (학생이 더 많이 올려도, 초과분은 이미지 없이 텍스트 기준으로만 채점되며 감점 사유가 되지 않는다.)
-const MAX_IMAGES_PER_REQUEST = 9;
+const MAX_IMAGES_PER_REQUEST = 10;
+// 미션별로 첨부 이미지를 몇 장까지 보낼지. 지정하지 않은 미션은 1장.
+const IMAGES_PER_MISSION = { '08': 2 };
 
 function hasAnyImage(f) {
   return !!(f && IMAGE_FIELD_KEYS.some(function (k) { return f[k]; }));
@@ -372,7 +375,8 @@ function buildSummary(payload) {
   lines.push('학생 이름: ' + (student.name || '미기재'));
   lines.push('학번: ' + (student.studentId || '미기재'));
   lines.push('기본미션(01~10) 완료 개수: ' + completedCount + ' / ' + core.length);
-  lines.push('이미지가 첨부된 미션 수(01~09번 기준): ' + imageMissionCount + ' (최대 ' + MAX_IMAGES_PER_REQUEST + '장까지 [미션 NN 첨부 이미지] 라벨과 함께 순서대로 첨부됨. 10번은 이미지 없이 텍스트로만 판단할 것)');
+  lines.push('이미지가 첨부된 미션 수(01~09번 기준): ' + imageMissionCount + ' (최대 ' + MAX_IMAGES_PER_REQUEST + '장까지 [미션 NN 첨부 이미지] 라벨과 함께 순서대로 첨부됨. 10번은 이미지 없이 텍스트로만 판단할 것. ' +
+    '08번은 서로 다른 AI로 만든 결과 두 장이 [미션 08 첨부 이미지 A]·[미션 08 첨부 이미지 B]로 첨부될 수 있으며, 학생이 적은 두 AI 비교 판단이 실제 두 이미지의 차이와 맞는지 대조할 것)');
   lines.push('');
   missions.forEach(function (m) {
     lines.push('[미션 ' + m.id + '] ' + m.title + ' - ' + (m.completed ? '완료' : '미완료'));
@@ -424,9 +428,11 @@ function collectMissionImages(payload) {
     return aBonus - bBonus;
   });
   ordered.forEach(function (m) {
-    if (images.length >= MAX_IMAGES_PER_REQUEST) return;
     const f = m.fields || {};
-    for (let i = 0; i < IMAGE_FIELD_KEYS.length; i++) {
+    const limit = IMAGES_PER_MISSION[m.id] || 1;
+    let taken = 0;
+    for (let i = 0; i < IMAGE_FIELD_KEYS.length && taken < limit; i++) {
+      if (images.length >= MAX_IMAGES_PER_REQUEST) return;
       const dataUrl = f[IMAGE_FIELD_KEYS[i]];
       if (!dataUrl || typeof dataUrl !== 'string') continue;
       const match = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
@@ -434,18 +440,24 @@ function collectMissionImages(payload) {
       const mimeType = match[1];
       const base64 = match[2];
       if (base64.length > MAX_IMAGE_BASE64_CHARS) continue; // 비정상적으로 큰 데이터는 건너뛴다
-      images.push({ missionId: m.id, mimeType: mimeType, base64: base64 });
-      break; // 미션당 대표 이미지 1장만 사용
+      // 같은 미션에서 두 장 이상 보낼 때는 A/B 라벨로 구분해 AI가 어느 쪽인지 알게 한다.
+      const label = limit > 1 ? ' ' + String.fromCharCode(65 + taken) : '';
+      images.push({ missionId: m.id, label: label, mimeType: mimeType, base64: base64 });
+      taken++;
     }
   });
   return images;
+}
+
+function imageLabel(img) {
+  return '[미션 ' + img.missionId + ' 첨부 이미지' + (img.label || '') + ']';
 }
 
 // Gemini 멀티모달 파트(라벨 텍스트 + inlineData) 형식으로 변환한다.
 function buildImagePartsGemini(images) {
   const parts = [];
   images.forEach(function (img) {
-    parts.push({ text: '[미션 ' + img.missionId + ' 첨부 이미지]' });
+    parts.push({ text: imageLabel(img) });
     parts.push({ inlineData: { mimeType: img.mimeType, data: img.base64 } });
   });
   return parts;
@@ -456,7 +468,7 @@ function buildImagePartsGemini(images) {
 function buildImagePartsOpenAI(images) {
   const parts = [];
   images.forEach(function (img) {
-    parts.push({ type: 'input_text', text: '[미션 ' + img.missionId + ' 첨부 이미지]' });
+    parts.push({ type: 'input_text', text: imageLabel(img) });
     parts.push({ type: 'input_image', image_url: 'data:' + img.mimeType + ';base64,' + img.base64, detail: 'low' });
   });
   return parts;
@@ -612,7 +624,8 @@ function gradeWithGemini(prompt, images) {
   const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + apiKey;
   const body = {
     contents: [{ parts: [{ text: prompt }].concat(imageParts) }],
-    generationConfig: { temperature: 0.3, responseMimeType: 'application/json' }
+    // 같은 기록에 같은 결과가 나오도록 무작위성을 최소화한다(완전한 결정성은 보장되지 않음).
+    generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
   };
 
   // Gemini가 일시적으로 혼잡(503)하거나 요청이 몰릴 때(429)는 점점 더 길게 쉬었다가 자동으로 재시도한다.

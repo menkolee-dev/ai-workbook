@@ -145,6 +145,11 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 .goodExample summary{cursor:pointer;font-weight:800;color:var(--accent)}
 .goodExample p{margin:6px 0 0}
 .privacyNote{font-size:11.5px;color:var(--muted);line-height:1.55;margin-top:8px}
+.howToFlow{display:flex;flex-wrap:wrap;gap:6px 14px;margin:-2px 0 14px;padding:10px 14px;background:#f2f6f4;border-radius:11px;font-size:12.5px;line-height:1.5;color:var(--text)}
+.howToFlow b{color:var(--accent);margin-right:2px}
+#uploadPair.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#uploadPair.pair .upload{min-height:130px}
+.guideOnly{color:var(--muted);font-size:12.5px;margin-top:4px}
 @media(max-width:600px){.reportMissionGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.missionNoteGrid{grid-template-columns:1fr}.reportCertificate{padding:20px}.reportCertTop{flex-direction:column-reverse;align-items:flex-start;gap:10px}.reportCertComment{max-width:100%}.reportCertMotif{display:none}}
 .reportDisclaimer{font-size:12px;color:var(--muted);line-height:1.6;background:#fafaf7;border:1px solid var(--line);border-radius:11px;padding:13px 15px;margin-bottom:14px;break-inside:avoid}
 .sectionLabel{padding:13px 10px 5px;color:#8a8f92;font-size:11px;letter-spacing:.12em;font-weight:900}.lessonBtn.advanced{margin-top:4px;background:#f2f5f8;border:1px solid #dbe3ea}.lessonBtn.advanced.active{background:var(--navy);color:#fff}.lessonBtn.advanced .n{border-color:#94a7b8}.lessonBtn.advanced.active .n{border-color:#fff}.advancedTag{display:block;color:#7d4ac7;font-size:9px;letter-spacing:.08em;margin-top:3px}.lessonBtn.advanced.active .advancedTag{color:#ded1ff}
@@ -175,7 +180,9 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 </div>
 
 <div id="challengeWorkspace"></div>
-<div class="card" id="projectInputCard"><div class="eyebrow">이제 내 차례</div><h3>나의 실습 이미지</h3><div class="grid2"><div><div class="upload" id="uploadBox"><div id="uploadPlaceholder">＋ 기준 이미지 선택<br><span class="small">JPG / PNG / WebP 미리보기</span></div><input type="file" accept="image/*" id="imageInput"></div><div class="small" style="color:var(--muted);margin-top:6px">💡 이 이미지는 AI 셀프평가 시 함께 검토됩니다. 미션과 무관한 이미지는 낮은 평가를 받을 수 있어요.</div></div><div><label>프로젝트 메모</label><textarea data-field="projectNote" placeholder="용도, 대상, 설계조건, 유지할 요소 등을 기록"></textarea><label>오늘의 핵심 목표</label><input data-field="goal" placeholder="예: 기존 매스를 유지하고 입면 대안 3개 만들기"></div></div></div>
+<div class="card" id="projectInputCard"><div class="eyebrow">이제 내 차례</div><h3>나의 실습 이미지</h3>
+<div class="howToFlow" id="howToFlow"><span><b>①</b> 위 예제로 이 미션에서 무엇을 만드는지 파악</span><span><b>②</b> 사용하는 AI 도구에서 직접 실험</span><span><b>③</b> 결과 이미지를 아래에 올리기</span><span><b>④</b> STEP마다 관찰·판단을 기록</span><span><b>⑤</b> 사람 확인 후 완료하기</span></div>
+<div class="grid2"><div><div id="uploadPair"><div class="upload" id="uploadBox"><div id="uploadPlaceholder">＋ 기준 이미지 선택<br><span class="small">JPG / PNG / WebP 미리보기</span></div><input type="file" accept="image/*" id="imageInput"></div><div class="upload" id="uploadBox2" style="display:none"><div id="uploadPlaceholder2">＋ AI B 결과<br><span class="small">다른 AI로 만든 결과</span></div><input type="file" accept="image/*" id="imageInput2"></div></div><div class="small" style="color:var(--muted);margin-top:6px">💡 이 이미지는 AI 셀프평가 시 함께 검토됩니다. 미션과 무관한 이미지는 낮은 평가를 받을 수 있어요.</div></div><div><label>프로젝트 메모</label><textarea data-field="projectNote" placeholder="용도, 대상, 설계조건, 유지할 요소 등을 기록"></textarea><label>오늘의 핵심 목표</label><input data-field="goal" placeholder="예: 기존 매스를 유지하고 입면 대안 3개 만들기"></div></div></div>
 
 <div id="promptBlock"></div><div id="steps"></div>
 
@@ -528,7 +535,17 @@ const GOOD_EXAMPLE_HTML=`<details class="goodExample"><summary>💡 이렇게 �
 <p><b>좋은 예</b> · "5층 규모의 노출콘크리트+유리 파사드 교육시설. 계단식 매스와 수평 밴드창이 특징이고, 주변이 저층 주거지라 매스가 상대적으로 커 보인다. 남측 외부계단이 입면의 리듬을 만든다."</p>
 <p><b>부족한 예</b> · "건물을 관찰함" / "완료" / "네"</p>
 <p class="small">AI는 글자 수가 아니라 <b>무엇을 봤고 어떤 근거로 판단했는지</b>가 드러나는지를 봅니다. 미션마다 같은 문장을 복사하면 낮게 평가됩니다.</p></details>`;
-function renderSteps(l){let h=document.getElementById('steps');h.innerHTML='';l.steps.forEach((st,idx)=>{let c=document.createElement('div');c.className='card';c.innerHTML=`<div class="eyebrow">${st[0]}</div><h3>${st[1]}</h3><p>${st[2]}</p><label>나의 기록</label><textarea data-field="step${idx+1}" placeholder="관찰, 프롬프트, 결과, 수정사항 등을 기록"></textarea>${(l.id==='01'&&idx===0)?GOOD_EXAMPLE_HTML:''}`;h.appendChild(c)})}
+function renderSteps(l){
+  let h=document.getElementById('steps');h.innerHTML='';
+  // 도전미션(11·12)은 위 작업공간이 곧 기록칸이라, STEP은 기록 없이 진행 순서만 한 카드로 안내한다.
+  if(['11','12'].includes(l.id)){
+    let c=document.createElement('div');c.className='card';
+    c.innerHTML=`<div class="eyebrow">진행 순서</div><h3>이 순서로 진행하고, 기록은 위 작업공간에 남깁니다</h3>`+
+      l.steps.map(st=>`<div class="resultBox" style="margin-top:8px"><b>${st[0]} · ${st[1]}</b><p class="small" style="margin:0">${st[2]}</p></div>`).join('');
+    h.appendChild(c);return;
+  }
+  l.steps.forEach((st,idx)=>{let c=document.createElement('div');c.className='card';c.innerHTML=`<div class="eyebrow">${st[0]}</div><h3>${st[1]}</h3><p>${st[2]}</p><label>나의 기록</label><textarea data-field="step${idx+1}" placeholder="관찰, 프롬프트, 결과, 수정사항 등을 기록"></textarea>${(l.id==='01'&&idx===0)?GOOD_EXAMPLE_HTML:''}`;h.appendChild(c)});
+}
 function renderPrompt(l){let h=document.getElementById('promptBlock');h.innerHTML='';if(!l.prompt)return;h.innerHTML=`<div class="card"><div class="eyebrow">프롬프트 복사하기</div><h3>예제 프롬프트</h3><div class="prompt" id="promptText">${l.prompt}</div><div class="actions"><button class="primary" onclick="copyPrompt()">프롬프트 복사</button></div></div>`}
 function copyPrompt(){
   const text=document.getElementById('promptText').innerText;
@@ -691,7 +708,7 @@ const REPORT_FIELD_LABELS={
   g2bQuestion:'검색 질문',g2bConditions:'검색 조건',g2bEvidence:'선택한 공고와 근거',g2bDecision:'반영/제외 조건',
   videoIntent:'공간 의도와 시나리오',cameraPath:'6컷 카메라 경로',modelLocks:'유지 조건',spatialAudit:'발견한 오류와 최종 판단'
 };
-const REPORT_IMAGE_KEYS=['imageData','slideImage1','slideImage2','slideImage3','slideImage4','slideImage5','refImageStart','refImageMiddle','refImageFinal','refImageMcp','cmpImageBefore','cmpImageAfter','cmpImageFinal'];
+const REPORT_IMAGE_KEYS=['imageData','imageData2','slideImage1','slideImage2','slideImage3','slideImage4','slideImage5','refImageStart','refImageMiddle','refImageFinal','refImageMcp','cmpImageBefore','cmpImageAfter','cmpImageFinal'];
 // 인쇄본은 학생이 쓴 자유서술(STEP 기록·소감 등)을 다시 보여주지 않는다 — 그 내용은 이미 AI가 읽고
 // 판단했고, 위쪽 종합 요약에 반영되어 있다. 여기서는 완료 여부와 최종 결정(있는 경우)만 한 줄로 표시한다.
 function renderReportMissionRow(m){
@@ -911,11 +928,20 @@ async function requestGrading(){
   collectState();
   const info=saveStudentInfo();
   if(!info.name||!info.studentId){alert('이름과 학번을 먼저 입력해주세요.');return;}
+  const btn=document.getElementById('gradeBtn'),box=document.getElementById('gradeResult');
   if(!gradingAutoRetried){
     if(coreMissionsStatus().completedCount===0&&!confirm('아직 완료한 미션이 없습니다.\n\n지금 평가를 받으면 모든 항목이 "노력 필요"로 나옵니다. 그래도 진행할까요?')) return;
-    if(window.__lastReport&&window.__lastReportSnapshot===gradingSnapshot()&&!confirm('지난 평가 이후 기록이 바뀌지 않았습니다.\n\n같은 결과가 나올 가능성이 큰데 다시 받을까요?')) return;
+    // 기록이 바뀌지 않았으면 AI를 다시 부르지 않고 지난 결과를 그대로 보여준다.
+    // 같은 내용에 매번 다른 등급이 나오는 혼란을 막고, 심사 예산도 아낀다.
+    if(window.__lastReport&&window.__lastReportSnapshot===gradingSnapshot()){
+      renderReport(window.__lastReport);
+      const note=document.createElement('div');
+      note.className='reportDraftNotice';
+      note.innerHTML='<b>지난 결과를 다시 표시했습니다</b><br><span class="small">기록이 바뀌지 않아 AI를 다시 호출하지 않았습니다. 내용을 수정한 뒤 다시 누르면 새로 평가합니다.</span>';
+      box.insertBefore(note,box.firstChild);
+      return;
+    }
   }
-  const btn=document.getElementById('gradeBtn'),box=document.getElementById('gradeResult');
   if(GAS_ENDPOINT.indexOf('여기에_배포된_스크립트_ID')!==-1){
     box.innerHTML='<div class="safetyNotice"><b>채점 서버가 아직 연결되지 않았습니다.</b><br><span class="small">DEPLOY.md 안내대로 Google Apps Script를 배포한 뒤 GAS_ENDPOINT 값을 실제 웹앱 주소로 바꿔주세요.</span></div>';
     return;
@@ -933,7 +959,11 @@ async function requestGrading(){
   try{
     const payload={student:info,missions:collectAllMissionData(),selfEval:loadSelfEval(),sentAt:new Date().toISOString(),secret:GAS_SECRET};
     const res=await fetch(GAS_ENDPOINT,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
-    const data=await res.json();
+    // Apps Script는 재배포 직후나 일시적 오류 때 JSON 대신 HTML 페이지를 돌려준다. 그 원문을 학생에게 보여주지 않는다.
+    const rawText=await res.text();
+    let data;
+    try{ data=JSON.parse(rawText); }
+    catch(e){ throw new Error('__transient__'); }
     if(!data.ok) throw new Error(data.error||'채점 서버 오류');
     window.__lastReport=data.report;
     window.__lastReportSnapshot=gradingSnapshot();
@@ -945,15 +975,17 @@ async function requestGrading(){
     renderReport(data.report);
   }catch(err){
     clearInterval(loadingTimer);
-    const msg=String(err.message||err);
-    const congested=msg.indexOf('혼잡')!==-1;
-    if(congested&&!gradingAutoRetried){
+    let msg=String(err.message||err);
+    // 네트워크 단절(Failed to fetch), HTML 응답, 서버 혼잡은 모두 잠시 뒤 저절로 풀리는 경우가 많아 한 번은 자동으로 재시도한다.
+    const transient=msg==='__transient__'||msg.indexOf('혼잡')!==-1||err instanceof TypeError;
+    if(transient&&!gradingAutoRetried){
       gradingAutoRetried=true;
-      box.innerHTML='<div class="gradeLoading"><div class="gradeSpinner"></div><div class="gradeLoadingMsg">서버가 혼잡하여 자동으로 한 번 더 시도합니다…</div><div class="gradeLoadingSub">잠시만 기다려주세요.</div></div>';
-      setTimeout(requestGrading,3000);
+      box.innerHTML='<div class="gradeLoading"><div class="gradeSpinner"></div><div class="gradeLoadingMsg">서버 응답이 잠시 불안정해 자동으로 한 번 더 시도합니다…</div><div class="gradeLoadingSub">잠시만 기다려주세요.</div></div>';
+      setTimeout(requestGrading,4000);
       return;
     }
     gradingAutoRetried=false;
+    if(transient) msg='서버 응답이 잠시 불안정합니다. 잠시 후 다시 한번 시도해 보시겠어요?';
     box.innerHTML=`<div class="safetyNotice"><b>채점 결과를 받지 못했어요</b><br><span class="small" style="white-space:pre-line">${esc(msg)}</span></div><div class="actions" style="margin-top:10px"><button class="primary" onclick="requestGrading()">다시 시도</button></div>`;
     btn.disabled=false;btn.textContent=prevText;
     return;
@@ -1112,6 +1144,19 @@ function render(opts){
   }else{
     document.getElementById('uploadPlaceholder').style.display='block';
   }
+  // 08번은 서로 다른 AI의 결과 두 장을 나란히 올려 비교한다.
+  const twoImages=l.id==='08';
+  document.getElementById('uploadPair').classList.toggle('pair',twoImages);
+  document.getElementById('uploadBox2').style.display=twoImages?'flex':'none';
+  document.getElementById('uploadPlaceholder').innerHTML=twoImages?'＋ AI A 결과<br><span class="small">첫 번째 AI로 만든 결과</span>':'＋ 기준 이미지 선택<br><span class="small">JPG / PNG / WebP 미리보기</span>';
+  document.getElementById('uploadBox2').querySelectorAll('img').forEach(x=>x.remove());
+  if(twoImages&&s.imageData2){
+    document.getElementById('uploadPlaceholder2').style.display='none';
+    let img2=document.createElement('img');img2.src=s.imageData2;
+    document.getElementById('uploadBox2').appendChild(img2);
+  }else{
+    document.getElementById('uploadPlaceholder2').style.display='block';
+  }
   if(!(opts&&opts.keepScroll)) window.scrollTo({top:0,behavior:'smooth'});
 }
 function updateProgress(){
@@ -1130,9 +1175,10 @@ const EXTRA_REQUIRED_FIELDS={
   '12':[{key:'videoIntent',label:'공간 의도와 이용 시나리오'},{key:'spatialAudit',label:'발견한 오류와 최종 판단'}]
 };
 function lessonCompletionChecklist(l){
+  const challenge=['11','12'].includes(l.id);
   const items=[
     {ok:s=>s.check1&&s.check2&&s.check3&&s.check4,label:'Human Check 4개 항목',selector:'.checks'},
-    {ok:s=>(s.step1||'').trim(),label:'AI 사용 전 나의 첫 판단 기록',selector:'[data-field="step1"]'},
+    ...(challenge?[]:[{ok:s=>(s.step1||'').trim(),label:'AI 사용 전 나의 첫 판단 기록',selector:'[data-field="step1"]'}]),
     {ok:s=>s.decisionType,label:'채택·수정·거부 중 최종 결정',selector:'[data-field="decisionType"]'},
     {ok:s=>(s.decision||'').trim(),label:'오류·판단 근거',selector:'[data-field="decision"]'}
   ];
@@ -1196,6 +1242,18 @@ document.getElementById('imageInput').addEventListener('change',e=>{
   let img=document.createElement('img');img.src=previewURL;box.appendChild(img);
   compressImageToBase64(f,256,0.5).then(dataUrl=>{
     let s=loadState(current);s.imageData=dataUrl;saveState(current,s);
+  }).catch(()=>{});
+});
+document.getElementById('imageInput2').addEventListener('change',e=>{
+  let f=e.target.files[0];if(!f)return;
+  if(f.size>20*1024*1024){alert('파일이 너무 큽니다 (20MB 이하만 가능). 더 작은 이미지를 선택해주세요.');e.target.value='';return}
+  let box=document.getElementById('uploadBox2');box.querySelectorAll('img').forEach(x=>x.remove());
+  document.getElementById('uploadPlaceholder2').style.display='none';
+  const tempUrl=URL.createObjectURL(f);
+  let img=document.createElement('img');img.src=tempUrl;box.appendChild(img);
+  compressImageToBase64(f,256,0.5).then(dataUrl=>{
+    let s=loadState(current);s.imageData2=dataUrl;saveState(current,s);
+    img.src=dataUrl;URL.revokeObjectURL(tempUrl);
   }).catch(()=>{});
 });
 loadLastReport();
