@@ -59,6 +59,13 @@ function doPost(e) {
     if (CLASS_SECRET && payload.secret !== CLASS_SECRET) {
       return jsonResponse({ ok: false, error: safeErrorMessage('인증 실패: secret 값이 올바르지 않습니다.') });
     }
+
+    // 1장 결과 저장 신호는 AI를 호출하지 않으므로 채점 횟수 한도에서 제외한다.
+    if (payload.action === 'certificateSaved') {
+      markCertificateSaved(payload);
+      return jsonResponse({ ok: true });
+    }
+
     checkAndIncrementDailyQuota();
 
     const report = gradeWithAI(payload);
@@ -155,6 +162,39 @@ function logToRoster(payload, report) {
   }
 }
 
+// 응시 기록 시트에서 "결과 저장" 열(I열)의 위치. 기존 시트에는 이 열이 없으므로 처음 기록할 때 헤더를 만든다.
+const SAVED_COLUMN = 9;
+
+// 학생이 1장 결과를 인쇄·PDF로 저장하려 한 시각을, 그 학생의 가장 최근 채점 기록 행에 적어둔다.
+// 브라우저는 실제 저장 여부를 알려주지 않으므로 "인쇄 창을 연 시점"까지만 기록된다.
+function markCertificateSaved(payload) {
+  try {
+    const student = payload.student || {};
+    const name = String(student.name || '');
+    const sid = String(student.studentId || '');
+    if (!name && !sid) return;
+
+    const sheet = getOrCreateRosterSheet();
+    if (!sheet.getRange(1, SAVED_COLUMN).getValue()) {
+      sheet.getRange(1, SAVED_COLUMN).setValue('결과 저장')
+        .setFontWeight('bold').setBackground('#174c43').setFontColor('#ffffff');
+      sheet.setColumnWidth(SAVED_COLUMN, 110);
+    }
+
+    const values = sheet.getDataRange().getValues();
+    const tz = Session.getScriptTimeZone() || 'Asia/Seoul';
+    const stamp = Utilities.formatDate(new Date(), tz, 'MM-dd HH:mm');
+    for (let r = values.length - 1; r >= 1; r--) {
+      if (String(values[r][2]) === name && String(values[r][3]) === sid) {
+        sheet.getRange(r + 1, SAVED_COLUMN).setValue(stamp);
+        return;
+      }
+    }
+  } catch (e) {
+    // 기록 실패는 조용히 무시한다 — 학생의 인쇄는 이미 진행 중이다.
+  }
+}
+
 // 남은 채점 예산을 한 줄로 요약한다. 심사 모드(openai)일 때는 누적 상한 기준, 평소(gemini)에는 일일 상한 기준.
 function budgetSummary() {
   const props = PropertiesService.getScriptProperties();
@@ -211,6 +251,7 @@ function sendWeeklyDigest() {
   const periodLabel = Utilities.formatDate(weekAgo, tz, 'M월 d일') + ' ~ ' + Utilities.formatDate(now, tz, 'M월 d일');
   const rosterUrl = sheet.getParent().getUrl();
   const budget = budgetSummary();
+  const savedCount = recent.filter(function (r) { return !!r[SAVED_COLUMN - 1]; }).length;
 
   const rowsHtml = recent.map(function (r) {
     return '<tr style="border-bottom:1px solid #e5e5e0">' +
@@ -220,6 +261,7 @@ function sendWeeklyDigest() {
       '<td style="padding:6px 8px">' + escHtml(r[4]) + '</td>' +
       '<td style="padding:6px 8px"><b>' + escHtml(r[5]) + '</b></td>' +
       '<td style="padding:6px 8px;color:#62676a">' + escHtml(r[7]) + '</td>' +
+      '<td style="padding:6px 8px;color:' + (r[SAVED_COLUMN - 1] ? '#174c43' : '#b0b3b5') + '">' + (r[SAVED_COLUMN - 1] ? '저장함' : '—') + '</td>' +
       '</tr>';
   }).join('');
 
@@ -229,18 +271,19 @@ function sendWeeklyDigest() {
     '<div style="font-size:11px;letter-spacing:.08em;color:#bfe0d6;text-transform:uppercase;font-weight:800">Architecture AX Expert · 관리자 전용 주간 요약</div>' +
     '<div style="font-size:18px;font-weight:800;margin-top:4px">' + periodLabel + '</div>' +
     '</div>' +
-    '<p style="font-size:13px;color:#333">이번 주 셀프평가 요청 <b>' + recent.length + '건</b> · 등급 분포: ' + tierSummary + '</p>' +
+    '<p style="font-size:13px;color:#333">이번 주 셀프평가 요청 <b>' + recent.length + '건</b> · 결과 저장 <b>' + savedCount + '건</b> · 등급 분포: ' + tierSummary + '</p>' +
     '<p style="font-size:12.5px;color:' + (budget.left <= 20 ? '#b84444' : '#62676a') + ';margin:-6px 0 12px">' +
     escHtml(budget.label) + ': <b>' + escHtml(budget.text) + '</b>' + (budget.left <= 20 ? ' — 잔여량이 얼마 남지 않았습니다.' : '') + '</p>' +
     (recent.length
       ? '<table style="width:100%;border-collapse:collapse;font-size:12.5px"><tr style="background:#f2f6f4;text-align:left">' +
         '<th style="padding:6px 8px">일시</th><th style="padding:6px 8px">이름</th><th style="padding:6px 8px">학번</th>' +
-        '<th style="padding:6px 8px">완료</th><th style="padding:6px 8px">등급</th><th style="padding:6px 8px">보완 미션</th></tr>' + rowsHtml + '</table>'
+        '<th style="padding:6px 8px">완료</th><th style="padding:6px 8px">등급</th><th style="padding:6px 8px">보완 미션</th>' +
+        '<th style="padding:6px 8px">결과 저장</th></tr>' + rowsHtml + '</table>'
       : '<p style="color:#888;font-size:13px">이번 주는 활동이 없었습니다.</p>') +
     '<p style="margin-top:16px;font-size:12px;color:#888">전체 명단(관리자 전용 시트): <a href="' + rosterUrl + '">' + rosterUrl + '</a></p>' +
     '</div>';
 
-  const plainBody = '[관리자 전용] 지난 7일간(' + periodLabel + ') 셀프평가 요청: ' + recent.length + '건\n등급 분포: ' + tierSummary +
+  const plainBody = '[관리자 전용] 지난 7일간(' + periodLabel + ') 셀프평가 요청: ' + recent.length + '건 (결과 저장 ' + savedCount + '건)\n등급 분포: ' + tierSummary +
     '\n' + budget.label + ': ' + budget.text + '\n\n전체 명단: ' + rosterUrl;
   const dateLabel = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
   MailApp.sendEmail({ to: ADMIN_EMAIL, subject: '[AX Expert 관리자] 주간 채점 현황 (' + dateLabel + ')', body: plainBody, htmlBody: htmlBody });
