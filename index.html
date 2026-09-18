@@ -151,6 +151,8 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 #uploadPair.pair .upload{min-height:130px}
 .guideOnly{color:var(--muted);font-size:12.5px;margin-top:4px}
 @media(max-width:600px){.reportMissionGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.missionNoteGrid{grid-template-columns:1fr}.reportCertificate{padding:20px}.reportCertTop{flex-direction:column-reverse;align-items:flex-start;gap:10px}.reportCertComment{max-width:100%}.reportCertMotif{display:none}}
+.reportCheer{background:linear-gradient(135deg,#f2f6f4,#e7efec);border:1px solid #cdded8;border-radius:13px;padding:16px 18px;margin:4px 0 14px;font-size:14px;line-height:1.65;color:var(--text);break-inside:avoid}
+.reportCheer b{display:block;font-size:15.5px;color:var(--accent);margin-bottom:5px}
 .reportDisclaimer{font-size:12px;color:var(--muted);line-height:1.6;background:#fafaf7;border:1px solid var(--line);border-radius:11px;padding:13px 15px;margin-bottom:14px;break-inside:avoid}
 .sectionLabel{padding:13px 10px 5px;color:#8a8f92;font-size:11px;letter-spacing:.12em;font-weight:900}.lessonBtn.advanced{margin-top:4px;background:#f2f5f8;border:1px solid #dbe3ea}.lessonBtn.advanced.active{background:var(--navy);color:#fff;box-shadow:inset 4px 0 0 #fff}.lessonBtn.advanced .n{border-color:#94a7b8}.lessonBtn.advanced.active .n{border-color:#fff}.advancedTag{display:block;color:#7d4ac7;font-size:9px;letter-spacing:.08em;margin-top:3px}.lessonBtn.advanced.active .advancedTag{color:#ded1ff}
 .challengeRibbon{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:13px}.statusChip{display:inline-flex;align-items:center;gap:5px;border:1px solid #ccd7df;background:#f2f6f9;color:var(--navy);border-radius:999px;padding:6px 9px;font-size:11px;font-weight:850}.statusChip.safe{background:#eaf4ef;border-color:#cce1d7;color:#176047}.statusChip.violet{background:#f1edfb;border-color:#ddd2f6;color:#603fad}
@@ -784,6 +786,8 @@ function buildReportHTML(){
   }else{
     html+='<div class="small">기본미션 10개 모두 완료되었습니다.</div>';
   }
+  const cheer=encouragement({completedCount:(core.length-missingCore.length)+'/'+core.length});
+  html+='<div class="reportCheer"><b>'+cheer.title+'</b>'+esc(cheer.body)+'</div>';
   html+='<div class="reportFooterNote">⚠ 작성한 내용은 이 브라우저에만 저장됩니다 — 기기나 브라우저를 바꾸거나 브라우저 데이터를 지우면 사라지니 "전체 기록 백업"으로 내려받아 두세요.</div>';
   return html;
 }
@@ -1004,6 +1008,12 @@ const TIER_META={
   '노력 필요':{emoji:'🌱',svg:'<svg viewBox="0 0 100 70" width="52" height="36"><rect x="30" y="25" width="40" height="35" stroke="#bcdcd0" stroke-width="1.2" fill="none" stroke-dasharray="3 3" opacity=".7"/><circle cx="50" cy="25" r="1.8" fill="#bcdcd0"/></svg>'}
 };
 function tierEmoji(tier){return (TIER_META[tier]||{}).emoji||'📘'}
+// 결과지 맨 끝의 격려 문구. 12개를 다 마친 학생과 일부만 한 학생에게 다른 말을 건넨다.
+function encouragement(report){
+  const done=parseInt(String(report.completedCount||'0'),10)||0;
+  if(done>=10) return {title:'🎉 끝까지 해내느라 정말 수고 많았습니다',body:'12개 미션을 모두 마치는 데 1시간 가까이 걸렸을 거예요. 이제 나의 AI 활용 수준을 대략 알게 되었으니, 여기서 멈추지 말고 더 배우고 시도해 AI 건축 전문가로 성장해 보세요.'};
+  return {title:'👏 여기까지 오느라 수고 많았습니다',body:'지금까지의 기록만으로도 나의 AI 활용 수준이 대략 보입니다. 남은 미션까지 이어가면 더 정확한 진단을 받을 수 있어요. 한 걸음씩 AI 건축 전문가로 나아가 보세요.'};
+}
 function tierMotif(tier){const m=TIER_META[tier];return m&&m.svg?`<div class="reportCertMotif">${m.svg}</div>`:''}
 function renderReport(report){
   const box=document.getElementById('gradeResult');
@@ -1028,6 +1038,7 @@ function renderReport(report){
     </div>`:'';
   const hl=summarizeStrengths(report);
   const hlHtml=(hl.strong.length||hl.weak.length)?`<div class="reportHighlights"><span>💪 <b>강점</b> ${hl.strong.length?esc(hl.strong.join(' · ')):'아직 없음 — 아래 보완점부터'}</span><span>🌱 <b>보완</b> ${hl.weak.length?esc(hl.weak.join(' · ')):'없음'}</span></div>`:'';
+  const cheer=encouragement(report);
   const selfCheck=report.selfEvalCheck;
   const selfCheckHtml=(selfCheck&&selfCheck.mismatch&&selfCheck.note)?`<div class="safetyNotice" style="margin-bottom:14px">⚠ 자기평가와 실제 기록에 차이가 있어요<br><span class="small">${esc(selfCheck.note)}</span></div>`:'';
   box.innerHTML=`
@@ -1048,6 +1059,7 @@ function renderReport(report){
     ${selfCheckHtml}
     ${notesHtml}
     ${bonusHtml}
+    <div class="reportCheer"><b>${cheer.title}</b>${esc(cheer.body)}</div>
     <div class="reportDisclaimer">※ 이 등급은 AI가 생성한 참고용 피드백이며, 실제 성적은 담당 교수의 별도 평가를 따릅니다.</div>
     <div class="actions"><button class="primary" onclick="printCertificate()">1장 파일로 저장 (인쇄 · PDF)</button><button class="ghost" onclick="downloadReport()">텍스트로 다운로드</button></div>`;
 }
@@ -1086,6 +1098,8 @@ function downloadReport(){
     out+=`\n`;
   }
   (report.bonusMissions||[]).forEach(b=>{out+=`[도전미션] ${b.label||b.name||b.id}: ${b.completed?'완료':'미완료'}${b.comment?` — ${b.comment}`:''}\n`});
+  const cheer=encouragement(report);
+  out+=`\n${cheer.title}\n${cheer.body}\n`;
   out+=`\n※ 이 등급은 참고용 AI 피드백이며 절대적 평가나 확정 성적이 아닙니다. 실제 성적은 담당 교수의 별도 평가를 따릅니다.\n`;
   const safe=(s)=>String(s||'').trim().replace(/\s+/g,'_')||'report';
   downloadTextFile(`ArchitectureAXExpert_셀프평가_${safe(info.name)}.txt`,out);
