@@ -145,6 +145,30 @@ function logToRoster(payload, report) {
   }
 }
 
+// 남은 채점 예산을 한 줄로 요약한다. 심사 모드(openai)일 때는 누적 상한 기준, 평소(gemini)에는 일일 상한 기준.
+function budgetSummary() {
+  const props = PropertiesService.getScriptProperties();
+  if (ACTIVE_PROVIDER === 'openai') {
+    const used = Number(props.getProperty('openaiReqCount_total') || '0');
+    return {
+      label: '심사용 채점 예산(누적)',
+      used: used,
+      max: OPENAI_MAX_TOTAL_REQUESTS,
+      left: Math.max(0, OPENAI_MAX_TOTAL_REQUESTS - used),
+      text: used + ' / ' + OPENAI_MAX_TOTAL_REQUESTS + '회 사용 · 잔여 ' + Math.max(0, OPENAI_MAX_TOTAL_REQUESTS - used) + '회'
+    };
+  }
+  const today = Utilities.formatDate(new Date(), Session.getScriptTimeZone() || 'Asia/Seoul', 'yyyy-MM-dd');
+  const used = Number(props.getProperty('reqCount_' + today) || '0');
+  return {
+    label: '오늘 채점 횟수',
+    used: used,
+    max: MAX_DAILY_REQUESTS,
+    left: Math.max(0, MAX_DAILY_REQUESTS - used),
+    text: used + ' / ' + MAX_DAILY_REQUESTS + '회 사용 · 오늘 잔여 ' + Math.max(0, MAX_DAILY_REQUESTS - used) + '회'
+  };
+}
+
 function escHtml(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -176,6 +200,7 @@ function sendWeeklyDigest() {
   const tierSummary = Object.keys(tierCounts).map(function (t) { return t + ' ' + tierCounts[t] + '명'; }).join(' · ') || '활동 없음';
   const periodLabel = Utilities.formatDate(weekAgo, tz, 'M월 d일') + ' ~ ' + Utilities.formatDate(now, tz, 'M월 d일');
   const rosterUrl = sheet.getParent().getUrl();
+  const budget = budgetSummary();
 
   const rowsHtml = recent.map(function (r) {
     return '<tr style="border-bottom:1px solid #e5e5e0">' +
@@ -195,6 +220,8 @@ function sendWeeklyDigest() {
     '<div style="font-size:18px;font-weight:800;margin-top:4px">' + periodLabel + '</div>' +
     '</div>' +
     '<p style="font-size:13px;color:#333">이번 주 셀프평가 요청 <b>' + recent.length + '건</b> · 등급 분포: ' + tierSummary + '</p>' +
+    '<p style="font-size:12.5px;color:' + (budget.left <= 20 ? '#b84444' : '#62676a') + ';margin:-6px 0 12px">' +
+    escHtml(budget.label) + ': <b>' + escHtml(budget.text) + '</b>' + (budget.left <= 20 ? ' — 잔여량이 얼마 남지 않았습니다.' : '') + '</p>' +
     (recent.length
       ? '<table style="width:100%;border-collapse:collapse;font-size:12.5px"><tr style="background:#f2f6f4;text-align:left">' +
         '<th style="padding:6px 8px">일시</th><th style="padding:6px 8px">이름</th><th style="padding:6px 8px">학번</th>' +
@@ -203,7 +230,8 @@ function sendWeeklyDigest() {
     '<p style="margin-top:16px;font-size:12px;color:#888">전체 명단(관리자 전용 시트): <a href="' + rosterUrl + '">' + rosterUrl + '</a></p>' +
     '</div>';
 
-  const plainBody = '[관리자 전용] 지난 7일간(' + periodLabel + ') 셀프평가 요청: ' + recent.length + '건\n등급 분포: ' + tierSummary + '\n\n전체 명단: ' + rosterUrl;
+  const plainBody = '[관리자 전용] 지난 7일간(' + periodLabel + ') 셀프평가 요청: ' + recent.length + '건\n등급 분포: ' + tierSummary +
+    '\n' + budget.label + ': ' + budget.text + '\n\n전체 명단: ' + rosterUrl;
   const dateLabel = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
   MailApp.sendEmail({ to: ADMIN_EMAIL, subject: '[AX Expert 관리자] 주간 채점 현황 (' + dateLabel + ')', body: plainBody, htmlBody: htmlBody });
 }
