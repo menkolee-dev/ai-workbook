@@ -76,7 +76,7 @@ function safeErrorMessage(err) {
   const raw = String((err && err.message) || err);
   try { Logger.log('채점 실패: ' + raw); } catch (e) { /* 무시 */ }
   if (raw.indexOf('혼잡') !== -1) return raw;
-  return '지금은 채점을 받을 수 없습니다. 잠시 후 다시 한번 시도해 보시겠어요?\n같은 화면이 계속 나오면 담당 교수에게 알려주세요.';
+  return '지금은 채점을 받을 수 없습니다. 잠시 후 다시 한번 시도해 보시겠어요?';
 }
 
 // [수동 실행 전용] 응시 기록 시트에 필요한 "스프레드시트 생성" 권한을 처음 한 번 승인받기 위한 함수.
