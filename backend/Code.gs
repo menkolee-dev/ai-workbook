@@ -317,6 +317,17 @@ function buildSummary(payload) {
     if (!hasField) lines.push('  (기록 없음 — 이미지 첨부 여부와 무관하게 텍스트 기준으로 판단)');
     lines.push('');
   });
+
+  const selfEval = payload.selfEval || {};
+  lines.push('[학생 자기평가서 — 학생이 스스로 매긴 점수/근거이며 아직 검증되지 않은 값]');
+  CRITERIA.forEach(function (c) {
+    const score = selfEval[c.key + '_score'];
+    const note = selfEval[c.key + '_note'];
+    lines.push('  - ' + c.name + ': 자기 점수 ' + (score !== undefined && score !== '' ? score + '점' : '미기재') + ' / 자기 근거: ' + (note ? note : '(근거 없음)'));
+  });
+  lines.push('  - 종합 소감: ' + (selfEval.overall ? selfEval.overall : '(미기재)'));
+  lines.push('');
+
   return lines.join('\n');
 }
 
@@ -419,10 +430,14 @@ function buildGradingPrompt(summary, mode) {
     '8) 여러 미션의 답변 문장이 서로 거의 동일하거나 복사해서 붙여넣은 것처럼 보이면(미션 내용이 다른데 문장이 같은 경우), 이는 실제 관찰·실험이 이루어지지 않았다는 신호이므로 해당 부분을 "보통" 이하로 평가하고 overallComment에 이 점을 짧게 언급해라.\n' +
     '9) 학생이 고른 최종 결정(decisionType: 채택/수정/거부)과 실제로 적은 근거(decision) 내용이 서로 모순되면(예: 채택을 선택했는데 근거는 문제점만 나열) "오류 대응" 기준 평가에 반영해라.\n' +
     imageRules +
+    '12) [자기평가서 대조] 학생이 자기평가서에서 스스로 매긴 점수(20=매우 잘함, 15=잘함, 10=보통, 5 이하=노력 필요)와 네가 criteria에서 독립적으로 매긴 등급을 비교해라. ' +
+    '자기 점수가 실제 미션 기록 내용보다 뚜렷이 부풀려져 있거나(예: 기록은 부실한데 전부 20점), 자기평가의 근거나 종합소감이 비어있거나 형식적이거나(예: "잘함", "네") 미션 기록 문장을 그대로 복사한 것처럼 보이면 ' +
+    'selfEvalCheck.mismatch를 true로 하고 이유를 selfEvalCheck.note에 1문장으로 짧게 적어라. 자기평가가 실제 기록과 대체로 일치하고 근거도 구체적이면 mismatch는 false, note는 빈 문자열로 남겨라.\n\n' +
     '채점 기준 (미션 01~10 전용):\n' + criteriaList + '\n\n' +
     '반드시 아래 JSON 형식으로만 응답하고 다른 텍스트는 절대 포함하지 마라 (숫자 점수 필드를 절대 추가하지 마라):\n' +
     '{"completedCount":"N/10 형식의 문자열","overallTier":' + tierOptions + ',"overallComment":"총평 2문장 이내","criteria":[{"name":"기준명","tier":' + tierOptions + ',"comment":"코멘트 1문장"}],' +
     '"missionNotes":[{"id":"01","tier":' + tierOptions + ',"note":"15자 내외 짧은 이유"}],' +
+    '"selfEvalCheck":{"mismatch":true 또는 false,"note":"불일치 이유 1문장, 없으면 빈 문자열"},' +
     '"bonusMissions":[{"id":"11","label":"11번 · 공공건축 MCP 분석","completed":true 또는 false,"comment":"코멘트 1문장"},{"id":"12","label":"12번 · AI 건축 모델링 검증","completed":true 또는 false,"comment":"코멘트 1문장"}]}\n' +
     '(criteria 배열은 반드시 위 5개 기준 각각에 대해 하나씩, 총 5개 항목. missionNotes는 반드시 미션 "01"~"10" 각각 하나씩 총 10개 항목을 빠짐없이 채워라 — note는 그 미션에서 실제로 관찰한 근거나 부족한 이유를 구체적으로 15자 내외로 적고 "잘했습니다"처럼 근거 없는 말은 금지. bonusMissions는 반드시 11번, 12번 각각 하나씩 총 2개 항목)\n\n' +
     '학생 기록:\n' + summary
@@ -462,6 +477,15 @@ const GRADING_JSON_SCHEMA = {
         additionalProperties: false
       }
     },
+    selfEvalCheck: {
+      type: 'object',
+      properties: {
+        mismatch: { type: 'boolean' },
+        note: { type: 'string' }
+      },
+      required: ['mismatch', 'note'],
+      additionalProperties: false
+    },
     bonusMissions: {
       type: 'array',
       items: {
@@ -477,7 +501,7 @@ const GRADING_JSON_SCHEMA = {
       }
     }
   },
-  required: ['completedCount', 'overallTier', 'overallComment', 'criteria', 'missionNotes', 'bonusMissions'],
+  required: ['completedCount', 'overallTier', 'overallComment', 'criteria', 'missionNotes', 'selfEvalCheck', 'bonusMissions'],
   additionalProperties: false
 };
 

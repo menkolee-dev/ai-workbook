@@ -699,10 +699,12 @@ function renderReportAISummary(){
   const report=window.__lastReport;
   if(!report) return '<div class="reportDraftNotice">아직 "셀프평가하기"를 받지 않았습니다 — 먼저 셀프평가를 받으면 이 자리에 AI 총평 요약이 표시됩니다.</div>';
   const crit=(report.criteria||[]).map(c=>'<div class="reportField"><span class="reportFieldLabel">'+esc(c.name)+'</span><span class="reportFieldValue">'+esc(c.tier)+' — '+esc(c.comment)+'</span></div>').join('');
+  const selfCheck=report.selfEvalCheck;
+  const selfCheckField=(selfCheck&&selfCheck.mismatch&&selfCheck.note)?'<div class="reportField"><span class="reportFieldLabel">자기평가 대조</span><span class="reportFieldValue">⚠ '+esc(selfCheck.note)+'</span></div>':'';
   return '<div class="reportAISummary">'+
     '<div class="reportTierHero"><span class="reportTierEmoji">'+tierEmoji(report.overallTier)+'</span><span class="reportTierText">'+esc(report.overallTier)+'</span><span class="reportTierSub">코어 미션 '+esc(report.completedCount||'-')+'</span></div>'+
     '<div class="reportField"><span class="reportFieldLabel">총평</span><span class="reportFieldValue">'+esc(report.overallComment)+'</span></div>'+
-    crit+
+    crit+selfCheckField+
   '</div>';
 }
 function buildReportHTML(){
@@ -884,7 +886,7 @@ async function requestGrading(){
   renderLoading();
   const loadingTimer=setInterval(()=>{elapsed++;if(elapsed%3===0)stepIdx++;renderLoading()},1000);
   try{
-    const payload={student:info,missions:collectAllMissionData(),sentAt:new Date().toISOString(),secret:GAS_SECRET};
+    const payload={student:info,missions:collectAllMissionData(),selfEval:loadSelfEval(),sentAt:new Date().toISOString(),secret:GAS_SECRET};
     const res=await fetch(GAS_ENDPOINT,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
     const data=await res.json();
     if(!data.ok) throw new Error(data.error||'채점 서버 오류');
@@ -942,6 +944,8 @@ function renderReport(report){
         ${notes.map(n=>`<div class="missionNoteItem"><span class="missionNoteId">${esc(n.id)}</span><span class="tierBadge sm">${tierEmoji(n.tier)} ${esc(n.tier)}</span><span class="missionNoteText">${esc(n.note)}</span></div>`).join('')}
       </div>
     </div>`:'';
+  const selfCheck=report.selfEvalCheck;
+  const selfCheckHtml=(selfCheck&&selfCheck.mismatch&&selfCheck.note)?`<div class="safetyNotice" style="margin-bottom:14px">⚠ 자기평가와 실제 기록에 차이가 있어요<br><span class="small">${esc(selfCheck.note)}</span></div>`:'';
   box.innerHTML=`
     <div class="reportCertificate">
       ${tierMotif(report.overallTier)}
@@ -956,6 +960,7 @@ function renderReport(report){
       <p class="reportCertComment">${esc(report.overallComment)}</p>
     </div>
     <div class="reportCriteriaGrid">${crit}</div>
+    ${selfCheckHtml}
     ${notesHtml}
     ${bonusHtml}
     <div class="reportDisclaimer">※ 이 등급은 AI가 생성한 참고용 피드백이며, 실제 성적은 담당 교수의 별도 평가를 따릅니다.</div>
@@ -976,6 +981,7 @@ function downloadReport(){
   out+=`코어 미션 완료: ${report.completedCount||'-'}\n`;
   out+=`종합 등급: ${report.overallTier}\n${report.overallComment}\n\n`;
   (report.criteria||[]).forEach(c=>{out+=`- ${c.name}: ${c.tier}\n  ${c.comment}\n\n`});
+  if(report.selfEvalCheck&&report.selfEvalCheck.mismatch&&report.selfEvalCheck.note) out+=`⚠ 자기평가와 실제 기록에 차이가 있어요: ${report.selfEvalCheck.note}\n\n`;
   if((report.missionNotes||[]).length){
     out+=`[미션별 결과]\n`;
     report.missionNotes.forEach(n=>{out+=`${n.id}: ${n.tier} — ${n.note}\n`});
