@@ -979,7 +979,7 @@ function renderReport(report){
   const bonusList=report.bonusMissions||[];
   const bonusHtml=bonusList.length?`
     <div class="bonusBox">
-      <b class="small" style="color:var(--accent);display:block;margin-bottom:2px">도전미션 (정규 등급과 별개)</b>
+      <b class="small" style="color:var(--accent);display:block;margin-bottom:2px">도전미션 · AI 확인 결과 (정규 등급과 별개)</b>
       ${bonusList.map(b=>`<div class="bonusRow"><span>${esc(b.label||b.name||b.id)}</span><span>${b.completed?'✅ 완료':'⭕ 미완료'}</span></div>${b.comment?`<div class="bonusComment">${esc(b.comment)}</div>`:''}`).join('')}
     </div>`:'';
   const notes=report.missionNotes||[];
@@ -1208,7 +1208,7 @@ render();
 
     <div class="finalItem">
       <b>나의 건축AI 활용능력 셀프평가</b><br>
-      <span class="small">1~10번 미션 기록을 채점 기준(사전 관찰 · AI 실험 체계성 · 근거 대조 · 오류 대응 · 기록의 구체성)에 따라 AI가 매우 잘함/잘함/보통/노력 필요 4단계로 평가합니다. 11·12번 도전미션은 완료 여부만 별도로 표시됩니다. 이 등급은 참고용이며 절대적인 평가가 아닙니다.</span>
+      <span class="small">1~10번 미션 기록을 채점 기준(사전 관찰 · AI 실험 체계성 · 근거 대조 · 오류 대응 · 기록의 구체성)에 따라 AI가 매우 잘함/잘함/보통/노력 필요 4단계로 평가합니다. 11·12번 도전미션은 등급 없이 완료 여부만 별도로 표시되며, 판단 과정이 구체적으로 남아 있을 때만 완료로 인정됩니다. 이 등급은 참고용이며 절대적인 평가가 아닙니다.</span>
       <div class="privacyNote">🔒 셀프평가를 누르면 미션 기록(이미지 포함)이 AI 채점을 위해 외부 AI 서버로 전송됩니다. 이름·학번·등급·총평은 담당 교수 확인용으로 기록되며, 기록 원문은 이 사이트 서버에 보관되지 않습니다.</div>
       <div class="actions"><button class="primary primaryLg" id="gradeBtn" onclick="requestGrading()">셀프평가하기</button></div>
       <div id="gradeResult" style="margin-top:10px"></div>
