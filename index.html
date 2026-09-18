@@ -10,7 +10,7 @@ main{max-width:1200px;margin:auto;padding:28px 22px 110px}.hero{background:linea
 .layout{display:grid;grid-template-columns:275px 1fr;gap:22px;margin-top:22px}.sidebar{background:#fff;border:1px solid var(--line);border-radius:18px;padding:13px;height:fit-content;position:sticky;top:80px;max-height:calc(100vh - 100px);overflow:auto}
 .lessonBtn{width:100%;border:0;background:transparent;text-align:left;padding:10px;border-radius:11px;cursor:pointer;display:flex;gap:9px;align-items:flex-start}.lessonBtn:not(.active):not(.intro):not(.advanced):hover{background:#eef1f0}.lessonBtn.advanced:not(.active):hover{background:#e9eef3}.lessonBtn.active{background:var(--accent2);color:var(--accent);box-shadow:inset 4px 0 0 var(--accent)}.lessonBtn.active .lt{font-weight:800}.lessonBtn.done .n{background:var(--accent);color:#fff}.n{min-width:25px;height:25px;border:1px solid var(--line);border-radius:7px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}.lt{font-size:13px;line-height:1.35;font-weight:650}
 .content{display:flex;flex-direction:column;gap:16px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px}.eyebrow{font-size:12px;letter-spacing:.08em;color:var(--accent);font-weight:850;margin-bottom:7px}
-h2{font-size:28px;margin:0 0 6px}h3{font-size:18px;margin:0 0 10px}.sub{color:var(--muted);font-size:14px;margin-bottom:15px}.mission{font-size:19px;line-height:1.55;font-weight:720}
+h2{font-size:28px;margin:0 0 6px}h3{font-size:18px;margin:0 0 10px}.sub{color:var(--muted);font-size:14px;margin-bottom:15px}.missionLabel{font-size:12px;letter-spacing:.08em;font-weight:850;color:var(--accent);margin-bottom:6px}.mission{font-size:21px;line-height:1.55;font-weight:750;padding:14px 18px;background:#f2f6f4;border-left:4px solid var(--accent);border-radius:10px}.missionSteps{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:12px}.missionStep{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid #cdded8;border-radius:999px;padding:6px 12px 6px 6px;font-size:13px;font-weight:700;color:var(--accent)}.missionStep b{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px}.missionStepArrow{color:#b5c4be;font-weight:900}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .exampleCard{background:#f7f7f3;border:1px solid var(--line);border-radius:14px;padding:14px}.exampleImg{aspect-ratio:4/3;background:#ecece7;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#777;text-align:center}.exampleImg img{width:100%;height:100%;object-fit:cover}
 .upload{border:1.5px dashed #bdbdb7;background:var(--soft);border-radius:14px;padding:16px;text-align:center;min-height:150px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.upload img{max-width:100%;max-height:260px;border-radius:10px}.upload input{position:absolute;inset:0;opacity:0;cursor:pointer}
@@ -173,7 +173,7 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 
 <div class="layout"><aside class="sidebar" id="sidebar"></aside><section class="content">
 <div class="card principleTip" id="principleCard"><span>💡 <b>따라 만들기보다, 왜 그렇게 선택했는지가 중요해요.</b></span><span class="small">관찰 → AI 실험 → 근거 대조 → 오류 찾기 → 결정</span></div>
-<div class="card lessonHeaderCard"><div class="eyebrow" id="lessonNo"></div><h2 id="title"></h2><div class="sub" id="subtitle"></div><div class="mission" id="mission"></div></div>
+<div class="card lessonHeaderCard"><div class="eyebrow" id="lessonNo"></div><h2 id="title"></h2><div class="sub" id="subtitle"></div><div class="missionLabel" id="missionLabel">이번 미션에서 할 일</div><div class="mission" id="mission"></div><div class="missionSteps" id="missionSteps"></div></div>
 
 <div class="card" id="exampleSection"><div class="eyebrow" id="exampleEyebrow">예제 · 여기서 시작</div><h3 id="exampleHeading">예제 먼저 보기</h3><div class="sub" id="exampleDesc"></div>
 <div class="grid3" id="exampleGrid"></div>
@@ -1110,6 +1110,11 @@ function render(opts){
   document.getElementById('mission').textContent=l.mission;
   document.getElementById('exampleDesc').textContent=l.example_desc||'';
   const isIntro=l.id==='00';
+  // 미션 문장 아래에 이 미션의 STEP 제목을 한 줄 로드맵으로 보여준다 — 새 미션에 들어왔을 때 할 일이 한눈에 잡히도록.
+  document.getElementById('missionLabel').style.display=isIntro?'none':'block';
+  const stepsEl=document.getElementById('missionSteps');
+  stepsEl.innerHTML=isIntro?'':l.steps.map((st,i)=>`${i?'<span class="missionStepArrow">→</span>':''}<span class="missionStep"><b>${i+1}</b>${esc(st[1])}</span>`).join('');
+  document.getElementById('mission').style.cssText=isIntro?'background:none;border:0;padding:0;font-size:19px':'';
   document.getElementById('exampleEyebrow').textContent=isIntro?'건축분야에 AI를 얼마나 잘 사용하는지 아시나요?':'예제 · 여기서 시작';
   document.getElementById('exampleHeading').textContent=isIntro?'12개의 AI 건축 실습으로 나의 AI 활용 능력을 셀프로 테스트해 보세요':'예제 먼저 보기';
   document.getElementById('principleCard').style.display=isIntro?'none':'flex';
