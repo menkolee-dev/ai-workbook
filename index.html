@@ -260,7 +260,7 @@ function checkReportStale(){
   const notice=document.createElement('div');
   notice.className='safetyNotice reportStaleNotice';
   notice.style.marginBottom='10px';
-  notice.innerHTML='<b>⚠ 이전 답안 기준 피드백 · 재확인 필요</b><br><span class="small">이 AI 참고 피드백을 받은 뒤 기록을 수정했습니다. "AI 참고 피드백 요청 (선택)"를 다시 눌러 최신 내용으로 갱신하세요.</span>';
+  notice.innerHTML='<b>⚠ 이전 답안 기준 AI 피드백 · 재확인 필요</b><br><span class="small">이 AI 참고 피드백을 받은 뒤 기록을 수정했습니다. "AI 참고 피드백 요청 (선택)" 버튼을 눌러 최신 내용으로 갱신하세요.</span>';
   cert.parentNode.insertBefore(notice,cert);
 }
 function bindAutosave(){document.querySelectorAll('[data-field]').forEach(el=>{el.addEventListener('input',collectState);el.addEventListener('change',collectState)})}
@@ -855,10 +855,10 @@ function renderReportMissionRow(m){
   if(note)html+='<div class="reportMissionNoteRow"><b>AI 참고 피드백</b><span class="tierBadge sm">'+esc(note.tier)+'</span><span class="missionNoteText">'+esc(note.note)+'</span></div>';
   return html+'</section>';
 }
-// 이미 AI 참고 피드백 요청 (선택)로 받아둔 AI 총평이 있으면 보고서 맨 위에 그대로 재사용한다(다시 채점 요청하지 않음).
+// 저장된 AI 총평이 있으면 보고서 맨 위에 그대로 재사용한다(다시 요청하지 않음).
 function renderReportAISummary(){
   const report=window.__lastReport;
-  if(!report) return '<div class="reportDraftNotice">아직 "AI 참고 피드백 요청 (선택)"를 받지 않았습니다 — 선택 기능인 AI 피드백을 요청하면 이 자리에 AI 총평 요약이 표시됩니다. 무료 기본 셀프체크는 별도로 이용할 수 있습니다.</div>';
+  if(!report) return '<div class="reportDraftNotice">저장된 AI 참고 피드백이 없습니다. 선택 기능인 AI 피드백을 요청하면 이 자리에 AI 총평 요약이 표시됩니다. 무료 기본 셀프체크는 별도로 이용할 수 있습니다.</div>';
   const crit=(report.criteria||[]).map(c=>'<div class="reportField"><span class="reportFieldLabel">'+esc(c.name)+'</span><span class="reportFieldValue">'+esc(c.tier)+' — '+esc(c.comment)+'</span></div>').join('');
   const hl=summarizeStrengths(report);
   const hlField=(hl.strong.length||hl.weak.length)?'<div class="reportField"><span class="reportFieldLabel">강점 / 보완</span><span class="reportFieldValue">강점: '+esc(hl.strong.length?hl.strong.join(' · '):'아직 없음')+' / 보완: '+esc(hl.weak.length?hl.weak.join(' · '):'없음')+'</span></div>':'';
@@ -889,7 +889,7 @@ function buildReportHTML(){
   html+='<div class="reportProgress">기본미션 진행: '+(core.length-missingCore.length)+' / '+core.length+' 완료</div>';
   html+='<h3 class="reportSectionTitle">종합 요약</h3>';
   if(window.__lastReport&&window.__lastReportSnapshot&&window.__lastReportSnapshot!==gradingSnapshot()){
-    html+='<div class="reportDraftNotice"><b>⚠ 이전 답안 기준 AI 총평</b><br>셀프평가를 받은 뒤 기록을 수정했습니다. "AI 참고 피드백 요청 (선택)"를 다시 받으면 최신 기록으로 갱신됩니다.</div>';
+    html+='<div class="reportDraftNotice"><b>⚠ 이전 답안 기준 AI 총평</b><br>AI 피드백을 받은 뒤 기록을 수정했습니다. 필요하면 "AI 참고 피드백 요청 (선택)" 버튼을 눌러 최신 기록으로 갱신하세요.</div>';
   }
   html+=renderReportAISummary();
   html+='<div class="reportPageBreak"></div>';
