@@ -260,7 +260,7 @@ function checkReportStale(){
   const notice=document.createElement('div');
   notice.className='safetyNotice reportStaleNotice';
   notice.style.marginBottom='10px';
-  notice.innerHTML='<b>⚠ 이전 답안 기준 AI 피드백 · 재확인 필요</b><br><span class="small">이 AI 참고 피드백을 받은 뒤 기록을 수정했습니다. "AI 셀프체크하기" 버튼을 눌러 최신 내용으로 갱신하세요.</span>';
+  notice.innerHTML='<b>⚠ 이전 답안 기준 AI 피드백 · 재확인 필요</b><br><span class="small">이 AI 참고 피드백 이후 기록이나 평가 설정이 달라졌습니다. "AI 셀프체크하기" 버튼을 눌러 최신 내용으로 갱신하세요.</span>';
   cert.parentNode.insertBefore(notice,cert);
 }
 function bindAutosave(){document.querySelectorAll('[data-field]').forEach(el=>{el.addEventListener('input',collectState);el.addEventListener('change',collectState)})}
@@ -893,7 +893,7 @@ function buildReportHTML(){
   html+='<div class="reportProgress">기본미션 진행: '+(core.length-missingCore.length)+' / '+core.length+' 완료</div>';
   html+='<h3 class="reportSectionTitle">종합 요약</h3>';
   if(window.__lastReport&&window.__lastReportSnapshot&&window.__lastReportSnapshot!==gradingSnapshot()){
-    html+='<div class="reportDraftNotice"><b>⚠ 이전 답안 기준 AI 총평</b><br>AI 피드백을 받은 뒤 기록을 수정했습니다. 필요하면 "AI 셀프체크하기" 버튼을 눌러 최신 기록으로 갱신하세요.</div>';
+    html+='<div class="reportDraftNotice"><b>⚠ 이전 답안 기준 AI 총평</b><br>AI 피드백 이후 기록이나 평가 설정이 달라졌습니다. 필요하면 "AI 셀프체크하기" 버튼을 눌러 최신 기록으로 갱신하세요.</div>';
   }
   html+=renderReportAISummary();
   html+='<div class="reportPageBreak"></div>';
@@ -1093,8 +1093,10 @@ const GAS_ENDPOINT='https://script.google.com/macros/s/AKfycbxdunxxPlYmU2lax52cY
 const GAS_SECRET='kbu2026';
 window.__lastReport=null;
 window.__lastReportSnapshot=null;
-// 미션 기록 + 자기평가서를 합친 스냅샷. 마지막 채점 이후 내용이 바뀌었는지 판단하는 기준.
-function gradingSnapshot(){return JSON.stringify({student:loadStudentInfo(),m:collectAllMissionData(),s:loadSelfEval()});}
+// 평가 설정과 입력 스냅샷을 함께 비교하되 이전 보고서는 그대로 보관한다.
+const AI_FEEDBACK_PIPELINE_VERSION='gemini-flash-lite-v27';
+function createGradingSnapshot(student,missions,selfEval){return JSON.stringify({pipeline:AI_FEEDBACK_PIPELINE_VERSION,student,m:missions,s:selfEval});}
+function gradingSnapshot(){return createGradingSnapshot(loadStudentInfo(),collectAllMissionData(),loadSelfEval());}
 function saveLastReport(report,snapshot){return writeStoreJSON('aivis_last_report',{report,snapshot,at:new Date().toISOString()});}
 function loadLastReportRaw(){return readStoreJSON('aivis_last_report',null);}
 function loadLastReport(){const d=loadLastReportRaw();if(d&&d.report){try{window.__lastReport=validateAIReport(d.report);window.__lastReportSnapshot=d.snapshot||null;}catch(e){window.__lastReport=null;window.__lastReportSnapshot=null;}}}
@@ -1114,8 +1116,8 @@ async function requestGrading(){
   if(!info.name||!info.studentId){alert('이름(또는 시연용 별칭)과 학번(또는 익명 학습자 코드)을 먼저 입력해주세요.');return;}
   const btn=document.getElementById('gradeBtn'),box=document.getElementById('gradeResult'),status=document.getElementById('gradeStatus');
   status.innerHTML='';
-  const missions=collectAllMissionData(),selfEval=loadSelfEval(),requestSnapshot=JSON.stringify({student:info,m:missions,s:selfEval});
-  if(window.__lastReport&&window.__lastReportSnapshot===requestSnapshot){renderReport(window.__lastReport);const note=document.createElement('div');note.className='reportDraftNotice';note.textContent='입력 내용이 같아 이전 AI 참고 피드백을 표시했습니다. 새로 호출하지 않았습니다.';box.insertBefore(note,box.firstChild);return;}
+  const missions=collectAllMissionData(),selfEval=loadSelfEval(),requestSnapshot=createGradingSnapshot(info,missions,selfEval);
+  if(window.__lastReport&&window.__lastReportSnapshot===requestSnapshot){renderReport(window.__lastReport);const note=document.createElement('div');note.className='reportDraftNotice';note.textContent='기록과 평가 설정이 같아 이전 AI 참고 피드백을 표시했습니다. 새로 호출하지 않았습니다.';box.insertBefore(note,box.firstChild);return;}
   if(coreMissionsStatus().completedCount===0&&!confirm('작성 완료된 기본미션이 없습니다. 현재 기록만으로 제한적인 참고 피드백을 요청할까요?'))return;
   gradingInFlight=true;btn.disabled=true;const prevText=btn.textContent;btn.textContent='AI 응답 대기 중…';
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),180000);let elapsed=0;
@@ -1436,7 +1438,7 @@ render();
     <div class="finalItem">
       <b>AI 셀프체크</b><br>
       <span class="small">AI가 실습 기록과 첨부 이미지를 사전 관찰 · AI 실험 체계성 · 근거 대조 · 오류 대응 · 기록의 구체성 5개 기준으로 살펴보고, 미션별 보완점을 제안합니다. 1~10번 기본미션은 매우 잘함/잘함/보통/노력 필요 4단계, 11·12번 도전미션은 완료 여부를 별도로 확인합니다. 결과는 학습을 돕는 참고 피드백이며 실제 성적은 담당 교수가 평가합니다.</span>
-      <div class="privacyNote">AI 참고 피드백 요청 시 실습 기록과 이미지를 평가 서버로 전송하며 연결 AI 서비스에서 처리합니다. 이름·학번 별도 필드는 교수 확인 명단에 사용합니다. 상세 보관 정책은 운영자가 확인해야 하며 실습 기록에 민감정보를 넣지 마세요.</div>
+      <div class="privacyNote">AI 셀프체크 요청 시 실습 기록과 이미지를 평가 서버로 전송하며 Google Gemini에서 처리합니다. 이름·학번 별도 필드는 교수 확인 명단에 사용합니다. 상세 보관 정책은 운영자가 확인해야 하며 실습 기록에 민감정보를 넣지 마세요.</div>
       <div class="actions"><button class="primary primaryLg" id="gradeBtn" onclick="requestGrading()">AI 셀프체크하기</button></div>
       <div id="gradeStatus" style="margin-top:10px" role="status"></div>
       <div id="gradeResult" style="margin-top:10px"></div>
