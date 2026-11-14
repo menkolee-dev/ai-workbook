@@ -1,6 +1,6 @@
 /**
  * Architecture AX Expert - AI 채점 백엔드 (Google Apps Script)
- * 배포 방법: 저장소 루트의 DEPLOY.md 참고
+ * 2026-11-14 Gemini 기본 제공자 갱신본. 기존 Apps Script 프로젝트의 배포를 새 버전으로 갱신한다.
  */
 
 // 1) API 키는 이 파일에 직접 적지 않고 "스크립트 속성"에 저장합니다 — 이 저장소는 공개(public) GitHub
@@ -12,32 +12,40 @@
 function getApiKey(propName) {
   return PropertiesService.getScriptProperties().getProperty(propName) || '';
 }
-const GEMINI_MODEL = 'gemini-3.6-flash';
+const GEMINI_MODEL = 'gemini-3.5-flash-lite';
 
 // === 채점 제공자 전환 스위치 ===
-// 'gemini' = 평소 학생 셀프평가 기본값(무료, 빠름). 'openai' = 대회 심사 전용(유료, GPT-5.6 Terra, 느리지만 더 깊게 판단).
-// [중요] 대회 심사 기간(약 30일)이 끝나면 반드시 'gemini'로 되돌려서 학생 공개용 기본값으로 복귀할 것.
-const ACTIVE_PROVIDER = 'openai'; // 'gemini' | 'openai'
+// 각 제공자의 API 요금·계정 접근권한은 운영자가 확인한다.
+// OpenAI는 한국시간 일정에 따라 모델만 전환한다. Gemini나 고가 모델로 자동 우회하지 않는다.
+const ACTIVE_PROVIDER = 'gemini'; // 'gemini' | 'openai'
 
-// --- OpenAI(GPT-5.6 Terra) 설정: 대회 심사 전용 ---
-// 결제수단이 등록된 OpenAI 계정의 키가 필요합니다(위 스크립트 속성 안내 참고).
-const OPENAI_MODEL = 'gpt-5.6-terra';
-// 정확도보다 응답 속도를 우선하기로 하여 'low'로 낮췄습니다. 이미지를 실제로 보고 판단하는 품질은
-// reasoning_effort가 아니라 아래 IMAGE_RULES_DEEP 프롬프트가 담당하므로, 추론 강도를 낮춰도
-// 이미지 분석 자체(무엇을 보는지)는 그대로 유지되고 "얼마나 깊이 따져보는지"만 줄어듭니다.
-// 그래도 느리면 'minimal'이나 'none'까지 낮출 수 있고(단, 이 모델이 해당 값을 지원하는지는
-// 실제로 한 번 호출해봐야 확인됩니다), 반대로 정확도를 다시 올리고 싶으면 'medium'/'high'로.
+// --- OpenAI Responses API 설정 ---
+// 해당 모델을 사용할 수 있는 API 프로젝트의 키와 사용 가능한 결제/크레딧이 필요하다.
+// 계정별 모델 접근권한은 testOpenAIConnection()을 직접 실행하여 확인한다.
+const OPENAI_MODEL = 'gpt-6-astra';
 const OPENAI_REASONING_EFFORT = 'low';
-// [예산 안전장치] 심사 기간(30일) 전체 누적 요청 수 상한. 요청 1건당 비용을 넉넉히 잡아(약 $0.06~$0.08)
-// 예산 $10 안에서 역산한 값이라 여유를 둔 추정치입니다 — 진짜 상한은 반드시 platform.openai.com
-// 계정 설정(Settings → Limits)에서 $10 하드 리밋을 별도로 걸어두세요. 이 카운터는 2차 안전장치입니다.
-const OPENAI_MAX_TOTAL_REQUESTS = 120;
+const OPENAI_ECONOMY_MODEL = 'gpt-6-luna';
+const OPENAI_ECONOMY_REASONING_EFFORT = 'low';
+const OPENAI_MAX_MONTHLY_REQUESTS = 120;
+
+// [평가 운영기간] 한국시간 2026-11-13 00:00부터 2026-12-31 23:59:59까지 Astra low.
+// 종료 시각(exclusive)인 2027-01-01 00:00부터 Luna low와 한국시간 월별 한도를 적용한다.
+// 기존 기간 ID는 사용량 보존을 위해 유지한다. 1월 이후는 월별 전용 카운터를 사용한다.
+const OPENAI_PERIOD_ID = '20261113_20261213';
+const OPENAI_PERIOD_START = '2026-11-13T00:00:00+09:00';
+const OPENAI_PERIOD_END_EXCLUSIVE = '2027-01-01T00:00:00+09:00';
+const OPENAI_MAX_PERIOD_REQUESTS = 120;
+const QUOTA_TIME_ZONE = 'Asia/Seoul';
+
+// 실제 API 요청 시도마다 차감한다. 재시도·실패·관리자 연결시험도 포함한다.
+// 요청 수 상한은 금액 상한이 아니다. 요금과 OpenAI 계정의 사용 한도도 별도로 확인한다.
+// 기존 openaiReqCount_total은 보존하며 이번 기간의 차단 판단에는 사용하지 않는다.
 
 // 2) 무작위 봇의 무단 호출을 막기 위한 간단한 공유 비밀번호. index.html의 GAS_SECRET 값과
 //    반드시 동일해야 합니다 — 바꾸려면 두 파일 모두 같은 값으로 함께 수정하세요.
 const CLASS_SECRET = 'kbu2026';
 
-// 3) 하루 최대 채점 횟수. 무단 대량 호출로 무료 할당량이 소진되는 것을 막는 안전장치입니다.
+// 3) 하루 최대 횟수. OpenAI는 실제 API 시도마다, Gemini는 기존처럼 채점 요청마다 센다.
 const MAX_DAILY_REQUESTS = 300;
 
 // 4) 응시 기록 시트가 처음 만들어질 때 링크를 한 번 받을 관리자 이메일. 비워두면 이 알림을 보내지 않습니다.
@@ -53,11 +61,20 @@ const CRITERIA = [
 ];
 
 function doPost(e) {
+  const requestId = createRequestId();
   try {
-    const payload = JSON.parse(e.postData.contents);
+    let payload;
+    try {
+      payload = JSON.parse(e && e.postData && e.postData.contents);
+    } catch (parseError) {
+      throw gradingError('INVALID_REQUEST');
+    }
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+      throw gradingError('INVALID_REQUEST');
+    }
 
     if (CLASS_SECRET && payload.secret !== CLASS_SECRET) {
-      return jsonResponse({ ok: false, error: safeErrorMessage('인증 실패: secret 값이 올바르지 않습니다.') });
+      throw gradingError('AUTH_FAILED');
     }
 
     // 1장 결과 저장 신호는 AI를 호출하지 않으므로 채점 횟수 한도에서 제외한다.
@@ -66,24 +83,188 @@ function doPost(e) {
       return jsonResponse({ ok: true });
     }
 
-    checkAndIncrementDailyQuota();
+    // OpenAI의 일일/기간 한도는 각 실제 API 시도 직전에 함께 검사·차감한다.
+    if (ACTIVE_PROVIDER !== 'openai') checkAndIncrementDailyQuota();
 
     const report = gradeWithAI(payload);
     logToRoster(payload, report);
     return jsonResponse({ ok: true, report: report });
   } catch (err) {
-    return jsonResponse({ ok: false, error: safeErrorMessage(err) });
+    const code = classifyGradingError(err);
+    logSafeGradingError(err, code, requestId);
+    return jsonResponse({ ok: false, error: safeErrorMessage(err), code: code, requestId: requestId });
   }
 }
 
-// 채점 실패 메시지는 학생 화면에 그대로 표시되므로, 예산·한도·API 오류 원문 같은 내부 운영 정보는
-// 내보내지 않는다. 실제 원인은 Apps Script 실행 로그(보기 → 실행)에만 남겨 관리자가 확인한다.
-// 단, 일시적 혼잡 안내는 프론트엔드의 자동 재시도 조건('혼잡')이라 문구를 그대로 통과시킨다.
+// 오류 원문·인증값·학생 입력은 응답과 로그에 남기지 않는다.
+// 학생은 code/requestId를 관리자에게 전달하고, 관리자는 같은 requestId의 운영 로그를 확인한다.
+const GRADING_ERROR_MESSAGES = {
+  AUTH_FAILED: '요청 인증을 확인하지 못했습니다. 사이트와 채점 서버의 연결 설정을 관리자에게 알려 주세요.',
+  CONFIG_MISSING: 'AI 진단 운영 설정이 아직 완료되지 않았습니다. 관리자에게 오류 코드를 전달해 주세요.',
+  CONFIG_INVALID: 'AI 운영기간 또는 요청 횟수 설정을 확인해야 합니다. 관리자에게 오류 코드를 전달해 주세요.',
+  QUOTA_REACHED: '현재 AI 진단 이용 한도에 도달했습니다. 관리자 확인 후 다시 이용해 주세요.',
+  PERIOD_NOT_STARTED: 'AI 진단 운영기간이 아직 시작되지 않았습니다. 관리자에게 운영일정을 확인해 주세요.',
+  PERIOD_EXPIRED: 'AI 요청의 운영기간이 바뀌었습니다. 잠시 후 다시 요청해 주세요.',
+  PERIOD_QUOTA_REACHED: '이번 운영기간의 AI 요청 횟수를 모두 사용했습니다. 관리자에게 횟수 한도를 확인해 주세요.',
+  DAILY_QUOTA_REACHED: '오늘의 AI 요청 횟수를 모두 사용했습니다. 다음 날 또는 관리자 확인 후 다시 이용해 주세요.',
+  UPSTREAM_AUTH_ERROR: 'AI 서비스 API 키 인증을 확인하지 못했습니다. 관리자에게 오류 코드를 전달해 주세요.',
+  UPSTREAM_PERMISSION_ERROR: 'AI 서비스의 프로젝트 또는 모델 이용 권한을 확인해야 합니다. 관리자에게 오류 코드를 전달해 주세요.',
+  UPSTREAM_MODEL_ERROR: '지정한 AI 모델을 찾거나 사용할 수 없습니다. 관리자에게 모델 이름과 접근권한 확인을 요청해 주세요.',
+  UPSTREAM_BILLING_LIMIT: 'AI 서비스의 크레딧 또는 결제·사용 한도를 확인해야 합니다. 관리자에게 오류 코드를 전달해 주세요.',
+  UPSTREAM_REQUEST_ERROR: 'AI 서비스가 요청 형식을 수락하지 않았습니다. 관리자에게 모델·요청 설정 확인을 요청해 주세요.',
+  UPSTREAM_BUSY: 'AI 서비스가 일시적으로 혼잡합니다. 잠시 후 직접 다시 시도해 주세요.',
+  UPSTREAM_ERROR: 'AI 서비스 연결에서 오류가 발생했습니다. 관리자에게 오류 코드와 요청 번호를 전달해 주세요.',
+  INVALID_AI_RESPONSE: 'AI 응답 형식을 확인하지 못했습니다. 학습 기록은 유지되며 관리자 확인이 필요합니다.',
+  INVALID_REQUEST: '요청 형식을 확인하지 못했습니다. 학습 기록을 백업한 뒤 페이지를 새로 열어 주세요.',
+  INTERNAL_ERROR: '지금은 채점을 받을 수 없습니다. 관리자에게 오류 코드와 요청 번호를 전달해 주세요.'
+};
+
+function createRequestId() {
+  try { return Utilities.getUuid(); } catch (e) {
+    return 'review-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+  }
+}
+
+function gradingError(code, status, provider) {
+  const safeCode = Object.prototype.hasOwnProperty.call(GRADING_ERROR_MESSAGES, code) ? code : 'INTERNAL_ERROR';
+  const err = new Error(GRADING_ERROR_MESSAGES[safeCode]);
+  err.gradingCode = safeCode;
+  if (Number.isFinite(status)) err.upstreamStatus = status;
+  if (provider === 'openai' || provider === 'gemini') err.upstreamProvider = provider;
+  return err;
+}
+
+function classifyGradingError(err) {
+  const code = err && err.gradingCode;
+  return Object.prototype.hasOwnProperty.call(GRADING_ERROR_MESSAGES, code) ? code : 'INTERNAL_ERROR';
+}
+
 function safeErrorMessage(err) {
-  const raw = String((err && err.message) || err);
-  try { Logger.log('채점 실패: ' + raw); } catch (e) { /* 무시 */ }
-  if (raw.indexOf('혼잡') !== -1) return raw;
-  return '지금은 채점을 받을 수 없습니다. 잠시 후 다시 한번 시도해 보시겠어요?';
+  return GRADING_ERROR_MESSAGES[classifyGradingError(err)];
+}
+
+function logSafeGradingError(err, code, requestId) {
+  const entry = { requestId: requestId, code: code, provider: ACTIVE_PROVIDER };
+  if (err && Number.isFinite(err.upstreamStatus)) entry.upstreamStatus = err.upstreamStatus;
+  if (safeUpstreamCode(err)) entry.upstreamCode = safeUpstreamCode(err);
+  try { Logger.log(JSON.stringify(entry)); } catch (e) { /* 로그 실패는 응답에 영향 없음 */ }
+}
+
+// 관리자에게 전달해도 되는 고정 오류 식별자만 허용한다. 임의 code/message는 노출하지 않는다.
+const SAFE_UPSTREAM_CODES = [
+  'invalid_api_key', 'permission_denied', 'model_not_found', 'invalid_request_error',
+  'rate_limit_exceeded', 'insufficient_quota', 'organization_spend_limit_exceeded',
+  'project_spend_limit_exceeded', 'organization_usage_limit_exceeded',
+  'credit_balance_exhausted', 'billing_hard_limit_reached', 'billing_not_active'
+];
+
+function safeUpstreamCode(err) {
+  const code = err && err.upstreamCode;
+  return SAFE_UPSTREAM_CODES.indexOf(code) !== -1 ? code : null;
+}
+
+// API 오류 내용은 분류에만 사용하고 그대로 반환하거나 기록하지 않는다.
+function upstreamError(provider, status, responseText) {
+  let upstreamCode = '';
+  try {
+    const parsed = JSON.parse(responseText);
+    upstreamCode = String(parsed && parsed.error && (parsed.error.code || parsed.error.status) || '');
+    if (provider === 'gemini' && parsed && parsed.error) {
+      const details = Array.isArray(parsed.error.details) ? parsed.error.details : [];
+      const authFailure = details.some(function (detail) {
+        return detail && detail['@type'] === 'type.googleapis.com/google.rpc.ErrorInfo' &&
+          ['API_KEY_INVALID', 'API_KEY_EXPIRED'].indexOf(detail.reason) !== -1;
+      });
+      // Gemini의 잘못된 키는 HTTP 400으로도 온다. 고정 식별자만 분류하고 원문은 보관하지 않는다.
+      if (authFailure || parsed.error.status === 'UNAUTHENTICATED') upstreamCode = 'invalid_api_key';
+      else if (parsed.error.status === 'PERMISSION_DENIED' || parsed.error.status === 'FAILED_PRECONDITION') upstreamCode = 'permission_denied';
+      else if (parsed.error.status === 'NOT_FOUND') upstreamCode = 'model_not_found';
+      else if (parsed.error.status === 'RESOURCE_EXHAUSTED') upstreamCode = status === 402 ? 'credit_balance_exhausted' : 'rate_limit_exceeded';
+      else if (parsed.error.status === 'INVALID_ARGUMENT') upstreamCode = 'invalid_request_error';
+    }
+  } catch (e) { /* JSON이 아닌 상류 응답도 안전하게 분류한다. */ }
+  function tagged(error) {
+    if (SAFE_UPSTREAM_CODES.indexOf(upstreamCode) !== -1) error.upstreamCode = upstreamCode;
+    return error;
+  }
+  const quotaCodes = ['insufficient_quota', 'organization_spend_limit_exceeded', 'project_spend_limit_exceeded',
+    'organization_usage_limit_exceeded', 'credit_balance_exhausted', 'billing_hard_limit_reached', 'billing_not_active'];
+  if (quotaCodes.indexOf(upstreamCode) !== -1) return tagged(gradingError('UPSTREAM_BILLING_LIMIT', status, provider));
+  if (status === 401 || (provider === 'gemini' && upstreamCode === 'invalid_api_key')) return tagged(gradingError('UPSTREAM_AUTH_ERROR', status, provider));
+  if (status === 403 || (provider === 'gemini' && upstreamCode === 'permission_denied')) return tagged(gradingError('UPSTREAM_PERMISSION_ERROR', status, provider));
+  if (status === 404 || upstreamCode === 'model_not_found') return tagged(gradingError('UPSTREAM_MODEL_ERROR', status, provider));
+  if (status === 400 || status === 422) return tagged(gradingError('UPSTREAM_REQUEST_ERROR', status, provider));
+  if ([429, 500, 503].indexOf(status) !== -1) return tagged(gradingError('UPSTREAM_BUSY', status, provider));
+  return tagged(gradingError('UPSTREAM_ERROR', status, provider));
+}
+
+function parseGradingResponse(raw) {
+  let report;
+  try { report = JSON.parse(raw); } catch (e) { throw gradingError('INVALID_AI_RESPONSE'); }
+  if (!report || typeof report !== 'object' || Array.isArray(report) ||
+      typeof report.completedCount !== 'string' || typeof report.overallTier !== 'string' ||
+      typeof report.overallComment !== 'string' || !Array.isArray(report.criteria) ||
+      !Array.isArray(report.missionNotes) || !Array.isArray(report.bonusMissions) ||
+      !report.selfEvalCheck || typeof report.selfEvalCheck.mismatch !== 'boolean') {
+    throw gradingError('INVALID_AI_RESPONSE');
+  }
+  return report;
+}
+
+function parseApiEnvelope(raw) {
+  try {
+    const data = JSON.parse(raw);
+    if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('invalid envelope');
+    return data;
+  } catch (e) {
+    throw gradingError('INVALID_AI_RESPONSE');
+  }
+}
+
+// [관리자 수동 실행 전용] 설정 존재 여부와 카운터만 확인한다.
+// 외부 API, 메일, 스프레드시트 작성, 카운터 증가를 수행하지 않는다. 웹 doPost에서 호출하지 않는다.
+function diagnoseConfiguration() {
+  const props = PropertiesService.getScriptProperties();
+  const now = new Date();
+  const today = Utilities.formatDate(now, QUOTA_TIME_ZONE, 'yyyy-MM-dd');
+  const period = safePeriodDiagnostic(undefined, now);
+  const status = {
+    sourceVersion: 'api-gemini-default-2026-11-14-v27',
+    provider: ACTIVE_PROVIDER,
+    model: ACTIVE_PROVIDER === 'openai' ? (period.model || null) : GEMINI_MODEL,
+    reasoningEffort: ACTIVE_PROVIDER === 'openai' ? (period.reasoningEffort || null) : null,
+    phase: ACTIVE_PROVIDER === 'openai' ? (period.phase || null) : null,
+    keyConfigured: {
+      openai: !!getApiKey('OPENAI_API_KEY').trim(),
+      gemini: !!getApiKey('GEMINI_API_KEY').trim()
+    },
+    dailyRequests: counterDiagnostic(props, 'reqCount_' + today, MAX_DAILY_REQUESTS),
+    legacyOpenaiTotalRequests: counterDiagnostic(props, 'openaiReqCount_total', null),
+    openaiPeriod: period,
+    externalApiCalled: false
+  };
+  status.dailyRequests.date = today;
+  status.legacyOpenaiTotalRequests.preserved = true;
+  status.legacyOpenaiTotalRequests.usedForCurrentLimit = false;
+  Logger.log(JSON.stringify(status));
+  return status;
+}
+
+// 진단에는 잘못된 속성 값 자체를 내보내지 않고 valid와 고정 오류 코드만 반환한다.
+function counterDiagnostic(props, key, max) {
+  try {
+    if (max !== null) validateQuotaMaximum(max);
+    const used = readQuotaCounter(props, key);
+    return { used: used, max: max, left: max === null ? null : Math.max(0, max - used), valid: true };
+  } catch (e) {
+    return { used: null, max: max, left: null, valid: false, code: classifyGradingError(e) };
+  }
+}
+
+function safePeriodDiagnostic(profile, now) {
+  try { return getOpenAIPeriodStatus(now || new Date(), profile); } catch (e) {
+    return { status: 'invalid_configuration', allowed: false, code: classifyGradingError(e) };
+  }
 }
 
 // [수동 실행 전용] 응시 기록 시트에 필요한 "스프레드시트 생성" 권한을 처음 한 번 승인받기 위한 함수.
@@ -195,21 +376,29 @@ function markCertificateSaved(payload) {
   }
 }
 
-// 남은 채점 예산을 한 줄로 요약한다. 심사 모드(openai)일 때는 누적 상한 기준, 평소(gemini)에는 일일 상한 기준.
+// OpenAI는 현재 평가기간 또는 한국시간 해당 월의 횟수, Gemini는 오늘의 채점 요청 수를 요약한다.
 function budgetSummary() {
   const props = PropertiesService.getScriptProperties();
   if (ACTIVE_PROVIDER === 'openai') {
-    const used = Number(props.getProperty('openaiReqCount_total') || '0');
+    const period = safePeriodDiagnostic();
+    if (period.status === 'invalid_configuration') {
+      return { label: 'OpenAI 운영기간', used: null, max: null, left: 0,
+        status: period.status, text: '운영기간 또는 횟수 설정 확인 필요' };
+    }
+    const labels = { active: '이용 가능', not_started: '시작 전', expired: '기간 종료', quota_reached: '횟수 소진' };
     return {
-      label: '심사용 채점 예산(누적)',
-      used: used,
-      max: OPENAI_MAX_TOTAL_REQUESTS,
-      left: Math.max(0, OPENAI_MAX_TOTAL_REQUESTS - used),
-      text: used + ' / ' + OPENAI_MAX_TOTAL_REQUESTS + '회 사용 · 잔여 ' + Math.max(0, OPENAI_MAX_TOTAL_REQUESTS - used) + '회'
+      label: period.phase === 'economy' ? 'OpenAI 이번 달 요청 수' : 'OpenAI 평가기간 요청 수',
+      model: period.model,
+      used: period.used,
+      max: period.max,
+      left: period.left,
+      status: period.status,
+      text: period.used + ' / ' + period.max + '회 사용 · 잔여 ' + period.left + '회 · ' + labels[period.status] +
+        ' · 모델: ' + period.model + ' · 다음 기간 시작: ' + period.endExclusive
     };
   }
-  const today = Utilities.formatDate(new Date(), Session.getScriptTimeZone() || 'Asia/Seoul', 'yyyy-MM-dd');
-  const used = Number(props.getProperty('reqCount_' + today) || '0');
+  const today = Utilities.formatDate(new Date(), QUOTA_TIME_ZONE, 'yyyy-MM-dd');
+  const used = readQuotaCounter(props, 'reqCount_' + today);
   return {
     label: '오늘 채점 횟수',
     used: used,
@@ -309,14 +498,15 @@ function setupWeeklyDigestTrigger() {
 // 하루 호출 횟수를 세어 MAX_DAILY_REQUESTS를 넘으면 예외를 던진다.
 function checkAndIncrementDailyQuota() {
   const props = PropertiesService.getScriptProperties();
-  const today = Utilities.formatDate(new Date(), Session.getScriptTimeZone() || 'Asia/Seoul', 'yyyy-MM-dd');
+  const today = Utilities.formatDate(new Date(), QUOTA_TIME_ZONE, 'yyyy-MM-dd');
   const lock = LockService.getScriptLock();
   lock.waitLock(5000);
   try {
     const key = 'reqCount_' + today;
-    const count = Number(props.getProperty(key) || '0');
+    const count = readQuotaCounter(props, key);
+    validateQuotaMaximum(MAX_DAILY_REQUESTS);
     if (count >= MAX_DAILY_REQUESTS) {
-      throw new Error('오늘의 채점 요청 한도(' + MAX_DAILY_REQUESTS + '회)를 초과했습니다. 내일 다시 시도하거나 관리자에게 문의하세요.');
+      throw gradingError('DAILY_QUOTA_REACHED');
     }
     props.setProperty(key, String(count + 1));
   } finally {
@@ -324,19 +514,134 @@ function checkAndIncrementDailyQuota() {
   }
 }
 
-// 심사 기간(30일) 전체 누적 OpenAI 요청 수를 세어 OPENAI_MAX_TOTAL_REQUESTS를 넘으면 예외를 던진다.
-// 날짜별로 리셋되는 checkAndIncrementDailyQuota와 달리, 이건 기간 전체 누적치다.
-function checkAndIncrementOpenAIQuota() {
+function validateQuotaMaximum(value) {
+  if (!Number.isSafeInteger(value) || value < 1) throw gradingError('CONFIG_INVALID');
+}
+
+// 숫자가 아니거나 음수·소수·빈 문자열이면 안전하게 차단한다. 원문은 로그에 남기지 않는다.
+function readQuotaCounter(props, key) {
+  const raw = props.getProperty(key);
+  if (raw === null || raw === undefined) return 0;
+  if (typeof raw !== 'string' || !/^(0|[1-9][0-9]*)$/.test(raw)) throw gradingError('CONFIG_INVALID');
+  const count = Number(raw);
+  if (!Number.isSafeInteger(count)) throw gradingError('CONFIG_INVALID');
+  return count;
+}
+
+// 명시적인 한국시간 ISO 값만 허용하며 2월30일 같은 자동 보정 날짜도 거부한다.
+function parseKoreaTimestamp(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+09:00$/.test(value)) {
+    throw gradingError('CONFIG_INVALID');
+  }
+  const millis = Date.parse(value);
+  if (!Number.isFinite(millis) || new Date(millis + 9 * 60 * 60 * 1000).toISOString().slice(0, 19) + '+09:00' !== value) {
+    throw gradingError('CONFIG_INVALID');
+  }
+  return millis;
+}
+
+// 모델·추론·한도 기간을 요청 시작 시 한 번 고른다. 날짜는 서버의 한국시간을 기준으로 한다.
+// 반환 객체는 서버 내부에서만 만들며 학생 요청으로 모델이나 기간을 지정할 수 없다.
+function resolveOpenAIProfile(now) {
+  const current = now && typeof now.getTime === 'function' ? now.getTime() : NaN;
+  const start = parseKoreaTimestamp(OPENAI_PERIOD_START);
+  const switchAt = parseKoreaTimestamp(OPENAI_PERIOD_END_EXCLUSIVE);
+  if (start >= switchAt || !Number.isFinite(current) ||
+      typeof OPENAI_PERIOD_ID !== 'string' || !/^[A-Za-z0-9_-]{1,64}$/.test(OPENAI_PERIOD_ID)) {
+    throw gradingError('CONFIG_INVALID');
+  }
+  validateQuotaMaximum(OPENAI_MAX_PERIOD_REQUESTS);
+  validateQuotaMaximum(OPENAI_MAX_MONTHLY_REQUESTS);
+  if (current < switchAt) {
+    return {
+      phase: 'evaluation', model: OPENAI_MODEL, reasoningEffort: OPENAI_REASONING_EFFORT,
+      periodId: OPENAI_PERIOD_ID, periodStart: OPENAI_PERIOD_START,
+      periodEndExclusive: OPENAI_PERIOD_END_EXCLUSIVE, maxRequests: OPENAI_MAX_PERIOD_REQUESTS
+    };
+  }
+  const korea = new Date(current + 9 * 60 * 60 * 1000);
+  const year = korea.getUTCFullYear();
+  const month = korea.getUTCMonth() + 1;
+  const monthText = String(month).padStart(2, '0');
+  const nextYear = month === 12 ? year + 1 : year;
+  const nextMonth = month === 12 ? 1 : month + 1;
+  return {
+    phase: 'economy', model: OPENAI_ECONOMY_MODEL, reasoningEffort: OPENAI_ECONOMY_REASONING_EFFORT,
+    periodId: 'monthly_' + year + monthText,
+    periodStart: year + '-' + monthText + '-01T00:00:00+09:00',
+    periodEndExclusive: nextYear + '-' + String(nextMonth).padStart(2, '0') + '-01T00:00:00+09:00',
+    maxRequests: OPENAI_MAX_MONTHLY_REQUESTS
+  };
+}
+
+function getOpenAIPeriodStatus(now, selectedProfile) {
+  const profile = selectedProfile || resolveOpenAIProfile(now);
+  validateQuotaMaximum(profile.maxRequests);
+  if (typeof profile.periodId !== 'string' || !/^[A-Za-z0-9_-]{1,64}$/.test(profile.periodId)) {
+    throw gradingError('CONFIG_INVALID');
+  }
+  const start = parseKoreaTimestamp(profile.periodStart);
+  const end = parseKoreaTimestamp(profile.periodEndExclusive);
+  const current = now && typeof now.getTime === 'function' ? now.getTime() : NaN;
+  if (start >= end || !Number.isFinite(current)) throw gradingError('CONFIG_INVALID');
+  const counterKey = 'openaiReqCount_period_' + profile.periodId;
+  const used = readQuotaCounter(PropertiesService.getScriptProperties(), counterKey);
+  const status = current < start ? 'not_started' : current >= end ? 'expired' :
+    used >= profile.maxRequests ? 'quota_reached' : 'active';
+  return {
+    id: profile.periodId, counterKey: counterKey,
+    phase: profile.phase, model: profile.model, reasoningEffort: profile.reasoningEffort,
+    start: profile.periodStart, endExclusive: profile.periodEndExclusive, timeZone: QUOTA_TIME_ZONE,
+    used: used, max: profile.maxRequests, left: Math.max(0, profile.maxRequests - used),
+    status: status, allowed: status === 'active'
+  };
+}
+
+// [관리자 수동 실행 전용] 전환 경계를 모의 날짜로 읽기만 한다.
+// 외부 API, 카운터 변경, 학생 명단, 메일, 트리거를 사용하지 않는다.
+function diagnoseScheduledConfiguration() {
+  const samples = [
+    '2026-11-12T23:59:59.999+09:00', '2026-11-13T00:00:00+09:00',
+    '2026-12-31T23:59:59.999+09:00', '2027-01-01T00:00:00+09:00',
+    '2027-01-31T23:59:59.999+09:00', '2027-02-01T00:00:00+09:00',
+    '2027-02-28T23:59:59.999+09:00', '2027-03-01T00:00:00+09:00',
+    '2027-12-31T23:59:59.999+09:00', '2028-01-01T00:00:00+09:00',
+    '2028-02-29T23:59:59.999+09:00', '2028-03-01T00:00:00+09:00'
+  ];
+  const result = {
+    sourceVersion: 'api-gemini-default-2026-11-14-v27',
+    switchAt: OPENAI_PERIOD_END_EXCLUSIVE, timeZone: QUOTA_TIME_ZONE,
+    transitions: samples.map(function (at) {
+      return { at: at, period: safePeriodDiagnostic(undefined, new Date(at)) };
+    }),
+    externalApiCalled: false, countersChanged: false,
+    studentRosterUpdated: false, emailSent: false
+  };
+  Logger.log(JSON.stringify(result));
+  return result;
+}
+
+// fetch 직전에 기간·일일 한도를 같은 잠금 안에서 확인하고 함께 예약한다.
+// 실제 API 시도(재시도·연결시험 포함) 한 건을 예약한다. 과거 누적 속성은 수정하지 않는다.
+// 재시도 중 월 경계를 넘으면 기존 기간을 종료하고 중단한다. 새 월 한도로 이전 모델을 호출하지 않는다.
+function checkAndIncrementOpenAIQuota(selectedProfile) {
   const props = PropertiesService.getScriptProperties();
   const lock = LockService.getScriptLock();
   lock.waitLock(5000);
   try {
-    const key = 'openaiReqCount_total';
-    const count = Number(props.getProperty(key) || '0');
-    if (count >= OPENAI_MAX_TOTAL_REQUESTS) {
-      throw new Error('심사용 채점 예산 한도(' + OPENAI_MAX_TOTAL_REQUESTS + '회)를 모두 사용했습니다. 관리자에게 문의하세요.');
-    }
-    props.setProperty(key, String(count + 1));
+    const now = new Date();
+    const period = getOpenAIPeriodStatus(now, selectedProfile);
+    if (period.status === 'not_started') throw gradingError('PERIOD_NOT_STARTED');
+    if (period.status === 'expired') throw gradingError('PERIOD_EXPIRED');
+    if (period.status === 'quota_reached') throw gradingError('PERIOD_QUOTA_REACHED');
+    validateQuotaMaximum(MAX_DAILY_REQUESTS);
+    const dailyKey = 'reqCount_' + Utilities.formatDate(now, QUOTA_TIME_ZONE, 'yyyy-MM-dd');
+    const dailyCount = readQuotaCounter(props, dailyKey);
+    if (dailyCount >= MAX_DAILY_REQUESTS) throw gradingError('DAILY_QUOTA_REACHED');
+    const updates = {};
+    updates[period.counterKey] = String(period.used + 1);
+    updates[dailyKey] = String(dailyCount + 1);
+    props.setProperties(updates, false);
   } finally {
     lock.releaseLock();
   }
@@ -353,37 +658,38 @@ function jsonResponse(obj) {
 const IMAGE_FIELD_KEYS = ['imageData', 'imageData2', 'slideImage1', 'slideImage2', 'slideImage3', 'slideImage4', 'slideImage5', 'refImageStart', 'refImageMiddle', 'refImageFinal', 'refImageMcp', 'cmpImageBefore', 'cmpImageAfter', 'cmpImageFinal'];
 // 안전장치: 이미지 1장당 base64 용량 상한(약 1.2MB 원본 기준). 이보다 크면 손상되었거나 비정상 데이터로 보고 건너뛴다.
 const MAX_IMAGE_BASE64_CHARS = 1600000;
-// 기본미션 01~09번은 대표 이미지 1장씩 검토하되, 08번(서로 다른 AI 비교)만 두 장(A/B)을 받아 최대 10장이다.
+// 기본미션 01~09번은 대표 이미지 1장씩 검토하되, 05번 비교 이미지는 최대 3장, 08번은 최대 2장이다.
+// 05번을 먼저 선택하며 전체 이미지 수는 10장을 넘지 않는다.
 // 10번(발표자료 슬라이드)은 건축 사진 관련성 판단 대상이 아니므로 이미지 채점에서 제외한다.
 // (학생이 더 많이 올려도, 초과분은 이미지 없이 텍스트 기준으로만 채점되며 감점 사유가 되지 않는다.)
 const MAX_IMAGES_PER_REQUEST = 10;
 // 미션별로 첨부 이미지를 몇 장까지 보낼지. 지정하지 않은 미션은 1장.
-const IMAGES_PER_MISSION = { '08': 2 };
+const IMAGES_PER_MISSION = { '05': 3, '08': 2 };
 
 function hasAnyImage(f) {
   return !!(f && IMAGE_FIELD_KEYS.some(function (k) { return f[k]; }));
 }
 
 function buildSummary(payload) {
-  const student = payload.student || {};
   const missions = payload.missions || [];
   const core = missions.filter(function (m) { return m.id !== '11' && m.id !== '12'; });
   const completedCount = core.filter(function (m) { return m.completed; }).length;
   const imageMissionCount = missions.filter(function (m) { return m.id !== '10' && hasAnyImage(m.fields); }).length;
 
   const lines = [];
-  lines.push('학생 이름: ' + (student.name || '미기재'));
-  lines.push('학번: ' + (student.studentId || '미기재'));
+  // 이름·학번의 별도 필드는 AI 본문에 포함하지 않는다. 로스터 식별은 기존 payload.student를 사용한다.
+  // 학생이 자유 텍스트에 직접 적은 개인정보까지 제거하는 익명화 기능은 아니다.
   lines.push('기본미션(01~10) 완료 개수: ' + completedCount + ' / ' + core.length);
-  lines.push('이미지가 첨부된 미션 수(01~09번 기준): ' + imageMissionCount + ' (최대 ' + MAX_IMAGES_PER_REQUEST + '장까지 [미션 NN 첨부 이미지] 라벨과 함께 순서대로 첨부됨. 10번은 이미지 없이 텍스트로만 판단할 것. ' +
-    '08번은 서로 다른 AI로 만든 결과 두 장이 [미션 08 첨부 이미지 A]·[미션 08 첨부 이미지 B]로 첨부될 수 있으며, 학생이 적은 두 AI 비교 판단이 실제 두 이미지의 차이와 맞는지 대조할 것)');
+  lines.push('이미지가 기록된 미션 수(10번 제외): ' + imageMissionCount + ' (실제로 전송되는 이미지는 최대 ' + MAX_IMAGES_PER_REQUEST + '장. 제공된 [미션 NN 첨부 이미지] 라벨만 판단 근거로 사용할 것. 10번은 텍스트로만 판단할 것. ' +
+    '05번은 원본·AI 대안·최종 수정안 비교 이미지를 최대 3장 우선 전송하고, 08번은 서로 다른 AI 결과 두 장을 A/B로 전송할 수 있다. 누락된 비교 이미지는 추측하지 말고 대조할 자료가 부족하다고 명시할 것)');
+  lines.push('교수 검토자 이름과 교수 메모는 이 AI 요약에서 제외했다. 아래 AI 도구·근거 출처·대조 기록은 학습자의 자기 기록이며 제3자가 사실 확인한 증거로 단정하지 말 것.');
   lines.push('');
   missions.forEach(function (m) {
     lines.push('[미션 ' + m.id + '] ' + m.title + ' - ' + (m.completed ? '완료' : '미완료'));
     const f = m.fields || {};
     let hasField = false;
     Object.keys(f).forEach(function (k) {
-      if (k === 'completed' || k === 'compareHistory' || IMAGE_FIELD_KEYS.indexOf(k) !== -1) return;
+      if (k === 'completed' || k === 'compareHistory' || k === 'reviewerName' || k === 'reviewerNote' || IMAGE_FIELD_KEYS.indexOf(k) !== -1) return;
       const v = f[k];
       if (v === undefined || v === null || v === '') return;
       if (k === 'compare' && typeof v === 'object') {
@@ -395,7 +701,14 @@ function buildSummary(payload) {
         return;
       }
       if (typeof v === 'object') return; // 예상치 못한 객체 필드는 건너뛴다
-      lines.push('  - ' + k + ': ' + v);
+      const fieldLabels = {
+        evidenceSource: '학생이 적은 근거 출처(실제 자료 대조 필요)',
+        evidenceCheck: '학생의 근거 대조·불확실성 기록',
+        aiTool: '학생이 밝힌 AI 도구',
+        aiModel: '학생이 밝힌 AI 모델',
+        aiUsedAt: '학생이 밝힌 AI 사용일'
+      };
+      lines.push('  - ' + (fieldLabels[k] || k) + ': ' + v);
       hasField = true;
     });
     if (hasAnyImage(f)) lines.push('  - (첨부 이미지 있음, 아래 참고)');
@@ -417,23 +730,32 @@ function buildSummary(payload) {
 }
 
 // 미션별 첨부 이미지를 제공자 중립적인 형태({missionId, mimeType, base64})로 모은다.
-// 미션당 대표 이미지 1장만 사용하고, 10번(발표자료 슬라이드)은 건축 사진 관련성 판단 대상이 아니므로 제외한다.
-// 기본미션(01~09)을 도전미션(11~12)보다 우선 포함하고, 전체 개수는 MAX_IMAGES_PER_REQUEST로 제한한다.
+// 05번 원본·AI 대안·최종 수정안(최대 3장)을 먼저 선택한다. 08번은 2장, 나머지는 1장이다.
+// 10번 슬라이드는 제외하고, 전체 개수는 MAX_IMAGES_PER_REQUEST로 제한한다.
 function collectMissionImages(payload) {
   const missions = payload.missions || [];
   const images = [];
   const ordered = missions.slice().filter(function (m) { return m.id !== '10'; }).sort(function (a, b) {
-    const aBonus = (a.id === '11' || a.id === '12') ? 1 : 0;
-    const bBonus = (b.id === '11' || b.id === '12') ? 1 : 0;
-    return aBonus - bBonus;
+    const aPriority = a.id === '05' ? 0 : ((a.id === '11' || a.id === '12') ? 2 : 1);
+    const bPriority = b.id === '05' ? 0 : ((b.id === '11' || b.id === '12') ? 2 : 1);
+    return aPriority - bPriority;
   });
   ordered.forEach(function (m) {
     const f = m.fields || {};
     const limit = IMAGES_PER_MISSION[m.id] || 1;
+    const fieldKeys = m.id === '05'
+      ? ['cmpImageBefore', 'cmpImageAfter', 'cmpImageFinal', 'imageData']
+      : IMAGE_FIELD_KEYS;
+    const comparisonLabels = {
+      cmpImageBefore: ' 원본(수정 전)',
+      cmpImageAfter: ' AI 대안',
+      cmpImageFinal: ' 최종 수정안',
+      imageData: ' 참고 이미지'
+    };
     let taken = 0;
-    for (let i = 0; i < IMAGE_FIELD_KEYS.length && taken < limit; i++) {
+    for (let i = 0; i < fieldKeys.length && taken < limit; i++) {
       if (images.length >= MAX_IMAGES_PER_REQUEST) return;
-      const dataUrl = f[IMAGE_FIELD_KEYS[i]];
+      const dataUrl = f[fieldKeys[i]];
       if (!dataUrl || typeof dataUrl !== 'string') continue;
       const match = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
       if (!match) continue;
@@ -441,7 +763,7 @@ function collectMissionImages(payload) {
       const base64 = match[2];
       if (base64.length > MAX_IMAGE_BASE64_CHARS) continue; // 비정상적으로 큰 데이터는 건너뛴다
       // 같은 미션에서 두 장 이상 보낼 때는 A/B 라벨로 구분해 AI가 어느 쪽인지 알게 한다.
-      const label = limit > 1 ? ' ' + String.fromCharCode(65 + taken) : '';
+      const label = m.id === '05' ? comparisonLabels[fieldKeys[i]] : (limit > 1 ? ' ' + String.fromCharCode(65 + taken) : '');
       images.push({ missionId: m.id, label: label, mimeType: mimeType, base64: base64 });
       taken++;
     }
@@ -602,8 +924,9 @@ const GRADING_JSON_SCHEMA = {
   additionalProperties: false
 };
 
-// ACTIVE_PROVIDER 설정에 따라 Gemini 또는 OpenAI(GPT-5.6 Terra)로 채점 요청을 분기한다.
+// ACTIVE_PROVIDER 설정에 따라 Gemini 또는 OpenAI로 채점 요청을 분기한다.
 function gradeWithAI(payload) {
+  if (!Array.isArray(payload.missions)) throw gradingError('INVALID_REQUEST');
   const summary = buildSummary(payload);
   const isOpenAI = ACTIVE_PROVIDER === 'openai';
   const prompt = buildGradingPrompt(summary, isOpenAI ? 'deep' : 'fast');
@@ -614,108 +937,311 @@ function gradeWithAI(payload) {
   return gradeWithGemini(prompt, images);
 }
 
-function gradeWithGemini(prompt, images) {
-  const apiKey = getApiKey('GEMINI_API_KEY');
-  if (!apiKey) {
-    throw new Error('GEMINI_API_KEY가 스크립트 속성에 설정되지 않았습니다. DEPLOY.md를 참고해 먼저 설정하세요.');
-  }
-
-  const imageParts = buildImagePartsGemini(images);
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + apiKey;
+function gradeWithGemini(prompt, images, maxAttempts) {
+  if (maxAttempts !== undefined && maxAttempts !== 1) throw gradingError('CONFIG_INVALID');
   const body = {
-    contents: [{ parts: [{ text: prompt }].concat(imageParts) }],
-    // 같은 기록에 같은 결과가 나오도록 무작위성을 최소화한다(완전한 결정성은 보장되지 않음).
-    generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
-  };
-
-  // Gemini가 일시적으로 혼잡(503)하거나 요청이 몰릴 때(429)는 점점 더 길게 쉬었다가 자동으로 재시도한다.
-  const RETRY_STATUSES = [503, 429, 500];
-  const MAX_ATTEMPTS = 4;
-  let status, text;
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const res = UrlFetchApp.fetch(url, {
-      method: 'post',
-      contentType: 'application/json',
-      payload: JSON.stringify(body),
-      muteHttpExceptions: true
-    });
-    status = res.getResponseCode();
-    text = res.getContentText();
-    if (status === 200) break;
-    if (RETRY_STATUSES.indexOf(status) === -1 || attempt === MAX_ATTEMPTS) break;
-    Utilities.sleep(1500 * Math.pow(2, attempt - 1)); // 1.5초, 3초, 6초 간격으로 재시도
-  }
-
-  if (status !== 200) {
-    if (RETRY_STATUSES.indexOf(status) !== -1) {
-      throw new Error('AI 서버가 지금 일시적으로 혼잡합니다. 잠시 후 다시 한번 시도해 보시겠어요?');
+    contents: [{ role: 'user', parts: [{ text: prompt }].concat(buildImagePartsGemini(images)) }],
+    generationConfig: {
+      temperature: 0.1,
+      responseMimeType: 'application/json',
+      responseJsonSchema: GRADING_JSON_SCHEMA,
+      maxOutputTokens: 8000
     }
-    throw new Error('Gemini API 오류 (' + status + '): ' + text.substring(0, 300));
+  };
+  // 기존 웹 채점요청당 일일 카운터는 doPost에서 센다. 관리자 검사는 호출 전에 직접 센다.
+  // 일시적 혼잡만 기존처럼 재시도하며, 관리자 검사는 maxAttempts=1로 실제 시도 1회만 사용한다.
+  const attempts = maxAttempts === 1 ? 1 : 4;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return validateGeminiGradingReport(parseGradingResponse(geminiOutputText(requestGeminiOnce(body))));
+    } catch (err) {
+      if (classifyGradingError(err) !== 'UPSTREAM_BUSY' || attempt === attempts) throw err;
+      Utilities.sleep(1500 * Math.pow(2, attempt - 1));
+    }
   }
-
-  const data = JSON.parse(text);
-  const raw = data.candidates &&
-    data.candidates[0] &&
-    data.candidates[0].content &&
-    data.candidates[0].content.parts &&
-    data.candidates[0].content.parts[0] &&
-    data.candidates[0].content.parts[0].text;
-  if (!raw) throw new Error('AI 응답을 읽을 수 없습니다.');
-
-  const cleaned = raw.replace(/```json/g, '').replace(/```/g, '').trim();
-  return JSON.parse(cleaned);
+  throw gradingError('INTERNAL_ERROR');
 }
 
-// 대회 심사 전용: GPT-5.6 Terra(OpenAI Responses API)로 채점 요청을 보낸다.
-function gradeWithOpenAI(prompt, images) {
-  const apiKey = getApiKey('OPENAI_API_KEY');
-  if (!apiKey) {
-    throw new Error('OPENAI_API_KEY가 스크립트 속성에 설정되지 않았습니다. ACTIVE_PROVIDER를 openai로 쓰려면 먼저 설정하세요.');
+// 키는 스크립트 속성에서 읽어 헤더로만 전달한다. URL·응답·로그에 키를 넣지 않는다.
+// 일일 한도는 기존 doPost 또는 관리자 함수에서 호출당 한 번 검사한다.
+function requestGeminiOnce(body) {
+  const apiKey = getApiKey('GEMINI_API_KEY').trim();
+  if (!apiKey) throw gradingError('CONFIG_MISSING');
+  if (!body || !Array.isArray(body.contents) || !body.generationConfig ||
+      body.generationConfig.responseMimeType !== 'application/json' || !body.generationConfig.responseJsonSchema) {
+    throw gradingError('CONFIG_INVALID');
   }
-  checkAndIncrementOpenAIQuota();
+  let response;
+  try {
+    response = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent', {
+      method: 'post', contentType: 'application/json',
+      headers: { 'x-goog-api-key': apiKey },
+      payload: JSON.stringify(body), muteHttpExceptions: true
+    });
+  } catch (fetchError) {
+    throw gradingError('UPSTREAM_ERROR', undefined, 'gemini');
+  }
+  const status = response.getResponseCode();
+  const raw = response.getContentText();
+  if (status !== 200) throw upstreamError('gemini', status, raw);
+  return parseApiEnvelope(raw);
+}
 
+function geminiOutputText(data) {
+  const candidate = Array.isArray(data.candidates) && data.candidates[0];
+  if (!candidate || candidate.finishReason !== 'STOP' || !candidate.content || !Array.isArray(candidate.content.parts)) {
+    throw gradingError('INVALID_AI_RESPONSE', 200, 'gemini');
+  }
+  const raw = candidate.content.parts.filter(function (part) {
+    return part && part.thought !== true && typeof part.text === 'string';
+  }).map(function (part) { return part.text; }).join('').trim();
+  if (!raw || typeof raw !== 'string') throw gradingError('INVALID_AI_RESPONSE');
+  return raw;
+}
+
+// 기존 공통 응답 파서를 재사용한 뒤 학습자 화면에 필요한 목록·등급·문자열 형식을 확인한다.
+function validateGeminiGradingReport(report) {
+  const tiers = ['매우 잘함', '잘함', '보통', '노력 필요'];
+  const isText = function (value) { return typeof value === 'string'; };
+  const validTier = function (value) { return tiers.indexOf(value) !== -1; };
+  if (!validTier(report.overallTier) || !isText(report.selfEvalCheck.note) || report.criteria.length !== CRITERIA.length ||
+      !CRITERIA.every(function (criterion) {
+        const matches = report.criteria.filter(function (item) { return item && item.name === criterion.name; });
+        return matches.length === 1 && validTier(matches[0].tier) && isText(matches[0].comment);
+      }) || report.missionNotes.length !== 10 || !Array.from({ length: 10 }, function (_, i) {
+        return ('0' + (i + 1)).slice(-2);
+      }).every(function (id) {
+        const matches = report.missionNotes.filter(function (item) { return item && item.id === id; });
+        return matches.length === 1 && validTier(matches[0].tier) && isText(matches[0].note);
+      }) || report.bonusMissions.length !== 2 || !['11', '12'].every(function (id) {
+        const matches = report.bonusMissions.filter(function (item) { return item && item.id === id; });
+        return matches.length === 1 && typeof matches[0].completed === 'boolean' &&
+          isText(matches[0].label) && isText(matches[0].comment);
+      })) {
+    throw gradingError('INVALID_AI_RESPONSE', 200, 'gemini');
+  }
+  return report;
+}
+
+// [관리자 수동 실행 전용] 실제 Gemini 요청 1회. 일일 한도를 차감한다.
+// 학생 명단·메일·트리거를 거치지 않으며 doPost action으로 노출하지 않는다.
+function testGeminiConnection() {
+  const requestId = createRequestId();
+  let externalApiCalls = 0;
+  let result;
+  try {
+    if (!getApiKey('GEMINI_API_KEY').trim()) throw gradingError('CONFIG_MISSING');
+    const body = {
+      contents: [{ role: 'user', parts: [{ text: 'Return only {"ok":true}. Administrator connection test with synthetic data only.' }] }],
+      generationConfig: {
+        temperature: 0.1, maxOutputTokens: 1024, responseMimeType: 'application/json',
+        responseJsonSchema: { type: 'object', properties: { ok: { type: 'boolean' } }, required: ['ok'], additionalProperties: false }
+      }
+    };
+    checkAndIncrementDailyQuota();
+    externalApiCalls = 1;
+    let reply;
+    try { reply = JSON.parse(geminiOutputText(requestGeminiOnce(body))); }
+    catch (err) { if (err && err.gradingCode) throw err; throw gradingError('INVALID_AI_RESPONSE'); }
+    if (!reply || reply.ok !== true || Object.keys(reply).length !== 1) throw gradingError('INVALID_AI_RESPONSE');
+    result = { ok: true, model: GEMINI_MODEL, provider: 'gemini', requestId: requestId, upstreamStatus: 200,
+      externalApiCalls: externalApiCalls, studentRosterUpdated: false, emailSent: false };
+  } catch (err) {
+    result = geminiDiagnosticFailure(err, requestId, externalApiCalls);
+  }
+  Logger.log(JSON.stringify(result));
+  return result;
+}
+
+// [관리자 수동 실행 전용] 실제 평가 프롬프트·공개 건축 예제 이미지·전체 JSON 형식 검사.
+// 공개 이미지 읽기 1회와 Gemini 실제 시도 1회만 사용한다. 학생 자료·명단·메일·트리거 변경 없음.
+// 이미지가 없거나 형식·용량이 다르면 실패하며 텍스트 전용 검사로 자동 전환하지 않는다.
+// 일일 한도 1회 차감, 자동 재시도 없음. 응답 형식 검증은 건축 해석의 정확성 보증이 아니다.
+function testGeminiGrading() {
+  const requestId = createRequestId();
+  let externalApiCalls = 0;
+  let publicImageRequests = 0;
+  let stage = 'configuration';
+  let result;
+  try {
+    if (!getApiKey('GEMINI_API_KEY').trim()) throw gradingError('CONFIG_MISSING');
+    stage = 'public_image_fetch';
+    publicImageRequests = 1;
+    const imageData = fetchGeminiTestImage();
+    const fields = {
+      projectNote: 'DEMO DATA: 관리자 연결점검용 가상기록이며 실제 학생·성적이 아닙니다. 사이트에 공개된 건축 예제 이미지 한 장만 사용합니다.',
+      step1: '공개 예제에서 회색 콘크리트 질감의 외벽, 어긋난 상자형 매스, 중앙 유리 아트리움, 큰 창, 식재 테라스, 전면 보행공간과 계단을 관찰했습니다. 실제 용도·구조 안전성은 이미지 한 장만으로 확정하지 않습니다.',
+      step2: '가상 프롬프트: 도심 가로에 면한 중층 건물, 회색 콘크리트 질감과 유리, 어긋난 매스와 식재 테라스, 전면 보행공간을 유지한 사선 시점의 주간 건축 시각화. 교육시설이라는 용도 해석은 추정입니다.',
+      step3: '가상 실험 계획은 매스·창호·카메라를 고정하고 외벽 재료 하나만 바꾸는 세 대안을 비교하는 것입니다. 실제 AI 변형 생성은 수행하지 않았으며 첨부는 공개 원본 한 장뿐입니다.',
+      step4: '원본의 매스와 중앙 유리 공간은 확인했으나 변형 결과가 없어 요청조건 유지 여부는 대조하지 못했습니다. 난간 높이·계단 치수·피난·접근성·구조 성능은 도면과 전문 검토가 필요합니다.',
+      evidenceSource: 'https://zeroarchitect.kr/images/01/example-1.jpg — 사이트 공개 건축 예제. 실제 학생 또는 비공개 설계자료가 아닙니다.',
+      evidenceCheck: '보이는 건축 요소와 용도·성능 추정을 분리했습니다. 실제 재료 성능, 층고, 법규 충족과 변형 실험 수행 여부는 확인하지 못했습니다.',
+      decisionType: '수정', decision: '용도·성능을 단정한 표현을 수정하고 관찰과 추정을 분리합니다. 원본 특징을 정리하는 용도로만 제한적으로 활용하고 실제 변형 실험과 상세 검토는 미실시로 남깁니다.',
+      completed: false,
+      imageData: imageData
+    };
+    const payload = {
+      student: { name: '연결점검용 가상기록', studentId: 'SYSTEM-CHECK-20261114' },
+      missions: Array.from({ length: 12 }, function (_, i) {
+        const id = ('0' + (i + 1)).slice(-2);
+        return { id: id, title: i === 0 ? '건축 이미지를 프롬프트로 역설계하기' : '미작성 미션 ' + id,
+          completed: false, fields: i === 0 ? fields : {} };
+      }),
+      selfEval: { overall: '합성 연결점검 자료이며 실제 학생 능력이나 성적을 평가할 근거가 없습니다.' }
+    };
+    const images = collectMissionImages(payload);
+    if (images.length !== 1) throw gradingError('INVALID_REQUEST');
+    const prompt = buildGradingPrompt(buildSummary(payload), 'fast');
+    stage = 'gemini_grading';
+    checkAndIncrementDailyQuota();
+    externalApiCalls = 1;
+    const report = gradeWithGemini(prompt, images, 1);
+    result = { ok: true, model: GEMINI_MODEL, provider: 'gemini', requestId: requestId, upstreamStatus: 200,
+      externalApiCalls: externalApiCalls, schemaValidated: true, criteriaCount: report.criteria.length,
+      missionNotesCount: report.missionNotes.length, bonusMissionsCount: report.bonusMissions.length,
+      publicImageRequests: publicImageRequests, imagesSent: images.length, imageKind: 'public_architecture_example',
+      visionPathValidated: true, interpretationAccuracyValidated: false,
+      studentRosterUpdated: false, emailSent: false };
+  } catch (err) {
+    result = geminiDiagnosticFailure(err, requestId, externalApiCalls);
+    result.stage = stage;
+    result.publicImageRequests = publicImageRequests;
+  }
+  Logger.log(JSON.stringify(result));
+  return result;
+}
+
+// 관리자 진단만 사용하는 고정 공개 예제. 임의 URL이나 학생 업로드를 받지 않는다.
+function fetchGeminiTestImage() {
+  let response;
+  try {
+    response = UrlFetchApp.fetch('https://zeroarchitect.kr/images/01/example-1.jpg', { muteHttpExceptions: true });
+  } catch (err) {
+    throw gradingError('INVALID_REQUEST');
+  }
+  const status = response.getResponseCode();
+  if (status !== 200) throw gradingError('INVALID_REQUEST', status);
+  const blob = response.getBlob();
+  const mimeType = String(blob.getContentType() || '').split(';')[0].trim().toLowerCase();
+  if (mimeType !== 'image/jpeg') throw gradingError('INVALID_REQUEST', status);
+  const bytes = blob.getBytes();
+  if (!bytes || bytes.length < 4 || bytes.length > 1200000 ||
+      (bytes[0] & 255) !== 255 || (bytes[1] & 255) !== 216 || (bytes[2] & 255) !== 255) {
+    throw gradingError('INVALID_REQUEST', status);
+  }
+  const base64 = Utilities.base64Encode(bytes);
+  if (!base64 || base64.length > MAX_IMAGE_BASE64_CHARS) throw gradingError('INVALID_REQUEST', status);
+  return 'data:image/jpeg;base64,' + base64;
+}
+
+function geminiDiagnosticFailure(err, requestId, externalApiCalls) {
+  return { ok: false, model: GEMINI_MODEL, provider: 'gemini', requestId: requestId,
+    code: classifyGradingError(err), error: safeErrorMessage(err),
+    upstreamStatus: Number.isFinite(err && err.upstreamStatus) ? err.upstreamStatus : null,
+    upstreamCode: safeUpstreamCode(err), externalApiCalls: externalApiCalls,
+    studentRosterUpdated: false, emailSent: false };
+}
+
+// OpenAI Responses API 요청 한 번. API 키·요청·상류 오류 원문은 로그에 남기지 않는다.
+// 재시도는 호출자가 제어한다. 이 함수는 한 번의 fetch만 수행하고 각 시도에 한도를 적용한다.
+function requestOpenAIOnce(body, selectedProfile) {
+  const profile = selectedProfile || resolveOpenAIProfile(new Date());
+  if (!body || body.model !== profile.model || !body.reasoning || body.reasoning.effort !== profile.reasoningEffort) {
+    throw gradingError('CONFIG_INVALID');
+  }
+  const apiKey = getApiKey('OPENAI_API_KEY').trim();
+  if (!apiKey) throw gradingError('CONFIG_MISSING');
+  const payload = JSON.stringify(body);
+  checkAndIncrementOpenAIQuota(profile);
+  let response;
+  try {
+    response = UrlFetchApp.fetch('https://api.openai.com/v1/responses', {
+      method: 'post', contentType: 'application/json',
+      headers: { Authorization: 'Bearer ' + apiKey },
+      payload: payload, muteHttpExceptions: true
+    });
+  } catch (fetchError) {
+    throw gradingError('UPSTREAM_ERROR', undefined, 'openai');
+  }
+  const status = response.getResponseCode();
+  const raw = response.getContentText();
+  if (status !== 200) throw upstreamError('openai', status, raw);
+  const data = parseApiEnvelope(raw);
+  if (data.status !== 'completed') throw gradingError('INVALID_AI_RESPONSE', status, 'openai');
+  return data;
+}
+
+function openAIOutputText(data) {
+  const messageItem = Array.isArray(data.output) && data.output.filter(function (o) { return o && o.type === 'message'; })[0];
+  const textItem = messageItem && Array.isArray(messageItem.content) &&
+    messageItem.content.filter(function (c) { return c && c.type === 'output_text'; })[0];
+  const raw = textItem && textItem.text;
+  if (!raw || typeof raw !== 'string') throw gradingError('INVALID_AI_RESPONSE');
+  return raw;
+}
+
+// 현재 선택한 모델로 학생 기록과 이미지에 대한 구조화된 참고 피드백을 요청한다.
+function gradeWithOpenAI(prompt, images) {
+  const profile = resolveOpenAIProfile(new Date());
   const imageParts = buildImagePartsOpenAI(images);
   const content = [{ type: 'input_text', text: prompt }].concat(imageParts);
-  const url = 'https://api.openai.com/v1/responses';
   const body = {
-    model: OPENAI_MODEL,
+    model: profile.model,
+    store: false,
     input: [{ role: 'user', content: content }],
-    reasoning: { effort: OPENAI_REASONING_EFFORT },
-    text: { format: { type: 'json_schema', name: 'grading_report', schema: GRADING_JSON_SCHEMA } },
+    reasoning: { effort: profile.reasoningEffort },
+    text: { format: { type: 'json_schema', name: 'grading_report', strict: true, schema: GRADING_JSON_SCHEMA } },
     max_output_tokens: 8000
   };
 
-  // Gemini와 동일한 방식으로, 일시적 혼잡(429/500/503)에는 점점 더 길게 쉬었다가 자동 재시도한다.
-  const RETRY_STATUSES = [503, 429, 500];
+  // 일시적 혼잡만 재시도한다. 결제·인증·모델·기간·횟수 오류는 반복하지 않는다.
   const MAX_ATTEMPTS = 4;
-  let status, text;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const res = UrlFetchApp.fetch(url, {
-      method: 'post',
-      contentType: 'application/json',
-      headers: { Authorization: 'Bearer ' + apiKey },
-      payload: JSON.stringify(body),
-      muteHttpExceptions: true
-    });
-    status = res.getResponseCode();
-    text = res.getContentText();
-    if (status === 200) break;
-    if (RETRY_STATUSES.indexOf(status) === -1 || attempt === MAX_ATTEMPTS) break;
-    Utilities.sleep(1500 * Math.pow(2, attempt - 1));
-  }
-
-  if (status !== 200) {
-    if (RETRY_STATUSES.indexOf(status) !== -1) {
-      throw new Error('AI 서버가 지금 일시적으로 혼잡합니다. 잠시 후 다시 한번 시도해 보시겠어요?');
+    try {
+      return parseGradingResponse(openAIOutputText(requestOpenAIOnce(body, profile)));
+    } catch (err) {
+      if (classifyGradingError(err) !== 'UPSTREAM_BUSY' || attempt === MAX_ATTEMPTS) throw err;
+      Utilities.sleep(1500 * Math.pow(2, attempt - 1));
     }
-    throw new Error('OpenAI API 오류 (' + status + '): ' + text.substring(0, 300));
   }
-
-  const data = JSON.parse(text);
-  const messageItem = (data.output || []).filter(function (o) { return o.type === 'message'; })[0];
-  const textItem = messageItem && (messageItem.content || []).filter(function (c) { return c.type === 'output_text'; })[0];
-  const raw = textItem && textItem.text;
-  if (!raw) throw new Error('AI 응답을 읽을 수 없습니다 (reasoning에 출력 토큰을 모두 사용했을 수 있습니다 — max_output_tokens를 늘려보세요).');
-
-  return JSON.parse(raw);
+  throw gradingError('INTERNAL_ERROR');
 }
+
+// [관리자 수동 실행 전용·유료 API 호출 1회] Apps Script 편집기의 함수 목록에서 실행한다.
+// 날짜·일일·기간 상한을 지키며 실제 시도 1회를 차감한다. 학생 명단·메일·트리거는 수정하지 않는다.
+// doPost의 action으로 노출하지 않는다. 연결시험 성공은 실제 학생 평가 성공까지 보증하지 않는다.
+function testOpenAIConnection() {
+  const requestId = createRequestId();
+  let result;
+  let profile;
+  try {
+    profile = resolveOpenAIProfile(new Date());
+    const body = {
+      model: profile.model, store: false,
+      input: [{ role: 'user', content: [{ type: 'input_text',
+        text: 'Return a JSON object with ok set to true. This is an administrator connection test using synthetic data only.' }] }],
+      reasoning: { effort: profile.reasoningEffort },
+      text: { format: { type: 'json_schema', name: 'connection_check', strict: true,
+        schema: { type: 'object', properties: { ok: { type: 'boolean', enum: [true] } },
+          required: ['ok'], additionalProperties: false } } },
+      max_output_tokens: 1024
+    };
+    const data = requestOpenAIOnce(body, profile); // 단 한 번만 호출한다. 자동 재시도 없음.
+    let reply;
+    try { reply = JSON.parse(openAIOutputText(data)); } catch (e) { throw gradingError('INVALID_AI_RESPONSE'); }
+    if (!reply || reply.ok !== true || Object.keys(reply).length !== 1) throw gradingError('INVALID_AI_RESPONSE');
+    result = { ok: true, model: profile.model, reasoningEffort: profile.reasoningEffort,
+      requestId: requestId, upstreamStatus: 200,
+      period: safePeriodDiagnostic(profile), externalApiCalls: 1, studentRosterUpdated: false, emailSent: false };
+  } catch (err) {
+    result = { ok: false, model: profile ? profile.model : null,
+      reasoningEffort: profile ? profile.reasoningEffort : null, requestId: requestId,
+      code: classifyGradingError(err), error: safeErrorMessage(err),
+      upstreamStatus: Number.isFinite(err && err.upstreamStatus) ? err.upstreamStatus : null,
+      upstreamCode: safeUpstreamCode(err),
+      period: safePeriodDiagnostic(profile), studentRosterUpdated: false, emailSent: false };
+  }
+  Logger.log(JSON.stringify(result));
+  return result;
+}
+
