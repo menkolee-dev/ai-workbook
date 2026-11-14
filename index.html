@@ -46,14 +46,14 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 
 .finalSubmitPanel{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:10000;display:none;align-items:center;justify-content:center;padding:24px}
 .finalSubmitPanel.open{display:flex}
-.finalSubmitBox{background:#fff;border-radius:18px;max-width:860px;width:100%;max-height:92vh;overflow:auto;padding:30px}
-.finalSubmitBox h3{font-size:24px;margin-bottom:8px}
+.finalSubmitBox{background:#fff;border-radius:18px;max-width:980px;width:100%;max-height:92vh;overflow:hidden;display:flex;flex-direction:column}
+.finalSubmitBox h3{font-size:24px;margin-bottom:8px;word-break:keep-all;line-height:1.4}
 .finalItem{border:1px solid var(--line);border-radius:12px;padding:13px;margin-top:10px;background:#fafaf8}
-.reportPanel{display:none;position:fixed;inset:0;background:#fff;z-index:10001;overflow:auto}
+.reportPanel{background:#fff;overflow:auto}
 .reportPanel.open{display:block}
 #certPrintArea{display:none}
-.reportPanelBar{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:14px 24px;display:flex;justify-content:flex-end;gap:10px;z-index:1}
-.reportPanelBox{max-width:820px;margin:0 auto;padding:28px 24px 60px}
+.reportPanelBar{background:#fff;border-bottom:1px solid var(--line);padding:0 0 14px;display:flex;justify-content:flex-end;gap:10px}
+.reportPanelBox{max-width:820px;margin:0 auto;padding:24px 0 36px}
 .reportHeadTop{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-bottom:6px}
 .reportHead h2{margin:0 0 4px;font-size:24px}
 .reportStudentId{color:var(--muted);font-weight:600;font-size:15px;margin-left:8px}
@@ -98,6 +98,9 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 @media print{
   @page{margin:15mm}
   body>*{display:none!important}
+  body.reportTabActive:not(.printingCert) #finalSubmitPanel{display:block!important;position:static!important;padding:0!important;background:#fff!important}
+  body.reportTabActive:not(.printingCert) .finalSubmitBox{display:block!important;max-width:none!important;max-height:none!important;overflow:visible!important;border-radius:0!important}
+  body.reportTabActive .resultsHeader,body.reportTabActive .resultsTabs,body.reportTabActive #evaluationPanel{display:none!important}
   .reportPanel.open{display:block!important;position:static!important;overflow:visible!important;height:auto!important;width:auto!important;background:#fff}
   .reportPanelBar{display:none!important}
   body.printingCert #certPrintArea{display:block!important;background:#fff}
@@ -171,16 +174,19 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 
 .utilityNav{display:flex;gap:8px;flex-wrap:wrap;max-width:1200px;margin:12px auto 0;padding:0 22px;box-sizing:border-box}.utilityNav button{font-size:12px;min-height:40px}.storageWarning{max-width:1156px;margin:12px auto;padding:12px 16px;border:1px solid #b84444;background:#fff4f1;color:#8b2a2a;border-radius:10px;white-space:pre-wrap;font-size:13px}.storageWarning[hidden]{display:none}.evidenceHelp{padding:10px 12px;background:#f3f7f5;border-radius:10px;font-size:12px;line-height:1.6}.reviewNote{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}.reviewNote summary{font-weight:700;font-size:13px;cursor:pointer}.reportMissionGrid{display:block}.reportMissionRow{padding:16px;margin:12px 0;break-inside:auto}.reportMissionRowBody b{font-size:15px}.reportEvidenceText{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;font-size:12px}.reportEvidenceLabel{font-weight:700;color:var(--accent);margin:12px 0 4px;font-size:12px}.reportImageGroup{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:8px 0}.reportImageGroup figure{margin:0}.reportImageGroup img{width:100%;height:150px;object-fit:contain;background:#f5f5f1}.reportImageGroup figcaption{font-size:11px;margin-top:4px;color:var(--muted)}.reportEvidenceNote{font-size:11px;color:var(--muted);line-height:1.55;margin-top:8px}.reportMissionGrid .reportMissionNoteRow{display:block;border-top:1px solid var(--line);margin-top:12px;padding-top:8px}.reportMissionGrid .reportMissionNoteRow .missionNoteText{display:block;margin-top:5px;white-space:pre-wrap}@media(max-width:600px){.reportImageGroup{grid-template-columns:1fr}.reportField{display:block}.reportFieldLabel{display:block}.utilityNav{padding:0 16px}.introStat strong{font-size:18px}}@media print{.reportImageGroup{grid-template-columns:repeat(3,minmax(0,1fr))}.reportImageGroup figure{break-inside:avoid}.reportEvidenceLabel{break-after:avoid}.reportMissionRowBody{break-after:avoid}.reportEvidenceText{orphans:3;widows:3}}
 .basicCheckSummary{padding:14px;background:#eef5f2;border:1px solid #d2e2db;border-radius:12px;line-height:1.7}.basicCheckDetails{margin-top:12px;border:1px solid var(--line);border-radius:12px;padding:12px}.basicCheckDetails summary{cursor:pointer;font-weight:750;font-size:13px}.basicCheckMission{border-top:1px solid var(--line);padding:13px 0;margin-top:10px}.basicCheckMission:last-child{padding-bottom:0}.basicCheckMission p{margin:6px 0!important;line-height:1.6;overflow-wrap:anywhere}.basicCheckCriteria{display:grid;gap:6px;margin-top:10px}.basicCheckCriteria div{padding:8px 10px;background:var(--soft);border-radius:8px;font-size:12px;line-height:1.6}
+.brandGroup{display:flex;align-items:center;gap:10px}.brandText{display:flex;align-items:center;gap:15px;flex-wrap:wrap}.brandIntro{font-size:12px;color:var(--muted);line-height:1.5}.headerActions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}.headerSave{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}.campusLink{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid #b8d1c8;border-radius:10px;padding:9px 11px;background:#f3f8f5;color:var(--accent);font-size:12px;font-weight:750;text-decoration:none;line-height:1.35}.campusLink:hover{background:#e7f1eb}.campusLink svg{width:22px;height:22px;flex-shrink:0}.campusNewWindow{font-size:10px;color:var(--muted);font-weight:500}.freeExplore{border-top:1px solid var(--line);margin-top:15px;padding:15px 4px 4px}.freeExplore h3{font-size:12px;color:var(--accent);margin-bottom:7px}.freeExplore p{font-size:12px;color:var(--muted);line-height:1.6;margin:7px 0}.freeExplore .campusLink{width:100%;justify-content:flex-start}.resultsHeader{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:20px 24px 12px}.resultsHeader h2{font-size:23px;margin:0}.resultsHeader .eyebrow{margin-bottom:5px}.resultsTabs{display:flex;gap:8px;border-bottom:1px solid var(--line);padding:0 24px 12px}.resultsTabs button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:10px;padding:10px 14px;font:inherit;font-size:13px;font-weight:750;cursor:pointer}.resultsTabs button[aria-selected="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}.resultsTabPanel{min-height:0;overflow:auto;padding:24px;overscroll-behavior:contain}.resultsTabPanel[hidden]{display:none!important}.resultsTabs button:focus-visible,.campusLink:focus-visible{outline:3px solid #78b5a4;outline-offset:3px}.resultsTabPanel:focus-visible{outline:2px solid #78b5a4;outline-offset:-3px}@media(max-width:850px){.brandText{display:block}.brandIntro{display:block;margin-top:4px}.top{padding:12px 16px}.headerActions{width:100%;justify-content:space-between;margin-top:4px}.headerSave .badge{display:none}.finalSubmitPanel{padding:10px}.finalSubmitBox{max-height:96vh}.resultsHeader{padding:16px 16px 10px}.resultsTabs{padding:0 16px 10px}.resultsTabPanel{padding:18px 16px}.campusLink{min-height:42px}}
 </style></head><body>
-<header><div class="top"><div style="display:flex;align-items:center;gap:10px"><img src="assets/kbu-logo.png" alt="경복대학교" style="height:30px;object-fit:contain" onerror="this.style.display='none'"><div class="brand">ZERO ARCHITECT</div></div><div><span class="badge">12개 미션 · 판단 근거 기록</span> <span id="saveState">자동 저장</span></div></div></header>
+<header><div class="top">
+  <div class="brandGroup"><img src="assets/kbu-logo.png" alt="경복대학교" style="height:30px;object-fit:contain" onerror="this.style.display='none'"><div class="brandText"><div class="brand">ZERO ARCHITECT</div><span class="brandIntro">AI 실습과 3D 탐색으로 건축을 배우는 공간</span></div></div>
+  <div class="headerActions"><a class="campusLink" href="https://kyungbok-campus-3d.drh333.chatgpt.site/" target="_blank" rel="noopener noreferrer" aria-label="캠퍼스 건축 탐색 (새 창)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M3 8l8-4 10 5-8 4-10-5zM3 8v10l10 4 8-4V9M13 13v9M7 10v9M17 11v9M7 6l10 5"/></svg><span>캠퍼스 건축 탐색<br><span class="campusNewWindow">새 창에서 열려요 ↗</span></span></a><div class="headerSave"><span class="badge">12개 미션 · 판단 근거 기록</span><span id="saveState">자동 저장</span></div></div>
+</div></header>
 <nav class="utilityNav" aria-label="기록과 결과 바로가기">
   <button class="primary" onclick="showIntro()">실습 시작</button>
-  <button class="ghost" onclick="showFinalSubmission()">결과·AI 피드백</button>
-  <button class="ghost" onclick="showReportPanel()">판단 근거 보고서</button>
+  <button class="ghost" id="resultsOpenButton" onclick="showFinalSubmission()">평가·보고서</button>
 </nav>
 <div id="storageWarning" class="storageWarning" role="alert" hidden></div>
 <main>
-<section class="hero"><div><div class="eyebrow" style="color:#dcebe7">건축 AI 실습 · 근거와 판단 기록</div><h1>AI 결과를 검증하고,<br>내 판단을 근거로 남깁니다</h1><p>12개 실습에서 관찰·실험·근거 대조·최종 결정을 기록합니다.</p><div class="heroPills"><span class="heroPill">🧭 10개의 기본미션과 2개의 도전미션</span><span class="heroPill">🎯 실습기록에 대한 AI 참고 피드백</span></div></div><div class="heroArt"><img src="assets/ai-building-hero.png" alt="AI로 상상한 미래 건축 이미지"></div><div class="progressWrap"><b>나의 진행률</b><div class="bar"><div id="progressBar"></div></div><div id="progressText">기본미션 0 / 10 완료</div><div class="small" id="bonusProgressText" style="color:#dce8e5;margin-top:6px">도전미션 0 / 2 완료</div><div class="small" style="color:#dce8e5;margin-top:8px">이 브라우저에 자동 저장됩니다. 다른 기기에서 이어가려면 상단 "결과·AI 피드백"의 "기록 백업 · 복원"을 이용하세요.</div></div></section>
+<section class="hero"><div><div class="eyebrow" style="color:#dcebe7">건축 AI 실습 · 근거와 판단 기록</div><h1>AI 결과를 검증하고,<br>내 판단을 근거로 남깁니다</h1><p>12개 실습에서 관찰·실험·근거 대조·최종 결정을 기록합니다.</p><div class="heroPills"><span class="heroPill">🧭 10개의 기본미션과 2개의 도전미션</span><span class="heroPill">🎯 실습기록에 대한 AI 참고 피드백</span></div></div><div class="heroArt"><img src="assets/ai-building-hero.png" alt="AI로 상상한 미래 건축 이미지"></div><div class="progressWrap"><b>나의 진행률</b><div class="bar"><div id="progressBar"></div></div><div id="progressText">기본미션 0 / 10 완료</div><div class="small" id="bonusProgressText" style="color:#dce8e5;margin-top:6px">도전미션 0 / 2 완료</div><div class="small" style="color:#dce8e5;margin-top:8px">이 브라우저에 자동 저장됩니다. 다른 기기에서 이어가려면 상단 "평가·보고서" → "평가" 탭의 "기록 백업 · 복원"을 이용하세요.</div></div></section>
 
 <div class="layout"><aside class="sidebar" id="sidebar"></aside><section class="content">
 <div class="card principleTip" id="principleCard"><span>💡 <b>따라 만들기보다, 왜 그렇게 선택했는지가 중요해요.</b></span><span class="small">관찰 → AI 실험 → 근거 대조 → 오류 찾기 → 결정</span></div>
@@ -216,7 +222,7 @@ function storageMessage(failed){
   const badge=document.getElementById('saveState'),warning=document.getElementById('storageWarning');
   const hasPending=Object.keys(pendingStore).length>0;
   if(badge){badge.textContent=(failed||hasPending)?'저장 실패 · 백업 필요':'저장됨';badge.style.color=(failed||hasPending)?'#b84444':'';}
-  if(warning){warning.hidden=!(failed||hasPending);warning.textContent=(failed||hasPending)?'브라우저 저장공간에 기록하지 못했습니다. 현재 화면의 내용은 이 탭에서만 유지됩니다. 새로고침하거나 닫기 전에 상단 “결과·AI 피드백”의 “기록 백업 · 복원”에서 백업을 내려받으세요.':'';}
+  if(warning){warning.hidden=!(failed||hasPending);warning.textContent=(failed||hasPending)?'브라우저 저장공간에 기록하지 못했습니다. 현재 화면의 내용은 이 탭에서만 유지됩니다. 새로고침하거나 닫기 전에 상단 “평가·보고서” → “평가” 탭의 “기록 백업 · 복원”에서 백업을 내려받으세요.':'';}
 }
 function readStoredText(k){
   if(Object.prototype.hasOwnProperty.call(pendingStore,k)) return pendingStore[k];
@@ -244,7 +250,7 @@ current=0;
 
 function key(i){return LESSONS[i].id==='00'?'aivis_v02_intro':'aivis_v02_lesson_'+(i-1);}
 function loadState(i){const v=readStoreJSON(key(i),{});return v&&typeof v==='object'&&!Array.isArray(v)?v:{};}
-function saveState(i,state){return writeStoreJSON(key(i),state);}
+function saveState(i,state){const saved=writeStoreJSON(key(i),state);updateEvaluationAction();return saved;}
 function collectState(){
   const state=loadState(current),l=LESSONS[current];
   document.querySelectorAll('[data-field]').forEach(el=>state[el.dataset.field]=el.type==='checkbox'?el.checked:el.value);
@@ -260,13 +266,14 @@ function checkReportStale(){
   const notice=document.createElement('div');
   notice.className='safetyNotice reportStaleNotice';
   notice.style.marginBottom='10px';
-  notice.innerHTML='<b>⚠ 이전 답안 기준 AI 피드백 · 재확인 필요</b><br><span class="small">이 AI 참고 피드백 이후 기록이나 평가 설정이 달라졌습니다. "AI 셀프체크하기" 버튼을 눌러 최신 내용으로 갱신하세요.</span>';
+  notice.innerHTML='<b>⚠ 이전 답안 기준 AI 피드백 · 재확인 필요</b><br><span class="small">이 AI 참고 피드백 이후 기록이나 평가 설정이 달라졌습니다. 현재 평가 버튼을 눌러 최신 내용으로 갱신하세요.</span>';
   cert.parentNode.insertBefore(notice,cert);
 }
 function bindAutosave(){document.querySelectorAll('[data-field]').forEach(el=>{el.addEventListener('input',collectState);el.addEventListener('change',collectState)})}
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+const CAMPUS_EXPLORATION_URL='https://kyungbok-campus-3d.drh333.chatgpt.site/';
 let sidebarCollapsed=true;
-function renderSidebar(){let sb=document.getElementById('sidebar');sb.innerHTML='';sb.classList.toggle('collapsed',sidebarCollapsed);let toggleBtn=document.createElement('button');toggleBtn.type='button';toggleBtn.className='sidebarToggleBtn';toggleBtn.textContent=sidebarCollapsed?'▸ 전체 미션 목록 펼치기':'▾ 미션 목록 접기';toggleBtn.onclick=()=>{sidebarCollapsed=!sidebarCollapsed;renderSidebar()};sb.appendChild(toggleBtn);LESSONS.forEach((l,i)=>{if(i===0){let t=document.createElement('div');t.className='sectionLabel';t.textContent='시작하기 · 프로젝트 소개';sb.appendChild(t)}if(i===1){let t=document.createElement('div');t.className='sectionLabel';t.textContent='기본미션 · 01–10';sb.appendChild(t)}if(i===11){let t=document.createElement('div');t.className='sectionLabel';t.textContent='도전미션 · 11–12';sb.appendChild(t)}let s=loadState(i),b=document.createElement('button'),advanced=['11','12'].includes(l.id),intro=l.id==='00';b.className='lessonBtn'+(intro?' intro':'')+(advanced?' advanced':'')+(i===current?' active':'')+(isCompleted(l,s)?' done':'');b.innerHTML=`<span class="n">${l.id}</span><span class="lt">${l.title}${intro?'<span class="introTag">먼저 시청 · 영상 2편</span>':(advanced?'<span class="advancedTag">도전미션 · 근거 기반</span>':'')}</span>`;b.onclick=()=>{collectState();current=i;writeStoreJSON('aivis_current_v08',i);render()};sb.appendChild(b)})}
+function renderSidebar(){let sb=document.getElementById('sidebar');sb.innerHTML='';sb.classList.toggle('collapsed',sidebarCollapsed);let toggleBtn=document.createElement('button');toggleBtn.type='button';toggleBtn.className='sidebarToggleBtn';toggleBtn.textContent=sidebarCollapsed?'▸ 전체 미션 목록 펼치기':'▾ 미션 목록 접기';toggleBtn.onclick=()=>{sidebarCollapsed=!sidebarCollapsed;renderSidebar()};sb.appendChild(toggleBtn);LESSONS.forEach((l,i)=>{if(i===0){let t=document.createElement('div');t.className='sectionLabel';t.textContent='시작하기 · 프로젝트 소개';sb.appendChild(t)}if(i===1){let t=document.createElement('div');t.className='sectionLabel';t.textContent='기본미션 · 01–10';sb.appendChild(t)}if(i===11){let t=document.createElement('div');t.className='sectionLabel';t.textContent='도전미션 · 11–12';sb.appendChild(t)}let s=loadState(i),b=document.createElement('button'),advanced=['11','12'].includes(l.id),intro=l.id==='00';b.className='lessonBtn'+(intro?' intro':'')+(advanced?' advanced':'')+(i===current?' active':'')+(isCompleted(l,s)?' done':'');b.innerHTML=`<span class="n">${l.id}</span><span class="lt">${l.title}${intro?'<span class="introTag">먼저 시청 · 영상 2편</span>':(advanced?'<span class="advancedTag">도전미션 · 근거 기반</span>':'')}</span>`;b.onclick=()=>{collectState();current=i;writeStoreJSON('aivis_current_v08',i);render()};sb.appendChild(b)});const explore=document.createElement('section');explore.className='freeExplore';explore.setAttribute('aria-label','자유탐색');explore.innerHTML='<h3>자유탐색</h3><p>건축을 몰라도 즐길 수 있어요.<br>캠퍼스를 둘러보며 눈에 띄는 공간을 찾아보세요.</p><a class="campusLink" href="'+CAMPUS_EXPLORATION_URL+'" target="_blank" rel="noopener noreferrer" aria-label="캠퍼스 건축 탐색 (새 창)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M3 8l8-4 10 5-8 4-10-5zM3 8v10l10 4 8-4V9M13 13v9M7 10v9M17 11v9M7 6l10 5"/></svg><span>캠퍼스 건축 탐색<br><span class="campusNewWindow">새 창에서 열려요 ↗</span></span></a><p>점수에 포함되지 않아요.</p>';sb.appendChild(explore)}
 function renderExamples(l){
  let g=document.getElementById('exampleGrid');
  g.innerHTML='';
@@ -319,7 +326,7 @@ function renderExamples(l){
       <div class="introFlowStep"><svg class="introFlowIcon" viewBox="0 0 44 44" aria-hidden="true"><path d="M8 30V16l14-9 14 9v14" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linejoin="round"/><line x1="8" y1="30" x2="36" y2="30" stroke="var(--accent)" stroke-width="1.6"/><rect x="18" y="20" width="8" height="10" fill="none" stroke="var(--accent)" stroke-width="1.3" opacity=".6"/><circle cx="34" cy="12" r="7" fill="var(--accent)"/><path d="M31 12l2 2 4-4" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><b>⑤ 결정</b><span>내가 채택·수정·거부</span></div>
     </div>
     <div class="small" style="margin-top:12px;padding:10px 14px;background:#f2f6f4;border-radius:10px;color:var(--text)">🛠 이미지 생성·수정은 사용하는 외부 AI 도구에서 하고, 이 사이트에는 <b>관찰과 판단을 기록</b>합니다. 어떤 AI를 쓰는지는 자유이고, 같은 조건이라도 AI마다 결과가 달라지는 점을 함께 살펴봅니다.</div>
-    <div class="safetyNotice">⚠ 작성한 내용은 이 브라우저에만 저장됩니다 — 기기나 브라우저를 바꾸거나 브라우저 데이터를 지우면 사라지니 상단 "결과·AI 피드백"의 "기록 백업 · 복원"에서 백업을 내려받아 두세요.</div>
+    <div class="safetyNotice">⚠ 작성한 내용은 이 브라우저에만 저장됩니다 — 기기나 브라우저를 바꾸거나 브라우저 데이터를 지우면 사라지니 상단 "평가·보고서" → "평가" 탭의 "기록 백업 · 복원"에서 백업을 내려받아 두세요.</div>
     <div class="introClosing"><b>완성 이미지보다, 판단 과정이 중요합니다.</b><br>이제 길을 떠나볼까요?</div>
     <div class="introStart"><button class="primary" onclick="startMissions()">시작하기 →</button></div>`;
    return;
@@ -350,7 +357,7 @@ function renderExamples(l){
              (l.id==='09'?'A3 포트폴리오 예시 · 클릭하여 확대':
              (l.id==='10'?'슬라이드 '+n+' 예시':'예제 '+n)));
    let src=`images/${l.id}/example-${n}.jpg`;
-   d.innerHTML=`<div class="exampleImg"><img src="${src}" alt="${label}" onclick="openLightbox('${src}','${label.replace(/'/g,"&#39;")}')" onerror="this.style.display='none';this.parentNode.innerHTML='예제 이미지 ${n}'"></div><div class="small" style="margin-top:8px">${label}</div>`;
+   d.innerHTML=`<div class="exampleImg"><img src="${src}" alt="${label}" tabindex="0" role="button" onclick="openLightbox('${src}','${label.replace(/'/g,"&#39;")}',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openLightbox('${src}','${label.replace(/'/g,"&#39;")}',this)}" onerror="this.style.display='none';this.parentNode.innerHTML='예제 이미지 ${n}'"></div><div class="small" style="margin-top:8px">${label}</div>`;
    g.appendChild(d)
  }
 }
@@ -647,24 +654,71 @@ function showCopyFallback(text){
   el.focus();
   el.select();
 }
-function showFinalSubmission(){
+let resultsDialogOpen=false,resultsReturnFocus=null;
+function saveResultsInputs(){collectState();collectSelfEval();saveStudentInfo();}
+function showFinalSubmission(options){openResultsDialog('evaluation',options);}
+function openResultsDialog(tab,options){
+  if(!resultsDialogOpen)resultsReturnFocus=document.activeElement;
+  if(!(options&&options.fromBackup))saveResultsInputs();
   const p=document.getElementById('finalSubmitPanel');
-  p.dataset.initialized='1';
   const info=loadStudentInfo();
   const nameEl=document.getElementById('studentName'),idEl=document.getElementById('studentId');
   if(nameEl) nameEl.value=info.name||'';
   if(idEl) idEl.value=info.studentId||'';
+  p.dataset.initialized='1';
+  renderSelfEval();
+  p.classList.add('open');p.setAttribute('aria-hidden','false');
+  resultsDialogOpen=true;document.body.style.overflow='hidden';
+  switchResultsTab(tab,true);
+}
+function switchResultsTab(tab,skipSave){
+  if(!resultsDialogOpen)return openResultsDialog(tab);
+  if(!skipSave)saveResultsInputs();
+  const report=tab==='report';
+  for(const [id,selected]of [['evaluationTab',!report],['reportTab',report]]){
+    const button=document.getElementById(id);button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;
+  }
+  document.getElementById('evaluationPanel').hidden=report;
+  const reportPanel=document.getElementById('reportPanel');reportPanel.hidden=!report;reportPanel.classList.toggle('open',report);
+  document.body.classList.toggle('reportTabActive',report);
+  if(report){document.getElementById('reportContent').innerHTML=buildReportHTML();}
+  else{
   if(window.__lastReport){renderReport(window.__lastReport);}else{document.getElementById('gradeResult').innerHTML='';}
   renderSelfEval();
   renderBasicSelfCheck();
+  updateEvaluationAction();
   checkReportStale();
-  p.classList.add('open');
-  document.body.style.overflow='hidden';
+  }
+  const selected=document.getElementById(report?'reportTab':'evaluationTab');
+  selected.focus();
 }
 function closeFinalSubmission(){
+  if(resultsDialogOpen)saveResultsInputs();
   const p=document.getElementById('finalSubmitPanel');
-  p.classList.remove('open');
-  document.body.style.overflow='';
+  p.classList.remove('open');p.setAttribute('aria-hidden','true');
+  document.getElementById('reportPanel').classList.remove('open');
+  resultsDialogOpen=false;document.body.style.overflow='';document.body.classList.remove('reportTabActive');
+  const target=resultsReturnFocus&&resultsReturnFocus.isConnected!==false?resultsReturnFocus:document.getElementById('resultsOpenButton');
+  resultsReturnFocus=null;if(target&&typeof target.focus==='function')target.focus();
+}
+function handleResultsDialogKey(event){
+  if(event.key==='Escape'){
+    event.preventDefault();event.stopPropagation();
+    const lightbox=document.getElementById('lightbox');
+    if(lightbox&&lightbox.classList.contains('open'))closeLightbox(null,true);else closeFinalSubmission();
+    return;
+  }
+  const tabs=['evaluationTab','reportTab'],index=tabs.indexOf(event.target.id);
+  if(index>=0&&['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){
+    event.preventDefault();const next=event.key==='Home'?0:event.key==='End'?1:1-index;switchResultsTab(next?'report':'evaluation');return;
+  }
+  if(event.key!=='Tab')return;
+  const dialog=document.getElementById('finalSubmitPanel');
+  const items=Array.from(dialog.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]')).filter(el=>el.tabIndex>=0&&!el.closest('[hidden]')&&el.getClientRects().length);
+  if(!items.length){event.preventDefault();return;}
+  const first=items[0],last=items[items.length-1],active=document.activeElement;
+  if(event.shiftKey&&(active===first||!dialog.contains(active))){event.preventDefault();last.focus();}
+  else if(!event.shiftKey&&(active===last||!dialog.contains(active))){event.preventDefault();first.focus();}
 }
 function coreMissionsStatus(){
   const core=LESSONS.map((l,i)=>({l,i})).filter(x=>!['00','11','12'].includes(x.l.id));
@@ -680,7 +734,7 @@ function markAllSubmitted(){
   }
   const info={submittedAt:new Date().toISOString()};
   writeStoreJSON('aivis_final_submit',info);
-  alert('기본미션 10개 완료를 확인했습니다.\n\n⚠ 작성한 내용은 이 브라우저에만 저장됩니다 — 기기나 브라우저를 바꾸거나 브라우저 데이터를 지우면 사라지니 상단 "결과·AI 피드백"의 "기록 백업 · 복원"에서 백업을 내려받아 두세요.');
+  alert('기본미션 10개 완료를 확인했습니다.\n\n⚠ 작성한 내용은 이 브라우저에만 저장됩니다 — 기기나 브라우저를 바꾸거나 브라우저 데이터를 지우면 사라지니 상단 "평가·보고서" → "평가" 탭의 "기록 백업 · 복원"에서 백업을 내려받아 두세요.');
 }
 
 // ===== 학생 정보 =====
@@ -862,14 +916,15 @@ function renderReportMissionRow(m){
 // 저장된 AI 총평이 있으면 보고서 맨 위에 그대로 재사용한다(다시 요청하지 않음).
 function renderReportAISummary(){
   const report=window.__lastReport;
+  const evaluation=lastReportEvaluation();
   if(!report) return '<div class="reportDraftNotice">저장된 AI 참고 피드백이 없습니다. AI 셀프체크를 요청하면 이 자리에 AI 총평 요약이 표시됩니다.</div>';
   const crit=(report.criteria||[]).map(c=>'<div class="reportField"><span class="reportFieldLabel">'+esc(c.name)+'</span><span class="reportFieldValue">'+esc(c.tier)+' — '+esc(c.comment)+'</span></div>').join('');
   const hl=summarizeStrengths(report);
   const hlField=(hl.strong.length||hl.weak.length)?'<div class="reportField"><span class="reportFieldLabel">강점 / 보완</span><span class="reportFieldValue">강점: '+esc(hl.strong.length?hl.strong.join(' · '):'아직 없음')+' / 보완: '+esc(hl.weak.length?hl.weak.join(' · '):'없음')+'</span></div>':'';
   const selfCheck=report.selfEvalCheck;
   const selfCheckField=(selfCheck&&selfCheck.mismatch&&selfCheck.note)?'<div class="reportField"><span class="reportFieldLabel">자기평가 대조</span><span class="reportFieldValue">⚠ '+esc(selfCheck.note)+'</span></div>':'';
-  return '<div class="reportAISummary">'+
-    '<div class="reportTierHero"><span class="reportTierEmoji">'+tierEmoji(report.overallTier)+'</span><span class="reportTierText">'+esc(report.overallTier)+'</span><span class="reportTierSub">기본미션 '+esc(report.completedCount||'-')+'</span></div>'+
+  return '<div class="reportAISummary"><div class="small"><b>'+esc(evaluation.title)+'</b>'+(evaluation.model?' · '+esc(evaluation.model):'')+'</div>'+
+    '<div class="reportTierHero"><span class="reportTierEmoji">'+tierEmoji(report.overallTier)+'</span><span class="reportTierText">'+esc(report.overallTier)+'</span><span class="reportTierSub">기본미션 완료 표시 '+esc(report.completedCount||'-')+'</span></div>'+
     '<div class="reportField"><span class="reportFieldLabel">총평</span><span class="reportFieldValue">'+esc(report.overallComment)+'</span></div>'+
     hlField+crit+selfCheckField+
   '</div>';
@@ -893,7 +948,7 @@ function buildReportHTML(){
   html+='<div class="reportProgress">기본미션 진행: '+(core.length-missingCore.length)+' / '+core.length+' 완료</div>';
   html+='<h3 class="reportSectionTitle">종합 요약</h3>';
   if(window.__lastReport&&window.__lastReportSnapshot&&window.__lastReportSnapshot!==gradingSnapshot()){
-    html+='<div class="reportDraftNotice"><b>⚠ 이전 답안 기준 AI 총평</b><br>AI 피드백 이후 기록이나 평가 설정이 달라졌습니다. 필요하면 "AI 셀프체크하기" 버튼을 눌러 최신 기록으로 갱신하세요.</div>';
+    html+='<div class="reportDraftNotice"><b>⚠ 이전 답안 기준 AI 총평</b><br>AI 피드백 이후 기록이나 평가 설정이 달라졌습니다. 필요하면 현재 평가 버튼을 눌러 최신 기록으로 갱신하세요.</div>';
   }
   html+=renderReportAISummary();
   html+='<div class="reportPageBreak"></div>';
@@ -918,17 +973,14 @@ function buildReportHTML(){
   }
   const cheer=encouragement({completedCount:(core.length-missingCore.length)+'/'+core.length});
   html+='<div class="reportCheer"><b>'+cheer.title+'</b>'+esc(cheer.body)+'</div>';
-  html+='<div class="reportFooterNote">⚠ 작성한 내용은 이 브라우저에만 저장됩니다 — 기기나 브라우저를 바꾸거나 브라우저 데이터를 지우면 사라지니 상단 "결과·AI 피드백"의 "기록 백업 · 복원"에서 백업을 내려받아 두세요.</div>';
+  html+='<div class="reportFooterNote">⚠ 작성한 내용은 이 브라우저에만 저장됩니다 — 기기나 브라우저를 바꾸거나 브라우저 데이터를 지우면 사라지니 상단 "평가·보고서" → "평가" 탭의 "기록 백업 · 복원"에서 백업을 내려받아 두세요.</div>';
   return html;
 }
 function showReportPanel(){
-  document.getElementById('reportContent').innerHTML=buildReportHTML();
-  document.getElementById('reportPanel').classList.add('open');
-  document.body.style.overflow='hidden';
+  openResultsDialog('report');
 }
 function closeReportPanel(){
-  document.getElementById('reportPanel').classList.remove('open');
-  document.body.style.overflow='';
+  closeFinalSubmission();
 }
 
 // ===== 내 기록 내보내기 (서버 없이 즉시 다운로드) =====
@@ -1081,7 +1133,7 @@ function importBackupJSON(e){
     try{
       const data=validateBackupData(JSON.parse(ev.target.result));
       if(!confirm('백업 형식 확인 완료\n생성 시각: '+(data.exportedAt||'미기재')+'\n\n현재 기록을 이 백업으로 대체합니다. 현재 기록을 보관하려면 취소 후 먼저 전체 기록 백업을 내려받으세요. 계속하시겠습니까?'))return;
-      applyValidatedBackup(data);render();showFinalSubmission();alert('기록을 복원했습니다. 완료 여부는 현재 작성 기준으로 다시 확인했습니다.');
+      applyValidatedBackup(data);render();showFinalSubmission({fromBackup:true});alert('기록을 복원했습니다. 완료 여부는 현재 작성 기준으로 다시 확인했습니다.');
     }catch(err){alert('복원 중단: '+String(err.message||err));}
     finally{e.target.value='';}
   };reader.readAsText(f);
@@ -1094,9 +1146,50 @@ const GAS_SECRET='kbu2026';
 window.__lastReport=null;
 window.__lastReportSnapshot=null;
 // 평가 설정과 입력 스냅샷을 함께 비교하되 이전 보고서는 그대로 보관한다.
-const AI_FEEDBACK_PIPELINE_VERSION='gemini-flash-lite-v27';
-function createGradingSnapshot(student,missions,selfEval){return JSON.stringify({pipeline:AI_FEEDBACK_PIPELINE_VERSION,student,m:missions,s:selfEval});}
+const AI_FEEDBACK_PIPELINE_VERSION='dual-evaluation-v28';
+const EVALUATION_ROUTES={
+  check:{mode:'check',provider:'gemini',model:'gemini-3.5-flash-lite',reasoningEffort:'',label:'Gemini 셀프체크하기',title:'Gemini 셀프체크',timeoutSeconds:180},
+  final:{mode:'final',provider:'openai',model:'gpt-6-astra',reasoningEffort:'high',label:'GPT 최종 평가받기',title:'GPT 최종평가',timeoutSeconds:330}
+};
+function coreEvaluationReadiness(missions){
+  const source=missions||collectAllMissionData();
+  const core=LESSONS.filter(l=>!['00','11','12'].includes(l.id)).map(l=>{
+    const mission=source.find(m=>m.id===l.id),state=mission&&mission.fields||{};
+    return {id:l.id,title:l.title,missing:lessonCompletionChecklist(l).filter(item=>!item.ok(state)).map(item=>item.label)};
+  });
+  const missing=core.filter(m=>m.missing.length);
+  return {ready:missing.length===0,readyCount:core.length-missing.length,total:core.length,missing};
+}
+function getEvaluationRoute(missions){return EVALUATION_ROUTES[coreEvaluationReadiness(missions).ready?'final':'check'];}
+function updateEvaluationAction(){
+  const btn=document.getElementById('gradeBtn');
+  if(!btn)return;
+  const readiness=coreEvaluationReadiness(),route=getEvaluationRoute();
+  btn.disabled=gradingInFlight;
+  if(!gradingInFlight)btn.textContent=route.label;
+  const note=document.getElementById('evaluationReadiness');
+  if(note)note.innerHTML='<b>필수 작성조건 충족 '+readiness.readyCount+' / '+readiness.total+'</b><p class="small">'+(readiness.ready?'기본미션 10개의 작성조건을 충족했습니다. GPT로 최종평가를 받을 수 있습니다.':'작성 중에는 Gemini로 셀프체크합니다. 기본미션 10개의 작성조건을 모두 채우면 GPT 최종평가로 바뀝니다.')+'</p><p class="small">완료 표시와 도전미션 11·12는 최종평가 조건에 포함하지 않습니다.</p>'+(readiness.missing.length?'<details class="basicCheckDetails"><summary>최종평가까지 보완할 작성항목</summary>'+readiness.missing.map(m=>'<div class="basicCheckMission"><b>'+esc(m.id)+' · '+esc(m.title)+'</b><p class="small">'+m.missing.map(esc).join(' · ')+'</p><button class="ghost" onclick="openSelfCheckMission(\''+esc(m.id)+'\')">이 미션 보완하기 →</button></div>').join('')+'</details>':'');
+}
+function createGradingSnapshot(student,missions,selfEval,route){
+  const evaluation=route||getEvaluationRoute(missions);
+  return JSON.stringify({pipeline:AI_FEEDBACK_PIPELINE_VERSION,evaluation:{mode:evaluation.mode,provider:evaluation.provider,model:evaluation.model,reasoningEffort:evaluation.reasoningEffort},student,m:missions,s:selfEval});
+}
 function gradingSnapshot(){return createGradingSnapshot(loadStudentInfo(),collectAllMissionData(),loadSelfEval());}
+function lastReportEvaluation(){
+  let snapshot;try{snapshot=JSON.parse(window.__lastReportSnapshot||'null');}catch(e){}
+  if(snapshot&&snapshot.pipeline===AI_FEEDBACK_PIPELINE_VERSION){
+    const actual=snapshot.evaluation,route=actual&&EVALUATION_ROUTES[actual.mode];
+    if(route&&actual.provider===route.provider&&actual.model===route.model&&actual.reasoningEffort===route.reasoningEffort)return {title:route.title,model:route.model};
+  }
+  if(snapshot&&snapshot.pipeline==='gemini-flash-lite-v27')return {title:'Gemini 셀프체크',model:'gemini-3.5-flash-lite'};
+  return {title:'이전 AI 참고 피드백',model:''};
+}
+function validateEvaluationRoute(actual,expected){
+  if(!actual||actual.mode!==expected.mode||actual.provider!==expected.provider||actual.model!==expected.model||(expected.mode==='final'&&actual.reasoningEffort!=='high')){
+    const error=new Error('평가 단계와 모델이 요청한 설정과 일치하지 않아 결과를 갱신하지 않았습니다. 관리자에게 확인해 주세요.');
+    error.code='EVALUATION_ROUTE_MISMATCH';throw error;
+  }
+}
 function saveLastReport(report,snapshot){return writeStoreJSON('aivis_last_report',{report,snapshot,at:new Date().toISOString()});}
 function loadLastReportRaw(){return readStoreJSON('aivis_last_report',null);}
 function loadLastReport(){const d=loadLastReportRaw();if(d&&d.report){try{window.__lastReport=validateAIReport(d.report);window.__lastReportSnapshot=d.snapshot||null;}catch(e){window.__lastReport=null;window.__lastReportSnapshot=null;}}}
@@ -1116,27 +1209,27 @@ async function requestGrading(){
   if(!info.name||!info.studentId){alert('이름(또는 시연용 별칭)과 학번(또는 익명 학습자 코드)을 먼저 입력해주세요.');return;}
   const btn=document.getElementById('gradeBtn'),box=document.getElementById('gradeResult'),status=document.getElementById('gradeStatus');
   status.innerHTML='';
-  const missions=collectAllMissionData(),selfEval=loadSelfEval(),requestSnapshot=createGradingSnapshot(info,missions,selfEval);
+  const missions=collectAllMissionData(),selfEval=loadSelfEval(),route=getEvaluationRoute(missions),requestSnapshot=createGradingSnapshot(info,missions,selfEval,route);
   if(window.__lastReport&&window.__lastReportSnapshot===requestSnapshot){renderReport(window.__lastReport);const note=document.createElement('div');note.className='reportDraftNotice';note.textContent='기록과 평가 설정이 같아 이전 AI 참고 피드백을 표시했습니다. 새로 호출하지 않았습니다.';box.insertBefore(note,box.firstChild);return;}
-  if(coreMissionsStatus().completedCount===0&&!confirm('작성 완료된 기본미션이 없습니다. 현재 기록만으로 제한적인 참고 피드백을 요청할까요?'))return;
-  gradingInFlight=true;btn.disabled=true;const prevText=btn.textContent;btn.textContent='AI 응답 대기 중…';
-  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),180000);let elapsed=0;
-  const showWaiting=()=>{status.innerHTML='<div class="gradeLoading"><div class="gradeSpinner"></div><div class="gradeLoadingMsg">AI 참고 피드백 응답을 기다립니다</div><div class="gradeLoadingSub">'+elapsed+'초 경과 · 최대 180초 대기 · 실제 처리단계나 완료율을 나타내지 않습니다.</div></div>';};
+  gradingInFlight=true;btn.disabled=true;btn.textContent=route.title+' 응답 대기 중…';
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),route.timeoutSeconds*1000);let elapsed=0;
+  const showWaiting=()=>{status.innerHTML='<div class="gradeLoading"><div class="gradeSpinner"></div><div class="gradeLoadingMsg">'+esc(route.title)+' 응답을 기다립니다</div><div class="gradeLoadingSub">'+elapsed+'초 경과 · 최대 '+route.timeoutSeconds+'초 대기 · 실제 처리단계나 완료율을 나타내지 않습니다.<br>응답이 늦어도 서버에서 처리 중일 수 있습니다. 중복 요청을 피하려면 잠시 기다려 주세요.</div></div>';};
   showWaiting();const timer=setInterval(()=>{elapsed++;showWaiting();},1000);
   try{
-    const payload={student:info,missions,selfEval,sentAt:new Date().toISOString(),secret:GAS_SECRET};
+    const payload={student:info,missions,selfEval,evaluationMode:route.mode,sentAt:new Date().toISOString(),secret:GAS_SECRET};
     const res=await fetch(GAS_ENDPOINT,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload),signal:controller.signal});
     if(!res.ok)throw new Error('평가 서비스에서 응답을 받지 못했습니다.');
     let data;try{data=JSON.parse(await res.text());}catch(e){throw new Error('평가 서비스 응답 형식을 확인할 수 없습니다.');}
     if(!data||data.ok!==true){const error=new Error((data&&typeof data.error==='string'&&data.error)||'평가 서비스에서 결과를 반환하지 않았습니다.');if(data&&typeof data.code==='string')error.code=data.code;if(data&&typeof data.requestId==='string')error.requestId=data.requestId;throw error;}
+    validateEvaluationRoute(data.evaluation,route);
     const report=validateAIReport(data.report);
     window.__lastReport=report;window.__lastReportSnapshot=requestSnapshot;saveLastReport(report,requestSnapshot);
     clearInterval(timer);status.innerHTML='';renderReport(report);checkReportStale();
   }catch(err){
-    const msg=err.name==='AbortError'?'180초 안에 응답을 받지 못했습니다. 요청이 서버에서 처리 중일 수 있으므로 잠시 후 확인해 주세요.':String(err.message||err);
+    const msg=err.name==='AbortError'?route.timeoutSeconds+'초 안에 응답을 받지 못했습니다. 요청이 서버에서 처리 중일 수 있으므로 중복 요청을 피하고 잠시 후 확인해 주세요.':String(err.message||err);
     const diagnostics=[err.code,err.requestId].filter(v=>typeof v==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(v));
     status.innerHTML='<div class="safetyNotice"><b>AI 피드백 결과를 받지 못했습니다</b><br><span class="small">'+esc(msg)+'</span>'+(diagnostics.length?'<p class="small">담당 교수에게 알려줄 확인 코드: '+esc(diagnostics.join(' / '))+'</p>':'')+'<br><span class="small">학습 기록과 저장된 AI 피드백은 유지됩니다. 기록 작성 점검, 학습 보고서, 백업은 계속 이용할 수 있습니다.</span><div class="actions"><button class="ghost" onclick="showBasicRecordCheck()">기록 작성 점검으로 이동 →</button></div></div>';
-  }finally{clearTimeout(timeout);clearInterval(timer);gradingInFlight=false;btn.disabled=false;btn.textContent=prevText;}
+  }finally{clearTimeout(timeout);clearInterval(timer);gradingInFlight=false;updateEvaluationAction();}
 }
 const TIER_META={
   '매우 잘함':{emoji:'🌟',svg:'<svg viewBox="0 0 100 70" width="94" height="60"><path d="M14 64 L14 26 L46 6 L78 26 L78 64 Z" stroke="#fff" stroke-width="1.3" fill="none" opacity=".9"/><line x1="14" y1="26" x2="78" y2="26" stroke="#fff" stroke-width="1" opacity=".6"/><line x1="14" y1="26" x2="46" y2="44" stroke="#fff" stroke-width=".9" opacity=".55"/><line x1="78" y1="26" x2="46" y2="44" stroke="#fff" stroke-width=".9" opacity=".55"/><line x1="46" y1="44" x2="46" y2="64" stroke="#fff" stroke-width=".9" opacity=".55"/><line x1="14" y1="64" x2="46" y2="44" stroke="#fff" stroke-width=".8" opacity=".4"/><line x1="78" y1="64" x2="46" y2="44" stroke="#fff" stroke-width=".8" opacity=".4"/><circle cx="46" cy="6" r="1.8" fill="#fff"/><circle cx="46" cy="44" r="1.6" fill="#fff"/><circle cx="14" cy="26" r="1.2" fill="#fff" opacity=".8"/><circle cx="78" cy="26" r="1.2" fill="#fff" opacity=".8"/><circle cx="88" cy="14" r="1" fill="#fff" opacity=".6"/></svg>'},
@@ -1154,6 +1247,7 @@ function encouragement(report){
 function tierMotif(tier){const m=TIER_META[tier];return m&&m.svg?`<div class="reportCertMotif">${m.svg}</div>`:''}
 function renderReport(report){
   const box=document.getElementById('gradeResult');
+  const evaluation=lastReportEvaluation();
   const crit=(report.criteria||[]).map((c,i)=>`
     <div class="reportCriteriaItem${i===4?' wide':''}">
       <div class="reportCriteriaHead"><b>${tierEmoji(c.tier)} ${esc(c.name)}</b><span class="tierBadge">${esc(c.tier)||'-'}</span></div>
@@ -1183,9 +1277,10 @@ function renderReport(report){
       ${tierMotif(report.overallTier)}
       <div class="reportCertTop">
         <div>
-          <div class="reportCertTitle">나의 건축 AI 실습기록 피드백</div>
+          <div class="reportCertTitle">${esc(evaluation.title)}</div>
+          ${evaluation.model?`<div class="small" style="color:#cfe4dc;margin-top:3px">${esc(evaluation.model)}</div>`:''}
           <div class="reportCertOverall">${tierEmoji(report.overallTier)} ${esc(report.overallTier)||'-'}</div>
-          ${report.completedCount?`<div class="small" style="color:#cfe4dc;margin-top:2px">기본미션 완료 ${esc(report.completedCount)}</div>`:''}
+          ${report.completedCount?`<div class="small" style="color:#cfe4dc;margin-top:2px">기본미션 완료 표시 ${esc(report.completedCount)}</div>`:''}
         </div>
         <div class="reportCertLogo"><img src="assets/kbu-logo.png" alt="경복대학교" onerror="this.parentNode.style.display='none'"></div>
       </div>
@@ -1222,8 +1317,9 @@ function downloadReport(){
   const report=window.__lastReport;
   if(!report){alert('먼저 셀프평가를 받아주세요.');return;}
   const info=loadStudentInfo();
-  let out=`Architecture AX Expert\n나의 건축 AI 실습기록 피드백\n${'='.repeat(44)}\n이름: ${info.name}\n학번: ${info.studentId}\n생성일시: ${new Date().toLocaleString('ko-KR')}\n${'='.repeat(44)}\n\n`;
-  out+=`기본미션 완료: ${report.completedCount||'-'}\n`;
+  const evaluation=lastReportEvaluation();
+  let out=`Architecture AX Expert\n${evaluation.title}${evaluation.model?' · '+evaluation.model:''}\n${'='.repeat(44)}\n이름: ${info.name}\n학번: ${info.studentId}\n생성일시: ${new Date().toLocaleString('ko-KR')}\n${'='.repeat(44)}\n\n`;
+  out+=`기본미션 완료 표시: ${report.completedCount||'-'}\n`;
   out+=`종합 등급: ${report.overallTier}\n${report.overallComment}\n\n`;
   const hl=summarizeStrengths(report);
   if(hl.strong.length||hl.weak.length) out+=`강점: ${hl.strong.length?hl.strong.join(' · '):'아직 없음'} / 보완: ${hl.weak.length?hl.weak.join(' · '):'없음'}\n\n`;
@@ -1241,21 +1337,26 @@ function downloadReport(){
   const safe=(s)=>String(s||'').trim().replace(/\s+/g,'_')||'report';
   downloadTextFile(`ArchitectureAXExpert_셀프평가_${safe(info.name)}.txt`,out);
 }
-function openLightbox(src,alt){
+let lightboxReturnFocus=null;
+function openLightbox(src,alt,trigger){
  const lb=document.getElementById('lightbox');
+ lightboxReturnFocus=trigger||document.activeElement;
  const img=document.getElementById('lightboxImg');
  img.src=src; img.alt=alt||'확대 이미지';
  lb.classList.add('open');
  document.body.style.overflow='hidden';
+ const close=lb.querySelector('.lightboxClose');if(close)close.focus();
 }
 function closeLightbox(e,force){
  const lb=document.getElementById('lightbox');
- if(force || e.target===lb){
+ if(force || (e&&e.target===lb)){
    lb.classList.remove('open');
-   document.body.style.overflow='';
+   document.body.style.overflow=resultsDialogOpen?'hidden':'';
+   const target=lightboxReturnFocus;lightboxReturnFocus=null;
+   if(target&&target.isConnected!==false&&typeof target.focus==='function')target.focus();
  }
 }
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){const lb=document.getElementById('lightbox');if(lb)lb.classList.remove('open');document.body.style.overflow='';}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){const lb=document.getElementById('lightbox');if(lb&&lb.classList.contains('open')){e.preventDefault();e.stopPropagation();closeLightbox(null,true);}}});
 function showIntro(){collectState();current=0;writeStoreJSON('aivis_current_v08',current);render();}
 function startMissions(){collectState();current=1;writeStoreJSON('aivis_current_v08',current);render()}
 function render(opts){
@@ -1313,6 +1414,7 @@ function render(opts){
   }else{
     document.getElementById('uploadPlaceholder2').style.display='block';
   }
+  updateEvaluationAction();
   if(!(opts&&opts.keepScroll)) window.scrollTo({top:0,behavior:'smooth'});
 }
 function updateProgress(){
@@ -1420,11 +1522,16 @@ loadLastReport();
 render();
 </script>
 
-<div class="finalSubmitPanel" id="finalSubmitPanel">
+<div class="finalSubmitPanel" id="finalSubmitPanel" role="dialog" aria-modal="true" aria-labelledby="resultsTitle" aria-hidden="true" onkeydown="handleResultsDialogKey(event)" onclick="if(event.target===this)closeFinalSubmission()">
   <div class="finalSubmitBox">
-    <div class="eyebrow">마무리</div>
-    <h3>AI 셀프체크 · 나의 실습기록 피드백</h3>
-    <p>실습 기록과 이미지를 바탕으로 AI 피드백을 받고, 다음에 보완할 점을 확인합니다.</p>
+    <div class="resultsHeader"><div><div class="eyebrow">학습 기록</div><h2 id="resultsTitle">평가·보고서</h2></div><button class="ghost" id="resultsCloseButton" onclick="closeFinalSubmission()">닫기</button></div>
+    <div class="resultsTabs" role="tablist" aria-label="평가와 보고서">
+      <button id="evaluationTab" role="tab" aria-selected="true" aria-controls="evaluationPanel" tabindex="0" onclick="switchResultsTab('evaluation')">평가</button>
+      <button id="reportTab" role="tab" aria-selected="false" aria-controls="reportPanel" tabindex="-1" onclick="switchResultsTab('report')">판단 근거 보고서</button>
+    </div>
+    <section class="resultsTabPanel" id="evaluationPanel" role="tabpanel" aria-labelledby="evaluationTab" tabindex="0">
+    <h3>Gemini 셀프체크 · GPT 최종평가</h3>
+    <p>작성 중에는 Gemini로 보완할 점을 확인하고, 기본미션 10개의 필수 작성조건을 채우면 GPT로 최종평가를 받습니다.</p>
 
     <div class="finalItem">
       <b>학생 정보</b><br>
@@ -1436,10 +1543,11 @@ render();
     </div>
 
     <div class="finalItem">
-      <b>AI 셀프체크</b><br>
+      <b>실습기록 점검과 최종평가</b><br>
       <span class="small">AI가 실습 기록과 첨부 이미지를 사전 관찰 · AI 실험 체계성 · 근거 대조 · 오류 대응 · 기록의 구체성 5개 기준으로 살펴보고, 미션별 보완점을 제안합니다. 1~10번 기본미션은 매우 잘함/잘함/보통/노력 필요 4단계, 11·12번 도전미션은 완료 여부를 별도로 확인합니다. 결과는 학습을 돕는 참고 피드백이며 실제 성적은 담당 교수가 평가합니다.</span>
-      <div class="privacyNote">AI 셀프체크 요청 시 실습 기록과 이미지를 평가 서버로 전송하며 Google Gemini에서 처리합니다. 이름·학번 별도 필드는 교수 확인 명단에 사용합니다. 상세 보관 정책은 운영자가 확인해야 하며 실습 기록에 민감정보를 넣지 마세요.</div>
-      <div class="actions"><button class="primary primaryLg" id="gradeBtn" onclick="requestGrading()">AI 셀프체크하기</button></div>
+      <div class="privacyNote">평가 버튼을 누르면 실습 기록과 이미지를 평가 서버로 전송합니다. Gemini 셀프체크는 Google Gemini, GPT 최종평가는 OpenAI에서 처리합니다. 이름·학번 별도 필드는 교수 확인 명단에 사용합니다. 실습 기록에 민감정보를 넣지 마세요. 상세 보관 정책은 운영자가 확인해야 합니다.</div>
+      <div id="evaluationReadiness" class="basicCheckSummary" style="margin-top:12px"></div>
+      <div class="actions"><button class="primary primaryLg" id="gradeBtn" onclick="requestGrading()">Gemini 셀프체크하기</button></div>
       <div id="gradeStatus" style="margin-top:10px" role="status"></div>
       <div id="gradeResult" style="margin-top:10px"></div>
     </div>
@@ -1486,17 +1594,15 @@ render();
 
     <div class="actions">
       <button class="outline" onclick="markAllSubmitted()">미션완료현황</button>
-      <button class="ghost" onclick="closeFinalSubmission()">닫기</button>
     </div>
-  </div>
-</div>
-
-<div class="reportPanel" id="reportPanel">
+    </section>
+    <section class="reportPanel resultsTabPanel" id="reportPanel" role="tabpanel" aria-labelledby="reportTab" tabindex="0" hidden>
   <div class="reportPanelBar">
     <button class="primary" onclick="window.print()">인쇄 / PDF로 저장</button>
-    <button class="ghost" onclick="closeReportPanel()">닫기</button>
   </div>
   <div class="reportPanelBox" id="reportContent"></div>
+    </section>
+  </div>
 </div>
 
 <div id="certPrintArea"></div>
