@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<base href="/">
 <title>ZERO ARCHITECT — 근거로 판단하는 건축 AI 실습</title>
 <style>
 :root{--bg:#f5f5f2;--card:#fff;--text:#1d1d1f;--muted:#62676a;--line:#deded9;--accent:#174c43;--accent2:#e7efec;--soft:#fafaf7;--warn:#fff5d9;--navy:#17324d;--blue:#eaf2f8;--violet:#6d4cc7;--danger:#b84444}
@@ -179,7 +180,7 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 </style></head><body>
 <header><div class="top">
   <div class="brandGroup"><img src="assets/kbu-logo.png" alt="경복대학교" style="height:30px;object-fit:contain" onerror="this.style.display='none'"><div class="brandText"><div class="brand">ZERO ARCHITECT</div><span class="brandIntro">AI for Everyone, Everywhere.</span></div></div>
-  <div class="headerActions"><a class="campusLink" id="campusHeaderLink" href="#campus" onclick="openCampusTour(event)" aria-label="캠퍼스 건축투어"><svg class="campusBuildingIcon" viewBox="0 0 40 32" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 29h34M5 29V16h9M26 16h9v13M14 29V10h12v19M12 10l8-7 8 7H12zM5 16l9-4M26 12l9 4M17 14h6M18 29v-7h4v7M8 20v6M11 20v6M29 20v6M32 20v6"/></svg><span>캠퍼스 건축투어<br><span class="campusHint">3D로 둘러보기</span></span></a><div class="headerSave"><span class="badge">12개 미션 · 판단 근거 기록</span><span id="saveState">자동 저장</span></div></div>
+  <div class="headerActions"><a class="campusLink" id="campusHeaderLink" href="/kbu/" onclick="openCampusTour(event)" aria-label="캠퍼스 건축투어"><svg class="campusBuildingIcon" viewBox="0 0 40 32" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 29h34M5 29V16h9M26 16h9v13M14 29V10h12v19M12 10l8-7 8 7H12zM5 16l9-4M26 12l9 4M17 14h6M18 29v-7h4v7M8 20v6M11 20v6M29 20v6M32 20v6"/></svg><span>캠퍼스 건축투어<br><span class="campusHint">3D로 둘러보기</span></span></a><div class="headerSave"><span class="badge">12개 미션 · 판단 근거 기록</span><span id="saveState">자동 저장</span></div></div>
 </div></header>
 <nav class="utilityNav" id="workbookNav" aria-label="기록과 결과 바로가기">
   <button class="primary" onclick="showIntro()">실습 시작</button>
@@ -279,19 +280,22 @@ function bindAutosave(){document.querySelectorAll('[data-field]').forEach(el=>{e
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 const CAMPUS_EXPLORATION_URL='https://kyungbok-campus-3d.drh333.chatgpt.site/';
 let sidebarCollapsed=true;
-function renderSidebar(){let sb=document.getElementById('sidebar');sb.innerHTML='';sb.classList.toggle('collapsed',sidebarCollapsed);let toggleBtn=document.createElement('button');toggleBtn.type='button';toggleBtn.className='sidebarToggleBtn';toggleBtn.textContent=sidebarCollapsed?'▸ 전체 미션 목록 펼치기':'▾ 미션 목록 접기';toggleBtn.onclick=()=>{sidebarCollapsed=!sidebarCollapsed;renderSidebar()};sb.appendChild(toggleBtn);LESSONS.forEach((l,i)=>{if(i===0){let t=document.createElement('div');t.className='sectionLabel';t.textContent='시작하기 · 프로젝트 소개';sb.appendChild(t)}if(i===1){let t=document.createElement('div');t.className='sectionLabel';t.textContent='기본미션 · 01–10';sb.appendChild(t)}if(i===11){let t=document.createElement('div');t.className='sectionLabel';t.textContent='도전미션 · 11–12';sb.appendChild(t)}let s=loadState(i),b=document.createElement('button'),advanced=['11','12'].includes(l.id),intro=l.id==='00';b.className='lessonBtn'+(intro?' intro':'')+(advanced?' advanced':'')+(i===current?' active':'')+(isCompleted(l,s)?' done':'');b.innerHTML=`<span class="n">${l.id}</span><span class="lt">${l.title}${intro?'<span class="introTag">먼저 시청 · 영상 2편</span>':(advanced?'<span class="advancedTag">도전미션 · 근거 기반</span>':'')}</span>`;b.onclick=()=>{collectState();current=i;writeStoreJSON('aivis_current_v08',i);render()};sb.appendChild(b)});const explore=document.createElement('section');explore.className='freeExplore';explore.setAttribute('aria-label','건축탐구');explore.innerHTML='<h3>건축탐구</h3><p>캠퍼스를 둘러보며 공감을 탐색해 보아요.</p><a class="campusLink" href="#campus" onclick="openCampusTour(event)" aria-label="캠퍼스 건축투어"><svg class="campusBuildingIcon" viewBox="0 0 40 32" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 29h34M5 29V16h9M26 16h9v13M14 29V10h12v19M12 10l8-7 8 7H12zM5 16l9-4M26 12l9 4M17 14h6M18 29v-7h4v7M8 20v6M11 20v6M29 20v6M32 20v6"/></svg><span>캠퍼스 건축투어<br><span class="campusHint">3D로 둘러보기</span></span></a>';sb.appendChild(explore)}
+function renderSidebar(){let sb=document.getElementById('sidebar');sb.innerHTML='';sb.classList.toggle('collapsed',sidebarCollapsed);let toggleBtn=document.createElement('button');toggleBtn.type='button';toggleBtn.className='sidebarToggleBtn';toggleBtn.textContent=sidebarCollapsed?'▸ 전체 미션 목록 펼치기':'▾ 미션 목록 접기';toggleBtn.onclick=()=>{sidebarCollapsed=!sidebarCollapsed;renderSidebar()};sb.appendChild(toggleBtn);LESSONS.forEach((l,i)=>{if(i===0){let t=document.createElement('div');t.className='sectionLabel';t.textContent='시작하기 · 프로젝트 소개';sb.appendChild(t)}if(i===1){let t=document.createElement('div');t.className='sectionLabel';t.textContent='기본미션 · 01–10';sb.appendChild(t)}if(i===11){let t=document.createElement('div');t.className='sectionLabel';t.textContent='도전미션 · 11–12';sb.appendChild(t)}let s=loadState(i),b=document.createElement('button'),advanced=['11','12'].includes(l.id),intro=l.id==='00';b.className='lessonBtn'+(intro?' intro':'')+(advanced?' advanced':'')+(i===current?' active':'')+(isCompleted(l,s)?' done':'');b.innerHTML=`<span class="n">${l.id}</span><span class="lt">${l.title}${intro?'<span class="introTag">먼저 시청 · 영상 2편</span>':(advanced?'<span class="advancedTag">도전미션 · 근거 기반</span>':'')}</span>`;b.onclick=()=>{collectState();current=i;writeStoreJSON('aivis_current_v08',i);render()};sb.appendChild(b)});const explore=document.createElement('section');explore.className='freeExplore';explore.setAttribute('aria-label','건축탐구');explore.innerHTML='<h3>건축탐구</h3><p>캠퍼스를 둘러보며 공감을 탐색해 보아요.</p><a class="campusLink" href="/kbu/" onclick="openCampusTour(event)" aria-label="캠퍼스 건축투어"><svg class="campusBuildingIcon" viewBox="0 0 40 32" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 29h34M5 29V16h9M26 16h9v13M14 29V10h12v19M12 10l8-7 8 7H12zM5 16l9-4M26 12l9 4M17 14h6M18 29v-7h4v7M8 20v6M11 20v6M29 20v6M32 20v6"/></svg><span>캠퍼스 건축투어<br><span class="campusHint">3D로 둘러보기</span></span></a>';sb.appendChild(explore)}
 let campusTourOpen=false,campusFrame=null,campusReturnFocus=null,campusScrollY=0,pendingCampusTrigger=null,campusReturnPending=false;
+function isCampusTourPath(){return /^\/kbu\/?$/.test(window.location.pathname);}
 function openCampusTour(event){
   if(event&&(event.ctrlKey||event.metaKey||event.shiftKey||event.altKey||(event.button!==undefined&&event.button!==0)))return;
   if(event){event.preventDefault();pendingCampusTrigger=event.currentTarget;}
-  if(window.location.hash!=='#campus'){
+  if(!isCampusTourPath()){
     const previous=window.history.state&&typeof window.history.state==='object'?window.history.state:{};
-    window.history.pushState({...previous,zeroArchitectView:'campus'},'','#campus');
+    window.history.pushState({...previous,zeroArchitectView:'campus'},'','/kbu/'+window.location.search);
   }
   syncCampusRoute();
 }
 function syncCampusRoute(){
-  const show=window.location.hash==='#campus';campusReturnPending=false;
+  const legacy=window.location.hash==='#campus',show=isCampusTourPath()||legacy;
+  if(legacy)window.history.replaceState(window.history.state,'','/kbu/'+window.location.search);
+  campusReturnPending=false;
   if(show&&!campusTourOpen){
     const active=document.activeElement;
     campusReturnFocus=pendingCampusTrigger||(active&&active!==document.body?active:document.getElementById('campusHeaderLink'));
@@ -329,7 +333,7 @@ function leaveCampusTour(){
   if(campusReturnPending)return;campusReturnPending=true;
   if(window.history.state&&window.history.state.zeroArchitectView==='campus')window.history.back();
   else{
-    window.history.replaceState(window.history.state,'',window.location.pathname+window.location.search);
+    window.history.replaceState(window.history.state,'','/'+window.location.search);
     syncCampusRoute();
   }
 }
