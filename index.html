@@ -179,6 +179,7 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 #workbookView[hidden],#workbookNav[hidden],#campusView[hidden]{display:none!important}body.campusTourActive{height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column}body.campusTourActive>header{position:relative;flex:0 0 auto}body.campusTourActive .headerActions{display:none}.campusView{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;background:#edf2ef}.campusViewBar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px max(20px,calc((100vw - 1156px)/2));background:#fff;border-bottom:1px solid var(--line)}.campusViewBar h1{font-size:21px;margin:0;word-break:keep-all}.campusViewBar .eyebrow{margin:0 0 4px}.campusLoadStatus{margin:0;padding:8px 20px;color:var(--muted);font-size:12px;line-height:1.5;background:#f4f7f5}.campusFrameHost{flex:1 1 auto;min-height:0;position:relative}.campusFrameHost iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#edf2ef}@media(max-width:600px){.campusViewBar{padding:10px 14px;gap:8px}.campusViewBar h1{font-size:19px}.campusViewBar button{font-size:12px;padding:10px 12px}.campusLoadStatus{padding:7px 14px;font-size:11px}}
 @media(prefers-reduced-motion:reduce){.campusLink,.campusLink:hover,.campusLink:focus-visible{transition:none;transform:none}}
 .rubricGuide summary,.evidenceDetails summary{cursor:pointer;font-weight:750;line-height:1.6}.rubricGuide p,.evidenceAudit p{font-size:13px;line-height:1.7}.rubricTableWrap{overflow-x:auto;max-width:100%;margin:12px 0;border:1px solid var(--line);border-radius:10px}.rubricTable{width:100%;min-width:850px;border-collapse:collapse;font-size:12px;line-height:1.6}.rubricTable caption{text-align:left;padding:12px;font-weight:750;color:var(--accent)}.rubricTable th,.rubricTable td{padding:10px;border:1px solid var(--line);text-align:left;vertical-align:top}.rubricTable th{background:var(--accent2);font-weight:750}.evidenceMatrix{min-width:650px}.evidenceMatrix td{white-space:nowrap}.evidenceAudit{background:#f7faf8;border:1px solid #cddfd7;border-radius:12px;padding:15px;margin:14px 0}.evidenceAudit h4{font-size:14px;margin:10px 0 5px}.evidenceDetails{border-top:1px solid var(--line);padding:10px 0}.evidenceDetails blockquote{margin:5px 0;padding:8px 12px;border-left:3px solid #96b8a9;background:#fff;white-space:pre-wrap;overflow-wrap:anywhere}.evidenceCell{padding:10px 0}.evidenceCell+.evidenceCell{border-top:1px dashed var(--line)}.evidenceReason{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.6}.tierWithheld{color:#76581f;background:#fff3d7;border-color:#e6d2a7}.reportCertificate.withheld{background:linear-gradient(120deg,#61583f,#786c4b)}.evidenceImageList{font-size:12px;line-height:1.7;padding-left:20px}.rubricGuide:focus-within,.rubricTableWrap:focus-visible{outline:2px solid var(--accent);outline-offset:3px}@media print{.evidenceAudit{break-inside:auto}.evidenceDetails:not([open])>:not(summary){display:block!important;content-visibility:visible!important}.rubricTableWrap{overflow:visible}.rubricTable{min-width:0;font-size:9px}.evidenceCell{break-inside:avoid}.evidenceDetails summary{break-after:avoid}}
+.verificationSummary{margin:0 0 15px;padding:16px;border:1px solid #cddfd7;border-radius:12px;background:#f7faf8}.verificationGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.verificationItem{padding:12px;border-radius:10px;background:#fff;border:1px solid var(--line)}.verificationItem b{display:block;font-size:13px;color:var(--accent)}.verificationItem p{font-size:12px;line-height:1.6;margin:6px 0 0}.qualityDistribution{font-size:12px;line-height:1.8;margin:10px 0 0}.priorityImprovements{border:1px solid #e2d4b8;background:#fffaf0;padding:15px;border-radius:12px;margin:14px 0}.priorityImprovements h4{margin:0 0 8px;font-size:14px}.priorityImprovements ol{margin:0;padding-left:22px}.priorityImprovements li{padding:10px 0}.priorityImprovements li+li{border-top:1px solid #e5dcc9}.priorityImprovements p{font-size:12px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}.optionalMcpExample summary{cursor:pointer;line-height:1.6}.optionalMcpExample>.mcpDemo{margin-top:14px}@media(max-width:650px){.verificationGrid{grid-template-columns:1fr}}@media print{.verificationSummary{break-inside:avoid}.priorityImprovements li{break-inside:avoid}}
 </style></head><body>
 <header><div class="top">
   <div class="brandGroup"><img src="assets/kbu-logo.png" alt="경복대학교" style="height:30px;object-fit:contain" onerror="this.style.display='none'"><div class="brandText"><div class="brand">ZERO ARCHITECT</div><span class="brandIntro">AI for Everyone, Everywhere.</span></div></div>
@@ -207,7 +208,7 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 
 <div id="promptBlock"></div><div id="steps"></div>
 
-<div class="card" id="humanCheckCard"><div class="eyebrow">사람 확인 · 필수</div><h3>나의 판단이 최종 결과예요</h3><div class="checks"><label><input type="checkbox" data-field="check1"> AI 사용 전, 내가 먼저 관찰했는가?</label><label><input type="checkbox" data-field="check2"> AI가 바꾼 부분을 찾았는가?</label><label><input type="checkbox" data-field="check3"> 현실성을 기준에 맞춰 확인했는가?</label><label><input type="checkbox" data-field="check4"> 근거를 내 언어로 설명할 수 있는가?</label></div><label><span class="requiredMark">필수</span> 나의 최종 결정</label><select data-field="decisionType"><option value="">선택하세요</option><option value="채택">채택 — 근거와 조건에 부합함</option><option value="수정">수정 — 일부만 활용하고 전공 판단으로 보완함</option><option value="거부">거부 — 오류·근거 부족·조건 불일치</option></select><div id="decisionField"><label><span class="requiredMark">필수</span> AI 오류 / 나의 결정</label><textarea data-field="decision" placeholder="AI가 틀리거나 불확실한 부분과 내가 내린 결정을 기록하세요."></textarea></div><label>한 줄 소감</label><textarea data-field="reflection" placeholder="AI보다 나의 판단이 중요했던 순간을 한 문장으로"></textarea><div class="completionRule">완료 조건: 확인 4개 + 최종 결정 + 판단 근거</div><div class="actions"><button class="primary" id="completeBtn">완료하기</button><button class="ghost" id="resetBtn">초기화</button></div></div>
+<div class="card" id="humanCheckCard"><div class="eyebrow">나의 기록 확인 · 선택</div><h3>확인한 범위와 남은 판단을 기록해요</h3><p class="small">아래 체크는 스스로 돌아보는 선택 항목입니다. 체크하지 않아도 완료와 AI 참고 평가를 받을 수 있습니다. 확인하지 못한 내용은 근거 칸에 미확인으로 남기세요.</p><div class="checks"><label><input type="checkbox" data-field="check1"> AI 사용 전 관찰한 내용과 추정을 구분해 보았는가?</label><label><input type="checkbox" data-field="check2"> AI의 변경 유무와 확인하지 못한 부분을 점검했는가?</label><label><input type="checkbox" data-field="check3"> 현실성의 확인·미확인 범위와 추가 확인 조건을 점검했는가?</label><label><input type="checkbox" data-field="check4"> 판단 근거와 남은 한계를 내 언어로 설명해 보았는가?</label></div><label for="decisionType"><span class="requiredMark">필수</span> 나의 최종 결정 또는 보류</label><select id="decisionType" data-field="decisionType"><option value="">선택하세요</option><option value="채택">채택 — 확인한 근거와 조건에 부합함</option><option value="수정">수정 — 일부 활용하고 전공 판단으로 보완함</option><option value="거부">거부 — 오류·조건 불일치로 사용하지 않음</option><option value="판단 보류">판단 보류 — 근거 부족·추가 확인 필요</option></select><div id="decisionField"><label for="decisionReason"><span class="requiredMark">필수</span> 확인 내용 / 나의 결정과 이유</label><textarea id="decisionReason" data-field="decision" placeholder="확인한 내용과 미확인 사항, 채택·수정·거부·보류한 이유와 다음 확인 행동을 기록하세요."></textarea></div><label for="reflection">한 줄 소감</label><textarea id="reflection" data-field="reflection" placeholder="내 판단에서 중요했던 근거 또는 아직 확인하지 못한 점"></textarea><div class="completionRule">완료 조건: 필수 기록 + 최종 결정 또는 보류 + 판단 근거</div><div class="actions"><button class="primary" id="completeBtn">완료하기</button><button class="ghost" id="resetBtn">초기화</button></div></div>
 
 <div class="footer" id="lessonFooter"><button class="ghost" id="prevBtn">← 이전 과제</button><button class="primary" id="nextBtn">다음 과제 →</button></div>
 </section></div></main>
@@ -217,9 +218,9 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
   <div class="campusFrameHost" id="campusFrameHost"></div>
 </section>
 <script>
-const LESSONS=[{"id": "01", "title": "건축 이미지를 프롬프트로 역설계하기", "subtitle": "이미지 → 프롬프트 → 변형 → 평가", "mission": "좋은 건축 이미지 한 장을 선택하고, 건축적 구성요소를 분석하여 재생성 가능한 프롬프트를 만든다.", "example_desc": "예제: 5층 도심형 교육시설 / 계단식 매스 / 노출콘크리트 + 유리", "prompt": "이 건축 이미지를 재생성할 수 있도록 분석해줘. 건물 용도, 매스, 층수, 입면 구성, 재료, 창호, 조경, 주변 환경, 빛, 날씨, 카메라 위치와 렌즈, 건축사진 스타일로 구분해서 설명하고 마지막에 이미지 생성용 프롬프트로 통합해줘.", "steps": [["STEP 01 · 관찰", "사람이 먼저 본다", "AI를 실행하기 전에 건물 유형, 매스, 층수, 재료, 입면, 창호, 주변환경 등 최소 5가지를 직접 관찰한다."], ["STEP 02 · 프롬프트", "구조화된 프롬프트 만들기", "AI가 이미지를 건물유형 / 형태-매스 / 입면 / 재료 / 조경 / 빛 / 카메라뷰로 분석하도록 한다."], ["STEP 03 · 실험", "한 번에 하나의 변수만 바꾸기", "재료 / 매스 / 환경 중 하나만 변경하여 3개의 변형안을 만든다."], ["STEP 04 · 검증", "AI 결과 검증", "원본 특징 유지, 요청사항만 변경, 창·문·계단·난간의 현실성, 재료의 시공 가능성을 점검한다."]]}, {"id": "02", "title": "디자인 레퍼런스로 매스 디자인 옵션 만들기", "subtitle": "스케치업 매스 → 레퍼런스 → AI 디자인 대안 → 선택", "mission": "하나의 SketchUp 매스에 서로 다른 레퍼런스를 적용해 3개의 건축 디자인 대안을 만들고 비교한다.", "example_desc": "예제: 동일 SketchUp 매스에 Mass / Facade / Material 레퍼런스 3개 적용", "steps": [["STEP 01 · 기준 매스", "기준 매스 정의", "용도, 규모, 대지, 입구, 유지할 매스 특징을 기록한다."], ["STEP 02 · 레퍼런스", "레퍼런스 3개 분석", "A Mass / B Facade / C Material로 역할을 구분한다."], ["STEP 03 · 대안", "3개 대안 생성", "매스·입면·재료 중 하나를 중심으로 대안을 생성한다."], ["STEP 04 · 선택", "설계 비교", "매스 보존, 디자인, 입면, 재료, 맥락, 실현 가능성을 비교하고 최종안을 선택한다."]]}, {"id": "03", "title": "디테일 사진으로 건축 디자인 발전시키기", "subtitle": "디자인 이미지 → 디테일 레퍼런스 → 재료 적용 → 최종 디자인", "mission": "재료·창호·차양·출입구 등의 실제 디테일 레퍼런스를 선택적으로 적용해 디자인을 구체화한다.", "example_desc": "예제: 외장재 / 창호·차양 / 출입구 디테일 3개를 하나의 설계에 적용", "steps": [["STEP 01 · 디테일 선정", "수정할 디테일 3개", "외장재, 창호/차양, 출입구/캐노피 등 세 영역을 선택한다."], ["STEP 02 · 적용", "선택 영역만 적용", "전체 형태를 복사하지 않고 레퍼런스의 재료·모듈·디테일 원리만 적용한다."], ["STEP 03 · 재료 대안", "재료 3안 비교", "형태는 유지하고 재료만 달리해 비교한다."], ["STEP 04 · 디테일 확인", "확대 검증", "패널 크기, 줄눈, 코너, 창호 프레임, 캐노피, 난간 등의 현실성을 점검한다."]]}, {"id": "04", "title": "스케치를 건축도면으로 바꾸기", "subtitle": "스케치 → 평면도 → 아이소메트릭 → 검토", "mission": "손스케치를 AI가 해석하도록 하고 평면도와 아이소메트릭으로 발전시킨 뒤 오류를 검증한다.", "example_desc": "예제: 손스케치 → 평면도 → 아이소메트릭 → 오류검증", "steps": [["STEP 01 · 스케치", "공간 관계 설명", "출입구, 주요공간, 동선, 서비스공간, 외부공간을 먼저 기록한다."], ["STEP 02 · 평면도", "스케치→평면도", "AI가 공간 관계를 해석하고 평면도로 표현하도록 한다."], ["STEP 03 · 오류 찾기", "오류 5개 찾기", "공간, 동선, 문/창, 스케일, 도면 표현 오류를 찾는다."], ["STEP 04 · 아이소메트릭", "평면→아이소메트릭", "배치와 벽을 유지하며 45도 아이소메트릭으로 변환하고 다시 비교한다."]]}, {"id": "05", "title": "현장사진으로 AI 리모델링 대안 만들기", "subtitle": "현장 사진 → 문제 발견 → 대안 3가지 → 최종 리모델링", "mission": "실제 건물 사진에서 문제를 찾고, 기존 건물을 최대한 유지하면서 3개의 리모델링 대안을 만든다.", "example_desc": "예제: 3~5층 기존 상가 건물의 Minimum / Moderate / Transformation 리모델링", "steps": [["STEP 01 · 현장", "현황 문제 4개 표시", "입면, 출입구, 창호, 조경, 주변 맥락의 문제를 먼저 관찰한다."], ["STEP 02 · 전략", "3단계 전략", "Minimum / Moderate / Transformation으로 변경 수준을 나눈다."], ["STEP 03 · 대안", "리모델링 3안", "기존 층수·폭·기본 구조·카메라를 유지하면서 대안을 생성한다."], ["STEP 04 · 현실성 검증", "현실성 검증", "구조, 외피, 창호, 접근성, 에너지, 비용을 점검한다."]]}, {"id": "06", "title": "AI로 인테리어 디자인하기", "subtitle": "실내 사진 → 콘셉트 → 스타일 대안 → 디테일 편집 → 최종 인테리어", "mission": "기존 실내공간의 구조와 크기는 유지하면서 사용자와 활동에 맞는 3개의 인테리어 대안을 만든다.", "example_desc": "예제: 기존 교실 → AI Learning Lounge 3가지 스타일 대안", "steps": [["STEP 01 · 개요", "사용자와 활동 정의", "사용자 / 활동 / 디자인 목표를 작성한다."], ["STEP 02 · 스타일", "공간·재료·조명 레퍼런스", "A Space / B Material / C Lighting으로 나누어 참고한다."], ["STEP 03 · 대안", "3개 실내대안", "Warm & Natural / Minimal & Modern / Creative & Flexible 등을 비교한다."], ["STEP 04 · 현실성", "실내 현실성 검증", "동선, 가구 크기, 조명, 설비, 피난, 접근성을 확인한다."]]}, {"id": "07", "title": "생성 이미지를 원하는 대로 수정하기", "subtitle": "디자인 유지 → 뷰 변경 → 디테일 편집 → 일관성 유지", "mission": "하나의 기준 디자인을 유지하면서 뷰·드론·시간대·재료·부분 요소만 선택적으로 바꾼다.", "example_desc": "예제: 동일 건물의 정면 / 코너 / 드론 / 야간 / 부분수정 비교", "steps": [["STEP 01 · 통제 조건", "유지 / 변경 / 변경 금지", "무엇을 유지하고 무엇만 변경할지 명확히 정의한다."], ["STEP 02 · 시점", "동일 건물 다른 뷰", "정면, 코너, 측면, 드론뷰를 만들고 일관성을 비교한다."], ["STEP 03 · 부분 편집", "부분 편집", "출입구, 창호, 조경, 사람, 자동차, 간판 등을 한 영역씩 수정한다."], ["STEP 04 · 일관성", "같은 건물 테스트", "매스, 층수, 창호, 재료, 출입구, 지붕의 일관성을 점검한다."]]}, {"id": "08", "title": "AI로 건축 이미지 생성·수정하기", "subtitle": "설명 → 생성 → 비평 → 수정 → 비교", "mission": "AI와 대화하면서 건축 이미지를 생성·비평·수정하고, 다른 AI를 활용하여 동일 과제를 비교한다.", "example_desc": "예제: 동일한 요구조건을 서로 다른 AI에 입력하고 결과 비교", "steps": [["STEP 01 · 개요", "프로젝트 브리프", "용도, 위치, 규모, 사용자, 개념, 재료, 주변환경, View를 작성한다."], ["STEP 02 · 생성", "첫 이미지 생성", "짧고 명확한 요구조건으로 첫 이미지를 만든다."], ["STEP 03 · 비평", "AI와 인간 비평", "매스, 입면, 창호, 재료, 출입구, 조경, 실현 가능성을 비교 평가한다."], ["STEP 04 · 비교", "서로 다른 AI 비교", "같은 입력과 요구조건을 두 개 이상의 AI에 넣어 결과가 어떻게 달라지는지 비교하고, 과제에 더 적합한 쪽과 그 이유를 기록한다."]]}, {"id": "09", "title": "AI 건축 비주얼 포트폴리오 보드 만들기", "subtitle": "수집 → 선별 → 구성 → 전달", "mission": "1~8번의 서로 다른 AI 건축 실습 결과를 선별하여, AI 활용 과정과 자신의 건축적 판단을 한 장의 A3 가로형 포트폴리오 보드로 표현한다.", "example_desc": "예제 완성본: 1~8 실습을 한 장에 정리한 A3 가로형 AI 건축 비주얼 포트폴리오", "steps": [["STEP 01 · 선별", "1~8 결과 수집", "각 과제에서 가장 의미 있는 이미지 1~2장을 모으고, 중복되거나 오류가 큰 이미지는 제외한다."], ["STEP 02 · 스토리 구성", "대표 작업 4개 선택", "1~8 중 가장 잘 된 4개를 크게 보여주고, 나머지 4개는 작은 썸네일로 정리한다."], ["STEP 03 · 우선순위", "Hero 1 + 대표 3 + 보조 4", "상단 제목·핵심 메시지, 중앙 대표 작업, 하단 기타 실험과 배운 점의 순서로 A3 가로형 보드를 구성한다."], ["STEP 04 · 공개", "AI 작업 / AI 오류 / 나의 결정", "각 대표 작업에서 AI가 한 일, AI의 오류, 내가 선택·수정한 내용을 짧게 표시하고 마지막에 나의 AI 활용 원칙 3가지를 정리한다."]]}, {"id": "10", "title": "AI 건축 실습 발표", "subtitle": "경험 → 강점 → 어려움 → 사람의 판단 → 배움", "mission": "1~9번의 AI 건축 실습을 돌아보며, 잘된 점·어려움·AI의 한계·사람의 판단·새롭게 배운 점을 5장의 프레젠테이션으로 정리한다. 희망자는 자신의 결과 이미지를 이용해 30초 AI 영상을 추가 제작하고 링크를 함께 기록한다. (최대 5% 가점)", "example_desc": "예제: 5장 발표자료 — 경험 → 강점 → 어려움 → 사람의 판단 → 새롭게 배운 점", "steps": [["STEP 01 · 경험", "무엇을 해보았나?", "1~9번 실습 중 대표 결과를 골라 내가 어떤 AI 건축 실험을 했는지 한 장에 정리한다."], ["STEP 02 · 강점", "AI가 잘한 점", "빠른 대안 생성, 시각화, 재료·분위기 비교 등 AI가 유용했던 점을 대표 사례와 함께 설명한다."], ["STEP 03 · 어려움", "무엇이 어려웠나?", "같은 건물 유지, 원하는 부분만 수정, 도면 정확성, 프롬프트 통제 등 어려움과 AI의 한계를 실제 실패 사례로 보여준다."], ["STEP 04 · 사람의 판단", "사람의 판단과 배운 점", "AI 오류를 어떻게 발견·수정했는지 설명하고, 마지막에 새롭게 배운 점과 앞으로의 AI 활용 원칙을 정리한다."]]}]; let current=0; let previewURL=null;
+const LESSONS=[{"id": "01", "title": "건축 이미지를 프롬프트로 역설계하기", "subtitle": "이미지 → 프롬프트 → 변형 → 평가", "mission": "좋은 건축 이미지 한 장을 선택하고, 건축적 구성요소를 분석하여 재생성 가능한 프롬프트를 만든다.", "example_desc": "예제: 5층 도심형 교육시설 / 계단식 매스 / 노출콘크리트 + 유리", "prompt": "이 건축 이미지를 재생성할 수 있도록 분석해줘. 건물 용도, 매스, 층수, 입면 구성, 재료, 창호, 조경, 주변 환경, 빛, 날씨, 카메라 위치와 렌즈, 건축사진 스타일로 구분해서 설명하고 마지막에 이미지 생성용 프롬프트로 통합해줘.", "steps": [["STEP 01 · 관찰", "사람이 먼저 본다", "AI를 실행하기 전에 건물 유형, 매스, 층수, 재료, 입면, 창호, 주변환경 등 최소 5가지를 직접 관찰한다."], ["STEP 02 · 프롬프트", "구조화된 프롬프트 만들기", "AI가 이미지를 건물유형 / 형태-매스 / 입면 / 재료 / 조경 / 빛 / 카메라뷰로 분석하도록 한다."], ["STEP 03 · 실험", "한 번에 하나의 변수만 바꾸기", "재료 / 매스 / 환경 중 하나만 변경하여 3개의 변형안을 만든다."], ["STEP 04 · 검증", "AI 결과 검증", "원본 특징 유지, 요청사항만 변경, 창·문·계단·난간의 현실성, 재료의 시공 가능성을 점검한다."]]}, {"id": "02", "title": "디자인 레퍼런스로 매스 디자인 옵션 만들기", "subtitle": "스케치업 매스 → 레퍼런스 → AI 디자인 대안 → 선택", "mission": "하나의 SketchUp 매스에 서로 다른 레퍼런스를 적용해 3개의 건축 디자인 대안을 만들고 비교한다.", "example_desc": "예제: 동일 SketchUp 매스에 Mass / Facade / Material 레퍼런스 3개 적용", "steps": [["STEP 01 · 기준 매스", "기준 매스 정의", "용도, 규모, 대지, 입구, 유지할 매스 특징을 기록한다."], ["STEP 02 · 레퍼런스", "레퍼런스 3개 분석", "A Mass / B Facade / C Material로 역할을 구분한다."], ["STEP 03 · 대안", "3개 대안 생성", "매스·입면·재료 중 하나를 중심으로 대안을 생성한다."], ["STEP 04 · 선택", "설계 비교", "매스 보존, 디자인, 입면, 재료, 맥락, 실현 가능성을 비교하고 최종안을 선택한다."]]}, {"id": "03", "title": "디테일 사진으로 건축 디자인 발전시키기", "subtitle": "디자인 이미지 → 디테일 레퍼런스 → 재료 적용 → 최종 디자인", "mission": "재료·창호·차양·출입구 등의 실제 디테일 레퍼런스를 선택적으로 적용해 디자인을 구체화한다.", "example_desc": "예제: 외장재 / 창호·차양 / 출입구 디테일 3개를 하나의 설계에 적용", "steps": [["STEP 01 · 디테일 선정", "수정할 디테일 3개", "외장재, 창호/차양, 출입구/캐노피 등 세 영역을 선택한다."], ["STEP 02 · 적용", "선택 영역만 적용", "전체 형태를 복사하지 않고 레퍼런스의 재료·모듈·디테일 원리만 적용한다."], ["STEP 03 · 재료 대안", "재료 3안 비교", "형태는 유지하고 재료만 달리해 비교한다."], ["STEP 04 · 디테일 확인", "확대 검증", "패널 크기, 줄눈, 코너, 창호 프레임, 캐노피, 난간 등의 현실성을 점검한다."]]}, {"id": "04", "title": "스케치를 건축도면으로 바꾸기", "subtitle": "스케치 → 평면도 → 아이소메트릭 → 검토", "mission": "손스케치를 AI가 해석하도록 하고 평면도와 아이소메트릭으로 발전시킨 뒤 오류를 검증한다.", "example_desc": "예제: 손스케치 → 평면도 → 아이소메트릭 → 오류검증", "steps": [["STEP 01 · 스케치", "공간 관계 설명", "출입구, 주요공간, 동선, 서비스공간, 외부공간을 먼저 기록한다."], ["STEP 02 · 평면도", "스케치→평면도", "AI가 공간 관계를 해석하고 평면도로 표현하도록 한다."], ["STEP 03 · 오류 찾기", "오류 또는 미확인 항목 점검", "공간, 동선, 문/창, 스케일, 도면 표현을 점검한다. 오류가 발견되지 않으면 확인 범위와 아직 확인하지 못한 사항을 기록한다."], ["STEP 04 · 아이소메트릭", "평면→아이소메트릭", "배치와 벽을 유지하며 45도 아이소메트릭으로 변환하고 다시 비교한다."]]}, {"id": "05", "title": "현장사진으로 AI 리모델링 대안 만들기", "subtitle": "현장 사진 → 문제 발견 → 대안 3가지 → 최종 리모델링", "mission": "실제 건물 사진에서 문제를 찾고, 기존 건물을 최대한 유지하면서 3개의 리모델링 대안을 만든다.", "example_desc": "예제: 3~5층 기존 상가 건물의 Minimum / Moderate / Transformation 리모델링", "steps": [["STEP 01 · 현장", "현황 문제 4개 표시", "입면, 출입구, 창호, 조경, 주변 맥락의 문제를 먼저 관찰한다."], ["STEP 02 · 전략", "3단계 전략", "Minimum / Moderate / Transformation으로 변경 수준을 나눈다."], ["STEP 03 · 대안", "리모델링 3안", "기존 층수·폭·기본 구조·카메라를 유지하면서 대안을 생성한다."], ["STEP 04 · 현실성 검증", "현실성 검증", "구조, 외피, 창호, 접근성, 에너지, 비용을 점검한다."]]}, {"id": "06", "title": "AI로 인테리어 디자인하기", "subtitle": "실내 사진 → 콘셉트 → 스타일 대안 → 디테일 편집 → 최종 인테리어", "mission": "기존 실내공간의 구조와 크기는 유지하면서 사용자와 활동에 맞는 3개의 인테리어 대안을 만든다.", "example_desc": "예제: 기존 교실 → AI Learning Lounge 3가지 스타일 대안", "steps": [["STEP 01 · 개요", "사용자와 활동 정의", "사용자 / 활동 / 디자인 목표를 작성한다."], ["STEP 02 · 스타일", "공간·재료·조명 레퍼런스", "A Space / B Material / C Lighting으로 나누어 참고한다."], ["STEP 03 · 대안", "3개 실내대안", "Warm & Natural / Minimal & Modern / Creative & Flexible 등을 비교한다."], ["STEP 04 · 현실성", "실내 현실성 검증", "동선, 가구 크기, 조명, 설비, 피난, 접근성을 확인한다."]]}, {"id": "07", "title": "생성 이미지를 원하는 대로 수정하기", "subtitle": "디자인 유지 → 뷰 변경 → 디테일 편집 → 일관성 유지", "mission": "하나의 기준 디자인을 유지하면서 뷰·드론·시간대·재료·부분 요소만 선택적으로 바꾼다.", "example_desc": "예제: 동일 건물의 정면 / 코너 / 드론 / 야간 / 부분수정 비교", "steps": [["STEP 01 · 통제 조건", "유지 / 변경 / 변경 금지", "무엇을 유지하고 무엇만 변경할지 명확히 정의한다."], ["STEP 02 · 시점", "동일 건물 다른 뷰", "정면, 코너, 측면, 드론뷰를 만들고 일관성을 비교한다."], ["STEP 03 · 부분 편집", "부분 편집", "출입구, 창호, 조경, 사람, 자동차, 간판 등을 한 영역씩 수정한다."], ["STEP 04 · 일관성", "같은 건물 테스트", "매스, 층수, 창호, 재료, 출입구, 지붕의 일관성을 점검한다."]]}, {"id": "08", "title": "AI로 건축 이미지 생성·수정하기", "subtitle": "설명 → 생성 → 비평 → 수정 → 비교", "mission": "AI와 대화하면서 건축 이미지를 생성·비평·수정하고, 다른 AI를 활용하여 동일 과제를 비교한다.", "example_desc": "예제: 동일한 요구조건을 서로 다른 AI에 입력하고 결과 비교", "steps": [["STEP 01 · 개요", "프로젝트 브리프", "용도, 위치, 규모, 사용자, 개념, 재료, 주변환경, View를 작성한다."], ["STEP 02 · 생성", "첫 이미지 생성", "짧고 명확한 요구조건으로 첫 이미지를 만든다."], ["STEP 03 · 비평", "AI와 인간 비평", "매스, 입면, 창호, 재료, 출입구, 조경, 실현 가능성을 비교 평가한다."], ["STEP 04 · 비교", "서로 다른 AI 비교", "같은 입력과 요구조건을 두 개 이상의 AI에 넣어 결과가 어떻게 달라지는지 비교하고, 과제에 더 적합한 쪽과 그 이유를 기록한다."]]}, {"id": "09", "title": "AI 건축 비주얼 포트폴리오 보드 만들기", "subtitle": "수집 → 선별 → 구성 → 전달", "mission": "1~8번의 서로 다른 AI 건축 실습 결과를 선별하여, AI 활용 과정과 자신의 건축적 판단을 한 장의 A3 가로형 포트폴리오 보드로 표현한다.", "example_desc": "예제 완성본: 1~8 실습을 한 장에 정리한 A3 가로형 AI 건축 비주얼 포트폴리오", "steps": [["STEP 01 · 선별", "1~8 결과 수집", "각 과제에서 가장 의미 있는 이미지 1~2장을 모으고, 중복되거나 오류가 큰 이미지는 제외한다."], ["STEP 02 · 스토리 구성", "대표 작업 4개 선택", "1~8 중 가장 잘 된 4개를 크게 보여주고, 나머지 4개는 작은 썸네일로 정리한다."], ["STEP 03 · 우선순위", "Hero 1 + 대표 3 + 보조 4", "상단 제목·핵심 메시지, 중앙 대표 작업, 하단 기타 실험과 배운 점의 순서로 A3 가로형 보드를 구성한다."], ["STEP 04 · 공개", "AI 작업 / AI 오류 / 나의 결정", "각 대표 작업에서 AI가 한 일, AI의 오류, 내가 선택·수정한 내용을 짧게 표시하고 마지막에 나의 AI 활용 원칙 3가지를 정리한다."]]}, {"id": "10", "title": "AI 건축 실습 발표", "subtitle": "경험 → 강점 → 어려움 → 사람의 판단 → 배움", "mission": "1~9번의 AI 건축 실습을 돌아보며, 잘된 점·어려움·AI의 한계·사람의 판단·새롭게 배운 점을 5장의 프레젠테이션으로 정리한다. 희망자는 자신의 결과 이미지를 이용해 30초 AI 영상을 추가 제작하고 링크를 함께 기록한다. (최대 5% 가점)", "example_desc": "예제: 5장 발표자료 — 경험 → 강점 → 어려움 → 사람의 판단 → 새롭게 배운 점", "steps": [["STEP 01 · 경험", "무엇을 해보았나?", "1~9번 실습 중 대표 결과를 골라 내가 어떤 AI 건축 실험을 했는지 한 장에 정리한다."], ["STEP 02 · 강점", "AI가 잘한 점", "빠른 대안 생성, 시각화, 재료·분위기 비교 등 AI가 유용했던 점을 대표 사례와 함께 설명한다."], ["STEP 03 · 어려움", "무엇이 어려웠나?", "같은 건물 유지, 원하는 부분만 수정, 도면 정확성, 프롬프트 통제 등 어려움과 AI의 한계를 실제 실패 사례로 보여준다."], ["STEP 04 · 사람의 판단", "사람의 판단과 배운 점", "AI 오류를 어떻게 발견·수정했는지 설명하고, 마지막에 새롭게 배운 점과 앞으로의 AI 활용 원칙을 정리한다."]]}]; let current=0; let previewURL=null;
 LESSONS.push(
-  {"id":"11","title":"MCP로 공공건축 공고에서 나에게 맞는 정보탐색 자동화하기","subtitle":"질문 → 공식 데이터 → MCP 실행 → 개요 → 사람 검증","mission":"[도전미션 · 정규 등급 제외 · 별도 도전활동] 나라장터 공식 공개정보를 읽기 전용으로 조회하고, 실제 발주 조건을 공간·예산·기간·친환경 요구로 구조화한 뒤 AI의 해석을 원문과 대조한다. 실행 화면을 캡처한 스크린샷 기록으로 충분하며 별도의 완성된 산출물은 필요하지 않다.","example_desc":"도전미션 예제: 나라장터 공개데이터 → MCP 실행 흔적 → 공고 비교 → 근거 검증 카드","prompt":"나라장터 MCP의 search_bids 도구를 읽기 전용으로 사용해 최근 30일의 교육시설·리모델링·친환경 관련 공사 또는 건축설계용역 공고를 최대 10건 조회해줘. 공고명, 공고기관, 수요기관, 업무구분, 지역, 공고일, 마감일, 공개된 금액, 계약방법, 공고번호와 원문 링크를 표로 정리해줘. 조회 결과에 없는 값은 추측하지 말고 '공개데이터에서 확인되지 않음'으로 표시해줘. 마지막에 건축디자인 관점의 설계 질문을 제안하되 확인된 사실과 AI 해석을 구분해줘.","steps":[["STEP 01 · 질문","내가 먼저 검색 질문을 설계한다","어떤 공간 문제를 해결하려는지, 필요한 사업 유형·지역·기간·키워드와 비교 기준을 먼저 정한다."],["STEP 02 · 읽기 전용 MCP","공식 공개데이터를 조회한다","search_bids 등 조회 도구만 사용한다. 로그인·공동인증서·입찰 참여·투찰·계약 행위는 수행하지 않는다."],["STEP 03 · 근거","공고 3건을 근거로 비교한다","공고번호와 차수, 기관, 일정, 공개된 금액, 계약방법, 자격·지역 제한, 원문 링크를 확인한다."],["STEP 04 · 검증","사실과 AI 해석을 분리한다","각 내용을 '공고에서 확인됨 / AI의 해석 / 자료 없음'으로 분류하고 설계에 반영할 조건과 제외할 조건의 이유를 기록한다."]]},
+  {"id":"11","title":"MCP로 내 업무의 연결 가능성 탐색하기","subtitle":"문제 정의 → 연결 계획 → 작은 검증 또는 대안 → 한계 판단","mission":"[도전미션 · 정규 등급 제외] 개인 관심, 학습, 연구 또는 건축 업무에서 반복되거나 연결이 필요한 문제 하나를 고른다. 연결할 자료·서비스와 입출력·권한을 정하고 작은 범위로 가능성을 확인한다. 실제 연동이 어려우면 모의 설계, 실행 불가 이유와 수동 대안으로 탐색해도 된다. 실행·모의·미실행을 구분하고 확인한 사실과 가정을 나누어 기록한다.","example_desc":"선택 예시: 공개자료 정리, 학습·연구 자료 연결, 건축 업무 기록, 공공건축 공고 비교. 예시를 복제하기보다 내 문제를 선택한다.","prompt":"내가 고른 문제 [직접 입력]를 MCP 또는 수동 작업으로 연결할 수 있는지 탐색해줘. 먼저 필요한 자료·서비스, 입력과 출력, 접근권한, 사용 가능한 도구를 확인하고 알 수 없는 것은 미확인으로 남겨줘. 허용된 자료의 읽기 전용 소규모 검증을 계획해줘. 실제 도구나 권한이 없으면 실행했다고 주장하지 말고 모의 연결도와 수동 대안을 제안해줘. 결과를 실제 실행으로 확인됨 / 모의 설계의 가정 / 미실행으로 구분하고, 다음 확인 사항과 한계를 적어줘. 비공개 자료·인증정보는 입력하거나 전송하지 마.","steps":[["STEP 01 · 내 문제","개인 관심·학습·연구·업무 중 문제를 고른다","현재 어떻게 처리하고 무엇이 반복되거나 불편한지, 연결로 얻고 싶은 결과를 내 말로 정의한다."],["STEP 02 · 연결 계획","연결 대상·입출력·권한을 정한다","어떤 자료나 서비스에서 무엇을 읽어 어떤 형태로 정리할지 적고, 실제 사용 가능한 도구·권한과 미확인 조건을 구분한다."],["STEP 03 · 작은 검증 또는 대안","실행·모의·미실행을 구분한다","가능하면 허용된 읽기 전용 범위에서 작게 검증한다. 어려우면 모의 설계, 실행하지 못한 이유와 수동 대안을 기록한다. 실제 연동이나 스크린샷 제출이 필수는 아니다."],["STEP 04 · 한계와 판단","확인한 사실과 가정을 나누어 판단한다","어디까지 연결할 수 있고 무엇은 확인하지 못했는지, 채택·수정·거부·보류와 다음 확인 행동의 이유를 적는다."]]},
   {"id":"12","title":"AI 건축 모델링 영상을 분석하고 공간 경험을 검증하기","subtitle":"AI 모델 → 카메라 경로 → 공간 검증 → 수정 → 설계 결정","mission":"[도전미션 · 정규 등급 제외 · 별도 도전활동] AI로 만든 건축 모델링 결과를 외부 진입·입면·전이공간·내부 활동공간의 연속 경험으로 분해하고, 형태의 일관성과 공간의 현실성을 검증해 수정 방향을 제안한다. 완성된 영상 없이 3장면 스크린샷 기록만으로 충분하다.","example_desc":"도전미션 예제: 「AI 건축 모델링 연습」 26초 영상 → 6개 핵심 장면 → 공간·동선·일관성 검증 보드","prompt":"동일한 현대 교육시설을 대상으로 20~30초의 건축 카메라 투어를 설계해줘. 외부 진입, 건물 전경과 입면, 외부·내부 전이, 내부 학습·협업 공간의 순서가 이해되도록 6개 핵심 장면으로 나눠줘. 장면이 바뀌어도 층수, 출입구, 창호 모듈, 주요 재료, 조경, 채광 방향을 일관되게 유지하고, 각 장면에 공간 목적, 카메라 위치, 확인할 건축 요소와 예상 AI 오류를 적어줘. 이미지에서 확인되지 않는 구조·피난·설비 성능은 확정하지 말고 사람의 검토가 필요한 항목으로 구분해줘.","steps":[["STEP 01 · 의도와 고정조건","공간 의도와 유지 조건을 먼저 정한다","건물의 용도와 이용 장면을 한 문장으로 정의하고, 층수·출입구·창호·재료·조경·카메라 축처럼 모든 장면에서 유지할 조건을 기록한다."],["STEP 02 · 6컷 경로","외부에서 내부로 이어지는 경로를 설계한다","진입→외관→입면·테라스→전이공간→내부 협업공간→최종 장면의 6컷을 만들고, 각 컷의 목적과 다음 컷과의 연결 이유를 설명한다."],["STEP 03 · 생성","연속적인 건축 모델링 영상을 만든다","20~30초 영상을 생성하되 화려한 전환보다 동일 건물의 정체성, 사람이 걷는 동선, 공간의 크기와 재료가 자연스럽게 이어지는지 우선한다."],["STEP 04 · 공간 검증","AI 오류를 찾고 설계 판단을 남긴다","층수·창호·출입구의 변형, 사람과 가구의 비례, 난간·피난·채광·동선의 불합리를 찾아 수정하고 최종 결과를 채택·수정·거부한 이유를 기록한다."]]}
 );
 LESSONS[9].mission="1~9번의 AI 건축 실습을 돌아보며, 잘된 점·어려움·AI의 한계·사람의 판단·새롭게 배운 점을 5장의 프레젠테이션으로 정리한다.";
@@ -270,8 +271,10 @@ function checkReportStale(){
   const box=document.getElementById('gradeResult');
   if(!box||!window.__lastReportSnapshot) return;
   const cert=box.querySelector('.reportCertificate');
-  if(!cert||box.querySelector('.reportStaleNotice')) return;
-  if(gradingSnapshot()===window.__lastReportSnapshot) return;
+  if(!cert) return;
+  const oldNotice=box.querySelector('.reportStaleNotice');
+  if(sameGradingInputs(window.__lastReportSnapshot,gradingSnapshot())){if(oldNotice&&typeof oldNotice.remove==='function')oldNotice.remove();return;}
+  if(oldNotice)return;
   const notice=document.createElement('div');
   notice.className='safetyNotice reportStaleNotice';
   notice.style.marginBottom='10px';
@@ -402,14 +405,14 @@ function renderExamples(l){
  }
  if(l.id==='11'){
    g.className='exampleGridFull';
-   g.innerHTML=`<div class="mcpDemo"><div class="challengeRibbon"><span class="statusChip">심화</span><span class="statusChip safe">공식 데이터 · 읽기 전용</span><span class="statusChip">MCP 실행 예시</span></div><h3>보이지 않는 MCP 실행을 ‘근거 흐름’으로 확인한다</h3><p class="small">아래는 연동 구조를 설명하는 시연 화면입니다. 실제 조회에서는 공고번호·조회시각·원문 링크를 결과와 함께 기록합니다.</p><div class="traceGrid"><div class="traceStep"><b>01 · 질문</b><span>교육시설·리모델링·친환경 공고를 찾는다.</span></div><div class="traceStep"><b>02 · MCP 도구</b><span>search_bids<br>읽기 전용 호출</span></div><div class="traceStep"><b>03 · 공식 데이터</b><span>나라장터 공개정보<br>JSON 응답</span></div><div class="traceStep"><b>04 · AI 구조화</b><span>공간·예산·기간·제약조건으로 정리</span></div><div class="traceStep"><b>05 · 사람 확인</b><span>원문 대조 후 채택·수정·거부</span></div></div><div class="evidenceGrid"><div class="evidenceBox"><b>확인된 사실</b><p>공고번호·차수, 기관, 일정, 공개된 금액, 계약방법과 공식 원문을 그대로 기록</p></div><div class="evidenceBox"><b>AI의 해석</b><p>공고 내용을 사용자·공간·환경 관점의 설계 질문으로 전환하되 사실과 분리</p></div><div class="evidenceBox"><b>최종 결정</b><p>참고할 조건과 제외할 조건을 선택하고 그 이유와 미확인 정보를 표시</p></div></div><details class="tech"><summary>기술 검증 보기 · 서비스 키를 제외한 JSON 예시</summary><pre class="safeJson">{
+   g.innerHTML=`<div class="card"><div class="eyebrow">어떤 문제를 연결해 볼까요?</div><h3>내가 선택한 문제에서 시작합니다</h3><p class="small">아래는 선택의 출발점이며 특정 예시를 따라 하거나 실제 연동을 완료할 필요가 없습니다. 사용 가능한 도구와 권한은 직접 확인하고, 없으면 모의 설계·수동 대안으로 탐색합니다.</p><div class="grid2"><div class="evidenceBox"><b>개인 관심·학습</b><p>공개 목록을 관심별로 분류하거나 학습 자료의 찾기·정리 흐름을 설계</p></div><div class="evidenceBox"><b>연구</b><p>사용 가능한 공개 자료의 출처·메타데이터를 연결해 비교표를 만드는 과정 탐색</p></div><div class="evidenceBox"><b>건축 업무</b><p>사용을 허락받은 자료의 도면·재료·검토 기록을 어떻게 연결할지 계획</p></div><div class="evidenceBox"><b>공공정보</b><p>공공건축 공고를 내 비교 기준으로 정리하는 흐름 검토</p></div></div></div><details class="card optionalMcpExample"><summary><b>선택 예시 펼치기 · 공공건축 공고 비교</b></summary><p class="small">연결 구조를 설명하는 예시입니다. 현재 도구의 제공 여부와 권한을 보장하지 않으며, 이 예시의 질문·결과를 그대로 제출하는 과제가 아닙니다.</p><div class="mcpDemo"><div class="challengeRibbon"><span class="statusChip">심화</span><span class="statusChip safe">공식 데이터 · 읽기 전용</span><span class="statusChip">MCP 실행 예시</span></div><h3>보이지 않는 MCP 실행을 ‘근거 흐름’으로 확인한다</h3><p class="small">아래는 연동 구조를 설명하는 시연 화면입니다. 실제 조회에서는 공고번호·조회시각·원문 링크를 결과와 함께 기록합니다.</p><div class="traceGrid"><div class="traceStep"><b>01 · 질문</b><span>교육시설·리모델링·친환경 공고를 찾는다.</span></div><div class="traceStep"><b>02 · MCP 도구</b><span>search_bids<br>읽기 전용 호출</span></div><div class="traceStep"><b>03 · 공식 데이터</b><span>나라장터 공개정보<br>JSON 응답</span></div><div class="traceStep"><b>04 · AI 구조화</b><span>공간·예산·기간·제약조건으로 정리</span></div><div class="traceStep"><b>05 · 사람 확인</b><span>원문 대조 후 채택·수정·거부</span></div></div><div class="evidenceGrid"><div class="evidenceBox"><b>확인된 사실</b><p>공고번호·차수, 기관, 일정, 공개된 금액, 계약방법과 공식 원문을 그대로 기록</p></div><div class="evidenceBox"><b>AI의 해석</b><p>공고 내용을 사용자·공간·환경 관점의 설계 질문으로 전환하되 사실과 분리</p></div><div class="evidenceBox"><b>최종 결정</b><p>참고할 조건과 제외할 조건을 선택하고 그 이유와 미확인 정보를 표시</p></div></div><details class="tech"><summary>기술 검증 보기 · 서비스 키를 제외한 JSON 예시</summary><pre class="safeJson">{
   "tool": "search_bids",
   "mode": "read_only",
   "query": {"type":"공사 또는 용역","keyword":"교육시설 리모델링","period":"최근 30일"},
   "source": "조달청 나라장터 공개데이터",
   "evidence": ["공고번호", "공고차수", "조회시각", "원문링크"],
   "rule": "응답에 없는 값은 생성하지 않음"
-}</pre></details><div class="actions"><a class="statusChip" href="https://www.data.go.kr/data/15129394/openapi.do" target="_blank" rel="noopener">공식 공개데이터 확인 ↗</a></div></div>`;
+}</pre></details><div class="actions"><a class="statusChip" href="https://www.data.go.kr/data/15129394/openapi.do" target="_blank" rel="noopener">공식 공개데이터 확인 ↗</a></div></div></details>`;
    return;
  }
  if(l.id==='12'){
@@ -491,7 +494,7 @@ function renderLesson10Submission(l){
   c.innerHTML=`
     <div class="eyebrow">슬라이드 업로드</div>
     <h3>발표 슬라이드 5장</h3>
-    <p class="small">각 슬라이드 이미지를 선택하면 이 브라우저에 자동 저장되어, 새로고침하거나 나중에 다시 열어도 남아있습니다.</p>
+    <p class="small"><b>이미지 보관용 · AI 내용 평가 제외</b> · 슬라이드는 긴 변 256px 축소본으로 이 브라우저에 보관합니다. 5장 첨부 여부만 작성조건으로 확인하며 AI가 슬라이드 이미지의 글·도면·완성도를 평가하지 않습니다. 원본은 별도로 보관하세요. AI가 검토할 대표 경험·비교 근거·판단은 아래 STEP 기록에 자신의 말로 적어주세요.</p>
 
     <div class="slideUploadGrid">
       ${[1,2,3,4,5].map(n=>`
@@ -499,7 +502,7 @@ function renderLesson10Submission(l){
           <div class="slideLabel">슬라이드 ${n}</div>
           <div class="slideUpload" id="slideBox${n}">
             <div id="slidePh${n}">＋ ${n}번 슬라이드<br><span class="small">PNG / JPG</span></div>
-            <input type="file" accept="image/*" onchange="previewSlide(event,${n})">
+            <input type="file" accept="image/*" aria-label="슬라이드 ${n} 보관 이미지 선택" onchange="previewSlide(event,${n})">
           </div>
         </div>`).join('')}
     </div>
@@ -602,8 +605,8 @@ function renderChallengeWorkspace(l){
   const host=document.getElementById('challengeWorkspace');
   host.innerHTML='';
   if(l.id==='11'){
-    host.innerHTML=`<div class="card challengeWorkspace"><div class="eyebrow">과제 11 · 작업공간</div><div class="challengeRibbon"><span class="statusChip violet">도전미션</span><span class="statusChip safe">정규 등급 제외 · 별도 도전활동</span></div><h3>공공건축 프로젝트 분석 카드</h3><p class="small">완성된 산출물을 요구하지 않습니다. 아래 실행 화면 스크린샷 1장이면 충분합니다.</p><div class="grid2"><div><label><span class="requiredMark">필수</span> 내가 정한 검색 질문</label><textarea data-field="g2bQuestion" placeholder="예: 교내 노후 학습공간 개선에 참고할 경기도 교육시설 리모델링 공고를 찾는다."></textarea><label>검색 조건</label><input data-field="g2bConditions" placeholder="업무구분 · 키워드 · 지역 · 기간 · 비교 건수"></div><div><label>선택한 공고와 원문 근거</label><textarea data-field="g2bEvidence" placeholder="공고번호·차수·기관·조회시각·원문 링크와 확인한 사실을 기록"></textarea><label>설계에 반영하거나 제외할 조건</label><textarea data-field="g2bDecision" placeholder="건축디자인 관점에서 선택한 조건과 그 이유"></textarea></div></div><div class="slideLabel" style="margin-top:12px">MCP 실행 화면 스크린샷</div><div class="slideUploadGrid" style="grid-template-columns:220px"><div class="slideUpload" id="refBoxMcp"><div id="refPhMcp">＋ 스크린샷 첨부<br><span class="small">실행 결과 화면 캡처</span></div><input type="file" accept="image/*" onchange="previewReference(event,'Mcp')"></div></div><div class="safetyNotice" style="margin-top:12px"><b>읽기 전용 실습</b> · 공개정보만 조회합니다. 로그인, 공동인증서, 입찰 참가, 투찰, 낙찰 판단, 계약 행위 및 첨부파일 자동 실행은 수행하지 않습니다. 저장된 시연 데이터를 사용하면 반드시 ‘예시 데이터(DEMO DATA)’로 표시하세요.</div></div>`;
-    restoreSavedImage('refBoxMcp','refPhMcp',loadState(current).refImageMcp);
+    host.innerHTML=`<div class="card challengeWorkspace"><div class="eyebrow">과제 11 · 내 업무 연결 탐색</div><div class="challengeRibbon"><span class="statusChip violet">도전미션</span><span class="statusChip safe">정규 등급 제외</span></div><h3>내 문제의 연결 가능성 카드</h3><p class="small">개인 관심·학습·연구·건축 업무 중 자유롭게 고릅니다. 실제 연동이 없어도 모의 설계나 미실행 이유·수동 대안을 기록할 수 있습니다. 예시의 공고나 결과를 복제할 필요가 없습니다.</p><div class="grid2"><div><label for="mcpProblem"><span class="requiredMark">필수</span> 내가 고른 문제와 원하는 결과</label><textarea id="mcpProblem" data-field="g2bQuestion" placeholder="무엇을 지금 어떻게 처리하며, 어떤 반복이나 연결 문제를 줄이고 싶은가요?"></textarea><label for="mcpPlan">연결 대상 · 입력과 출력 · 권한</label><textarea id="mcpPlan" data-field="g2bConditions" placeholder="자료·서비스 → 읽을 입력 → 정리할 출력 / 확인된 도구·권한 / 아직 확인하지 못한 조건"></textarea><label for="mcpExecutionMode">탐색 방식 · 실제 실행 여부 구분</label><select id="mcpExecutionMode" data-field="mcpExecutionMode"><option value="">구분을 기록하세요 · 기존 기록은 실행 여부 미확인</option><option value="실행">실행 — 허용된 범위에서 실제 확인함</option><option value="모의">모의 — 가정과 연결 계획을 설계함</option><option value="미실행">미실행 — 이유와 수동 대안을 정리함</option></select></div><div><label for="mcpVerification"><span class="requiredMark">필수</span> 작은 검증 결과 또는 실행하지 못한 이유·대안</label><textarea id="mcpVerification" data-field="g2bEvidence" placeholder="실행: 입력·도구·결과와 확인 범위 / 모의: 가정·연결도·예상 결과 / 미실행: 도구·권한·자료의 제약과 수동 대안"></textarea><label for="mcpJudgment"><span class="requiredMark">필수</span> 연결 가능성·한계와 나의 판단</label><textarea id="mcpJudgment" data-field="g2bDecision" placeholder="확인된 사실과 가정을 구분하고, 사용할 범위·남은 문제·다음 확인 행동을 기록하세요."></textarea></div></div><div class="slideLabel" style="margin-top:12px">실행 또는 모의 화면 · 선택 보관</div><div class="slideUploadGrid" style="grid-template-columns:220px"><div class="slideUpload" id="refBoxMcp"><div id="refPhMcp">＋ 선택 이미지<br><span class="small">실행 화면·모의 연결도 등</span></div><input type="file" accept="image/*" aria-label="MCP 탐색 선택 보관 이미지" onchange="previewReference(event,'Mcp')"></div></div><div class="safetyNotice"><b>권한과 실제 실행을 구분합니다</b> · 공개되었거나 사용을 허락받은 자료로 읽기 전용 범위를 탐색합니다. 비공개 연구·업무 자료와 인증정보를 외부 AI에 넣지 않습니다. 도구·접근권한·실행 결과를 확인하지 못하면 미확인으로 남기고 실제 연동이 된 것처럼 기록하지 않습니다. 이 페이지가 기관 시스템 연동이나 접근권한을 제공하는 것은 아닙니다.</div></div>`;
+    return;
   }
   if(l.id==='12'){
     host.innerHTML=`<div class="card challengeWorkspace"><div class="eyebrow">과제 12 · 공간 검증</div><div class="challengeRibbon"><span class="statusChip violet">도전미션</span><span class="statusChip safe">정규 등급 제외 · 별도 도전활동</span></div><h3>외부–내부 공간 경험 검증 보드</h3><p class="small">완성된 영상 제작은 선택 사항입니다. 아래 3장면 스크린샷만 남겨도 충분합니다.</p><div class="grid3"><div><div class="slideLabel">진입</div><div class="slideUpload" id="refBoxStart"><div id="refPhStart">＋ 진입 장면<br><span class="small">출입구·접근 동선</span></div><input type="file" accept="image/*" onchange="previewReference(event,'Start')"></div></div><div><div class="slideLabel">외관</div><div class="slideUpload" id="refBoxMiddle"><div id="refPhMiddle">＋ 외관 장면<br><span class="small">매스·입면 일관성</span></div><input type="file" accept="image/*" onchange="previewReference(event,'Middle')"></div></div><div><div class="slideLabel">내부</div><div class="slideUpload" id="refBoxFinal"><div id="refPhFinal">＋ 내부 장면<br><span class="small">활동·채광·동선</span></div><input type="file" accept="image/*" onchange="previewReference(event,'Final')"></div></div></div><div class="grid2" style="margin-top:12px"><div><label><span class="requiredMark">필수</span> 공간 의도와 이용 시나리오</label><textarea data-field="videoIntent" placeholder="누가, 어디로 진입해, 어떤 공간을 이용하는지 한 문장으로 정의"></textarea><label>6컷 카메라 경로</label><textarea data-field="cameraPath" placeholder="진입 → 외관 → 입면·테라스 → 전이 → 내부 활동 → 최종 장면"></textarea></div><div><label>모든 장면에서 유지할 조건</label><textarea data-field="modelLocks" placeholder="층수, 출입구, 창호 모듈, 재료, 조경, 채광 방향, 사람의 비례"></textarea><label><span class="requiredMark">필수</span> 발견한 오류와 최종 판단</label><textarea data-field="spatialAudit" placeholder="오류 3가지 이상과 수정 방법, 최종 결과의 채택·수정·거부 및 이유"></textarea></div></div><div class="safetyNotice"><b>설계 검증 원칙</b> · AI 영상은 공간 아이디어를 빠르게 비교하는 자료입니다. 구조·피난·접근성·설비·에너지 성능은 도면, 법규와 전문 검토로 다시 확인하고, 얼굴·차량번호·비공개 도면은 외부 AI에 업로드하지 않습니다.</div></div>`;
@@ -684,7 +687,7 @@ function renderEvidenceContext(l){
   const old=document.getElementById('evidenceContextCard');if(old)old.remove();if(l.id==='00')return;
   const card=document.createElement('div');card.id='evidenceContextCard';card.className='card';
   card.innerHTML=`<div class="eyebrow">판단 근거 · 학습 기록</div><h3>무엇으로 확인했나요?</h3>
-    <div class="evidenceHelp">사진·도면의 위치, 실측값, 제품자료, 수업자료 또는 공식 원문의 이름·쪽·링크를 적습니다. 확인하지 못한 성능은 “미확인”으로 남깁니다. 이미지에서 치수나 법규 적합성을 확정하지 않습니다.</div>
+    <div class="evidenceHelp">${l.id==='11'?'실행한 경우에는 사용한 자료·도구·결과의 위치를 적습니다. 모의 설계나 미실행이면 예정 자료·가정·확인하지 못한 권한과 수동 대안의 근거를 적어도 됩니다. 실제 연동을 했다고 적을 필요가 없습니다.':'사진·도면의 위치, 실측값, 제품자료, 수업자료 또는 공식 원문의 이름·쪽·링크를 적습니다. 확인하지 못한 성능은 “미확인”으로 남깁니다. 이미지에서 치수나 법규 적합성을 확정하지 않습니다.'}</div>
     <label><span class="requiredMark">필수</span> 근거 출처 / 자료 위치</label><textarea data-field="evidenceSource" placeholder="예: 원본 사진 A 출입구 부분 / 도면 A-03 / 제품 시험자료 3쪽 / 자료명과 URL·확인일"></textarea>
     <label><span class="requiredMark">필수</span> 확인 내용과 남은 불확실성</label><textarea data-field="evidenceCheck" placeholder="어떤 항목을 어떤 자료와 대조했는지, 확인 결과와 추가로 확인할 사항을 기록"></textarea>
     <div class="grid3"><div><label>AI 도구 (선택)</label><input data-field="aiTool" placeholder="사용한 도구 이름"></div><div><label>모델 / 버전 (선택)</label><input data-field="aiModel" placeholder="알 수 없으면 미확인"></div><div><label>사용일 (선택)</label><input type="date" data-field="aiUsedAt"></div></div>
@@ -866,6 +869,7 @@ function collectSelfEval(){
   s.overall=overallEl?overallEl.value:'';
   writeStoreJSON('aivis_self_eval',s);
   updateSelfEvalTotal(s);
+  if(window.__lastReport)renderReport(window.__lastReport);
   checkReportStale();
 }
 function updateSelfEvalTotal(s){
@@ -972,7 +976,7 @@ function collectAllMissionData(){
 function computeStats(missions){
   const total=missions.length;
   const completed=missions.filter(m=>m.completed).length;
-  const tally={'채택':0,'수정':0,'거부':0};
+  const tally={'채택':0,'수정':0,'거부':0,'판단 보류':0};
   let lenSum=0,lenCount=0;
   missions.forEach(m=>{
     const dt=m.fields.decisionType;
@@ -991,7 +995,7 @@ const REPORT_FIELD_LABELS={
   step1:'STEP 1 기록',step2:'STEP 2 기록',step3:'STEP 3 기록',step4:'STEP 4 기록',
   decisionType:'최종 결정',decision:'AI 오류 / 나의 결정',reflection:'한 줄 소감',
   finalLearning:'발표 한 줄 결론',
-  g2bQuestion:'검색 질문',g2bConditions:'검색 조건',g2bEvidence:'선택한 공고와 근거',g2bDecision:'반영/제외 조건',
+  g2bQuestion:'내가 고른 문제와 원하는 결과',g2bConditions:'연결 대상·입출력·권한',g2bEvidence:'검증 또는 미실행 이유·대안',g2bDecision:'연결 가능성·한계와 판단',mcpExecutionMode:'MCP 탐색 방식 (실행·모의·미실행)',
   videoIntent:'공간 의도와 시나리오',cameraPath:'6컷 카메라 경로',modelLocks:'유지 조건',spatialAudit:'발견한 오류와 최종 판단'
 };
 const REPORT_IMAGE_KEYS=['imageData','imageData2','slideImage1','slideImage2','slideImage3','slideImage4','slideImage5','refImageStart','refImageMiddle','refImageFinal','refImageMcp','cmpImageBefore','cmpImageAfter','cmpImageFinal'];
@@ -1009,6 +1013,7 @@ function renderReportMissionRow(m){
   html+=f('근거 출처 / 자료 위치',fields.evidenceSource)+f('확인 내용과 남은 불확실성',fields.evidenceCheck);
   html+=f('최종 판단 근거',fields.decision||fields.g2bDecision||fields.spatialAudit);
   if(fields.compare){for(const [k,label] of [['checked','비교한 항목'],['verdict','문제 유무 / 보류'],['reason','비교 판단 근거'],['action','채택·수정·거부 조치']])html+=f(label,fields.compare[k]);}
+  if(m.id==='11')html+=f('탐색 방식 · 학습자 기록',fields.mcpExecutionMode||'구분 미기재 · 실제 실행 여부 확인 불가');
   for(const k of ['g2bQuestion','g2bConditions','g2bEvidence','videoIntent','cameraPath','modelLocks','finalLearning','reflection'])if(fields[k])html+=f(REPORT_FIELD_LABELS[k],fields[k]);
   const ai=[fields.aiTool,fields.aiModel,fields.aiUsedAt].filter(Boolean).join(' · ');if(ai)html+=f('사용 AI 기록 (학습자 입력)',ai);
   if(note)html+='<div class="reportMissionNoteRow"><b>AI 참고 피드백</b><span class="tierBadge sm">'+esc(note.tier)+'</span><span class="missionNoteText">'+esc(note.note)+'</span></div>';
@@ -1018,7 +1023,7 @@ function reportSavedLabel(){
   const date=new Date(window.__lastReportAt||'');
   return Number.isNaN(date.getTime())?'확인할 수 없음':date.toLocaleString('ko-KR',{timeZone:'Asia/Seoul',hour12:false})+' (한국시간)';
 }
-function reportIsStale(){return !window.__lastReportSnapshot||window.__lastReportSnapshot!==gradingSnapshot();}
+function reportIsStale(){return !sameGradingInputs(window.__lastReportSnapshot,gradingSnapshot());}
 let evidencePrintState=[];
 window.addEventListener('beforeprint',()=>{
   if(evidencePrintState.length)return;
@@ -1036,6 +1041,37 @@ function renderEvidenceAudit(report){
   html+='<details class="evidenceDetails"><summary>AI에 실제 전달한 이미지 '+manifest.reviewed.length+'장과 검토 한계</summary>'+(manifest.reviewed.length?'<ul class="evidenceImageList">'+manifest.reviewed.map(x=>'<li>미션 '+esc(x.missionId)+' · '+esc(x.label)+(x.field?' ('+esc(x.field)+')':'')+'</li>').join('')+'</ul>':'<p>AI에 전달한 이미지가 없습니다. 텍스트 기록만 검토했습니다.</p>')+'<p class="small">이미지를 검토하지 않은 기본미션: '+esc(manifest.notReviewedMissionIds.join(', ')||'없음')+'</p><p class="small">'+esc(manifest.note)+'</p><p class="small">최대 256px 축소 이미지의 작은 글자·치수는 검증할 수 없습니다. 미션 10 슬라이드는 첨부 여부만 확인하며 시각 평가하지 않습니다.</p></details></section>';
   return html;
 }
+function recordQualityDistribution(report){
+  const counts={'매우 잘함':0,'잘함':0,'보통':0,'노력 필요':0,'판단 보류':0};
+  (report.assessments||[]).forEach(a=>(a.ratings||[]).forEach(r=>{if(counts[r.tier]!==undefined)counts[r.tier]++;}));
+  return counts;
+}
+function renderVerificationStatus(report){
+  const current=report.rubricVersion===EVIDENCE_RUBRIC_VERSION,manifest=report.imageManifest;
+  const reviewed=current&&manifest?manifest.reviewed.length:0;
+  const quality=current?esc(report.overallTier)+' · '+report.reviewSummary.ratedCells+'/50개 판단 가능':'이전 기준 결과 · 현재 근거 범위 확인 불가';
+  const distribution=recordQualityDistribution(report);
+  return '<section class="verificationSummary" aria-label="기록 평가와 별도 확인 상태"><div class="verificationGrid"><div class="verificationItem"><b>① 기록의 질 · AI 참고 판단</b><p>'+quality+'</p><p>입력한 글과 전송 자료를 바탕으로 한 초안입니다. 실제 수행 여부나 진위를 인증하지 않습니다.</p></div><div class="verificationItem"><b>② 원자료 대조 · 별도 확인</b><p>'+(current?'AI에 실제 전달한 이미지 '+reviewed+'장. 검토한 자료는 아래 명세에서 확인합니다.':'당시 전송 자료의 범위를 현재 명세로 확인할 수 없습니다.')+'</p><p>원본의 진위·실측·법규·성능을 독립적으로 확인한 결과가 아닙니다.</p></div><div class="verificationItem"><b>③ 교수 확인 · 별도 검토</b><p>이 AI 결과만으로 교수의 확인 여부를 알 수 없습니다. 원자료·실제 수행·최종 성적은 담당교수가 따로 검토합니다.</p></div></div>'+(current?'<p class="qualityDistribution"><b>50개 기록 판단의 분포</b> · '+Object.entries(distribution).map(([tier,count])=>esc(tier)+' '+count+'개').join(' · ')+'</p>':'')+'<p class="small">완료 표시는 등급과 별도입니다. 현재 '+coreMissionsStatus().completedCount+'/10 · 평가 당시 '+esc(report.completedCount||'미기록')+'</p></section>';
+}
+function priorityImprovements(report,limit=5){
+  const order={'판단 보류':0,'노력 필요':1,'보통':2},items=[];
+  (report.assessments||[]).forEach(a=>(a.ratings||[]).forEach(r=>{if(order[r.tier]!==undefined)items.push({id:a.id,...r});}));
+  items.sort((a,b)=>order[a.tier]-order[b.tier]||Number(a.id)-Number(b.id)||EVIDENCE_RUBRIC.findIndex(c=>c.key===a.key)-EVIDENCE_RUBRIC.findIndex(c=>c.key===b.key));
+  return {total:items.length,items:items.slice(0,limit)};
+}
+function renderPriorityImprovements(report){
+  if(report.rubricVersion!==EVIDENCE_RUBRIC_VERSION)return '';
+  const list=priorityImprovements(report);
+  if(!list.total)return '<div class="priorityImprovements"><h4>다음 확인</h4><p>기록 수준에서 우선 제안한 보완 항목은 없습니다. 원자료 대조와 교수 확인은 위의 별도 확인 상태를 참고하세요.</p></div>';
+  return '<section class="priorityImprovements" aria-label="우선 보완할 기록"><h4>먼저 보완할 기록 '+list.items.length+'개'+(list.total>list.items.length?' · 전체 '+list.total+'개 중':'')+'</h4><p class="small">판단 보류를 먼저, 이어서 보완이 필요한 기록을 보여줍니다. 보류는 낮은 능력의 판정이 아닙니다.</p><ol>'+list.items.map(r=>'<li><b>미션 '+esc(r.id)+' · '+esc(EVIDENCE_RUBRIC.find(c=>c.key===r.key).name)+' · '+esc(r.tier)+'</b><p>'+esc(r.reason)+'</p><button class="ghost" onclick="openFeedbackMission(\''+esc(r.id)+'\',\''+esc(r.field||'')+'\',\''+esc(r.key)+'\')">해당 기록 보완하기 →</button></li>').join('')+'</ol><p class="small">모든 판단의 원문 근거와 이유는 아래 미션별 상세에서 확인할 수 있습니다.</p></section>';
+}
+function openFeedbackMission(id,field,key){
+  openSelfCheckMission(id);
+  const compareIds={'compare.checked':'cmpChecked','compare.verdict':'cmpVerdict','compare.reason':'cmpReason','compare.action':'cmpAction'};
+  const fallback={observation:'step1',experiment:'step2',evidence:'evidenceCheck',errorHandling:'decision',documentation:'step4'};
+  const target=compareIds[field]?document.getElementById(compareIds[field]):document.querySelector('[data-field="'+(field||fallback[key]||'evidenceCheck')+'"]');
+  if(target){target.scrollIntoView({behavior:'smooth',block:'center'});if(typeof target.focus==='function')target.focus();}
+}
 // 저장된 AI 총평이 있으면 보고서 맨 위에 그대로 재사용한다(다시 요청하지 않음).
 function renderReportAISummary(){
   const report=window.__lastReport;
@@ -1044,12 +1080,12 @@ function renderReportAISummary(){
   const crit=(report.criteria||[]).map(c=>'<div class="reportField"><span class="reportFieldLabel">'+esc(c.name)+'</span><span class="reportFieldValue">'+esc(c.tier)+' — '+esc(c.comment)+'</span></div>').join('');
   const hl=summarizeStrengths(report);
   const hlField=(hl.strong.length||hl.weak.length||hl.pending.length)?'<div class="reportField"><span class="reportFieldLabel">강점 / 보완 / 추가 확인</span><span class="reportFieldValue">강점: '+esc(hl.strong.length?hl.strong.join(' · '):'확인된 항목 없음')+' / 보완: '+esc(hl.weak.length?hl.weak.join(' · '):'평가된 항목에서 없음')+(hl.pending.length?' / 추가 확인 · 판단 보류: '+esc(hl.pending.join(' · ')):'')+'</span></div>':'';
-  const selfCheck=report.selfEvalCheck;
+  const selfCheck=currentSelfEvalCheck(report);
   const selfCheckField=(selfCheck&&selfCheck.mismatch&&selfCheck.note)?'<div class="reportField"><span class="reportFieldLabel">자기평가 대조</span><span class="reportFieldValue">⚠ '+esc(selfCheck.note)+'</span></div>':'';
-  return '<div class="reportAISummary"><div class="small"><b>'+esc(evaluation.title)+'</b>'+(evaluation.model?' · '+esc(evaluation.model):'')+'</div>'+
-    '<div class="reportTierHero"><span class="reportTierEmoji">'+tierEmoji(report.overallTier)+'</span><span class="reportTierText">'+esc(report.overallTier)+'</span><span class="reportTierSub">기본미션 완료 표시 '+esc(report.completedCount||'-')+'</span></div>'+
+  return '<div class="reportAISummary">'+renderVerificationStatus(report)+'<div class="small"><b>'+esc(evaluation.title)+'</b>'+(evaluation.model?' · '+esc(evaluation.model):'')+'</div>'+
+    '<div class="reportTierHero"><span class="reportTierEmoji">'+tierEmoji(report.overallTier)+'</span><span class="reportTierText">'+esc(report.overallTier)+'</span><span class="reportTierSub">평가 당시 기본미션 완료 표시 '+esc(report.completedCount||'-')+'</span></div>'+
     '<div class="reportField"><span class="reportFieldLabel">총평</span><span class="reportFieldValue">'+esc(report.overallComment)+'</span></div>'+
-    hlField+crit+selfCheckField+renderEvidenceAudit(report)+
+    hlField+crit+selfCheckField+renderPriorityImprovements(report)+renderEvidenceAudit(report)+
   '</div>';
 }
 function buildReportHTML(){
@@ -1070,7 +1106,7 @@ function buildReportHTML(){
   }
   html+='<div class="reportProgress">기본미션 진행: '+(core.length-missingCore.length)+' / '+core.length+' 완료</div>';
   html+='<h3 class="reportSectionTitle">종합 요약</h3>';
-  if(window.__lastReport&&window.__lastReportSnapshot&&window.__lastReportSnapshot!==gradingSnapshot()){
+  if(window.__lastReport&&reportIsStale()){
     html+='<div class="reportDraftNotice"><b>⚠ 이전 답안 기준 AI 총평</b><br>AI 피드백 이후 기록이나 평가 설정이 달라졌습니다. 필요하면 현재 평가 버튼을 눌러 최신 기록으로 갱신하세요.</div>';
   }
   html+=renderReportAISummary();
@@ -1120,7 +1156,7 @@ function buildRecordText(){
   let out='Architecture AX Expert\n나의 AI 건축 입문과정 — 실습 기록\n'+'='.repeat(44)+'\n';
   out+=`이름: ${info.name||'(미기재)'}\n학번: ${info.studentId||'(미기재)'}\n생성일시: ${new Date().toLocaleString('ko-KR')}\n`;
   out+=`완료: ${stats.completed} / ${stats.total} 미션\n`;
-  out+=`최종 결정 분포 — 채택 ${stats.tally['채택']} · 수정 ${stats.tally['수정']} · 거부 ${stats.tally['거부']}\n`;
+  out+=`최종 결정 분포 — 채택 ${stats.tally['채택']} · 수정 ${stats.tally['수정']} · 거부 ${stats.tally['거부']} · 판단 보류 ${stats.tally['판단 보류']}\n`;
   out+=`평균 판단 근거 글자수: 약 ${stats.avgLen}자\n`+'='.repeat(44)+'\n\n';
   const selfEval=loadSelfEval();
   let selfTotal=0;
@@ -1270,7 +1306,8 @@ function validateBackupData(data){
       else if(field==='compareHistory'){if(!Array.isArray(v[field])||v[field].length>3)throw new Error('비교 이력 형식이 올바르지 않습니다.');out[field]=v[field].map(compare);}
       else out[field]=checkedText(v[field],field);
     }
-    if(out.decisionType&&!['채택','수정','거부'].includes(out.decisionType))throw new Error('최종 결정 값이 올바르지 않습니다.');
+    if(out.decisionType&&!['채택','수정','거부','판단 보류'].includes(out.decisionType))throw new Error('최종 결정 값이 올바르지 않습니다.');
+    if(out.mcpExecutionMode&&!['실행','모의','미실행'].includes(out.mcpExecutionMode))throw new Error('MCP 탐색 방식이 올바르지 않습니다.');
     out.completed=isCompleted(LESSONS[i],out);missions[k]=out;
   }
   const student=data.studentInfo||{};if(!plainObject(student))throw new Error('학습자 정보 형식이 올바르지 않습니다.');
@@ -1324,7 +1361,7 @@ const GAS_SECRET='kbu2026';
 window.__lastReport=null;
 window.__lastReportSnapshot=null;
 // 평가 설정과 입력 스냅샷을 함께 비교하되 이전 보고서는 그대로 보관한다.
-const AI_FEEDBACK_PIPELINE_VERSION='evidence-rubric-v29';
+const AI_FEEDBACK_PIPELINE_VERSION='student-workflow-v30';
 const EVALUATION_ROUTES={
   check:{mode:'check',provider:'gemini',model:'gemini-3.5-flash-lite',reasoningEffort:'',label:'Gemini 셀프체크하기',title:'Gemini 셀프체크',timeoutSeconds:180},
   final:{mode:'final',provider:'openai',model:'gpt-6-astra',reasoningEffort:'high',label:'GPT 최종 참고 평가받기',title:'GPT 기록 참고 평가',timeoutSeconds:330}
@@ -1350,12 +1387,29 @@ function updateEvaluationAction(){
 }
 function createGradingSnapshot(student,missions,selfEval,route){
   const evaluation=route||getEvaluationRoute(missions);
-  return JSON.stringify({pipeline:AI_FEEDBACK_PIPELINE_VERSION,evaluation:{mode:evaluation.mode,provider:evaluation.provider,model:evaluation.model,reasoningEffort:evaluation.reasoningEffort},student,m:missions,s:selfEval});
+  // 자기점수·성찰은 AI의 등급 입력이 아니다. 인수는 기존 호출·백업 호환을 위해 유지한다.
+  return JSON.stringify({pipeline:AI_FEEDBACK_PIPELINE_VERSION,evaluation:{mode:evaluation.mode,provider:evaluation.provider,model:evaluation.model,reasoningEffort:evaluation.reasoningEffort},student,m:missions});
+}
+function comparableGradingSnapshot(raw){
+  let snapshot;try{snapshot=typeof raw==='string'?JSON.parse(raw):raw;}catch(e){return null;}
+  if(!snapshot||!['evidence-rubric-v29',AI_FEEDBACK_PIPELINE_VERSION].includes(snapshot.pipeline)||!Array.isArray(snapshot.m))return null;
+  const actual=snapshot.evaluation,route=actual&&EVALUATION_ROUTES[actual.mode];
+  if(!route||actual.provider!==route.provider||actual.model!==route.model||actual.reasoningEffort!==route.reasoningEffort)return null;
+  // backend buildSummary는 선택 체크·완료 표시를 제외하며 빈 문자열은 입력하지 않는다. 방문·자동저장이 만든 빈 키도 근거 변경이 아니다. 원래 값은 snapshot에 남긴다.
+  const missions=snapshot.m.map(m=>{const fields={...(m.fields||{})};for(const key of ['completed','check1','check2','check3','check4'])delete fields[key];for(const key of Object.keys(fields))if(fields[key]==='')delete fields[key];const {completed,...rest}=m;const emptyChallenge=['11','12'].includes(m.id)&&!Object.values(fields).some(v=>typeof v==='string'?v.trim():v&&typeof v==='object'?Object.keys(v).length:v);return {...rest,...(emptyChallenge?{title:''}:{}),fields};});
+  const ordered=value=>Array.isArray(value)?value.map(ordered):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(k=>[k,ordered(value[k])])):value;
+  return JSON.stringify(ordered({rubric:EVIDENCE_RUBRIC_VERSION,evaluation:actual,student:snapshot.student,m:missions}));
+}
+function sameGradingInputs(saved,current){const a=comparableGradingSnapshot(saved),b=comparableGradingSnapshot(current);return !!a&&!!b&&a===b;}
+function currentSelfEvalCheck(report,selfEval=loadSelfEval()){
+  const compared=[],scoreTier={'5':'노력 필요','10':'보통','15':'잘함','20':'매우 잘함'};
+  EVIDENCE_RUBRIC.forEach(c=>{const own=scoreTier[String(selfEval[c.key+'_score'])],actual=(report.criteria||[]).find(x=>x.name===c.name);if(own&&actual&&actual.tier!=='판단 보류'&&actual.tier!==own)compared.push(c.name);});
+  return {mismatch:compared.length>0,note:compared.length?compared.join('·')+': 현재 자기평가와 저장된 기록 기반 AI 초안의 수준이 다릅니다. 이 비교만 로컬에서 갱신했으며 AI를 다시 호출하거나 등급을 변경하지 않았습니다.':''};
 }
 function gradingSnapshot(){return createGradingSnapshot(loadStudentInfo(),collectAllMissionData(),loadSelfEval());}
 function lastReportEvaluation(){
   let snapshot;try{snapshot=JSON.parse(window.__lastReportSnapshot||'null');}catch(e){}
-  if(snapshot&&snapshot.pipeline===AI_FEEDBACK_PIPELINE_VERSION){
+  if(snapshot&&['evidence-rubric-v29',AI_FEEDBACK_PIPELINE_VERSION].includes(snapshot.pipeline)){
     const actual=snapshot.evaluation,route=actual&&EVALUATION_ROUTES[actual.mode];
     if(route&&actual.provider===route.provider&&actual.model===route.model&&actual.reasoningEffort===route.reasoningEffort)return {title:route.title,model:route.model};
   }
@@ -1391,7 +1445,7 @@ async function requestGrading(){
   const btn=document.getElementById('gradeBtn'),box=document.getElementById('gradeResult'),status=document.getElementById('gradeStatus');
   status.innerHTML='';
   const missions=collectAllMissionData(),selfEval=loadSelfEval(),route=getEvaluationRoute(missions),requestSnapshot=createGradingSnapshot(info,missions,selfEval,route);
-  if(window.__lastReport&&window.__lastReportSnapshot===requestSnapshot){renderReport(window.__lastReport);const note=document.createElement('div');note.className='reportDraftNotice';note.textContent='기록과 평가 설정이 같아 이전 AI 참고 피드백을 표시했습니다. 새로 호출하지 않았습니다.';box.insertBefore(note,box.firstChild);return;}
+  if(window.__lastReport&&sameGradingInputs(window.__lastReportSnapshot,requestSnapshot)){renderReport(window.__lastReport);const note=document.createElement('div');note.className='reportDraftNotice';note.textContent='평가할 기록과 설정이 같아 저장된 AI 참고 피드백을 표시했습니다. 현재 자기평가와의 차이만 이 브라우저에서 다시 비교했으며 AI를 새로 호출하지 않았습니다.';box.insertBefore(note,box.firstChild);return;}
   gradingInFlight=true;btn.disabled=true;btn.textContent=route.title+' 응답 대기 중…';
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),route.timeoutSeconds*1000);let elapsed=0;
   const showWaiting=()=>{status.innerHTML='<div class="gradeLoading"><div class="gradeSpinner"></div><div class="gradeLoadingMsg">'+esc(route.title)+' 응답을 기다립니다</div><div class="gradeLoadingSub">'+elapsed+'초 경과 · 최대 '+route.timeoutSeconds+'초 대기 · 실제 처리단계나 완료율을 나타내지 않습니다.<br>응답이 늦어도 서버에서 처리 중일 수 있습니다. 중복 요청을 피하려면 잠시 기다려 주세요.</div></div>';};
@@ -1452,9 +1506,10 @@ function renderReport(report){
   const hl=summarizeStrengths(report);
   const hlHtml=(hl.strong.length||hl.weak.length||hl.pending.length)?`<div class="reportHighlights"><span>💪 <b>강점</b> ${hl.strong.length?esc(hl.strong.join(' · ')):'확인된 항목 없음'}</span><span>🌱 <b>보완</b> ${hl.weak.length?esc(hl.weak.join(' · ')):'평가된 항목에서 없음'}</span>${hl.pending.length?'<span>⏸ <b>추가 확인 · 판단 보류</b> '+esc(hl.pending.join(' · '))+'</span>':''}</div>`:'';
   const cheer=encouragement(report);
-  const selfCheck=report.selfEvalCheck;
-  const selfCheckHtml=(selfCheck&&selfCheck.mismatch&&selfCheck.note)?`<div class="safetyNotice" style="margin-bottom:14px">⚠ 자기평가와 실제 기록에 차이가 있어요<br><span class="small">${esc(selfCheck.note)}</span></div>`:'';
+  const selfCheck=currentSelfEvalCheck(report);
+  const selfCheckHtml=(selfCheck&&selfCheck.mismatch&&selfCheck.note)?`<div class="safetyNotice" style="margin-bottom:14px">현재 자기평가와 저장된 AI 초안의 차이<br><span class="small">${esc(selfCheck.note)}</span></div>`:'';
   box.innerHTML=`
+    ${renderVerificationStatus(report)}
     <div class="reportCertificate${report.overallTier==='판단 보류'?' withheld':''}">
       ${tierMotif(report.overallTier)}
       <div class="reportCertTop">
@@ -1462,12 +1517,13 @@ function renderReport(report){
           <div class="reportCertTitle">${esc(evaluation.title)}</div>
           ${evaluation.model?`<div class="small" style="color:#cfe4dc;margin-top:3px">${esc(evaluation.model)}</div>`:''}
           <div class="reportCertOverall">${tierEmoji(report.overallTier)} ${esc(report.overallTier)||'-'}</div>
-          ${report.completedCount?`<div class="small" style="color:#cfe4dc;margin-top:2px">기본미션 완료 표시 ${esc(report.completedCount)}</div>`:''}
+          ${report.completedCount?`<div class="small" style="color:#cfe4dc;margin-top:2px">평가 당시 기본미션 완료 표시 ${esc(report.completedCount)}</div>`:''}
         </div>
         <div class="reportCertLogo"><img src="assets/kbu-logo.png" alt="경복대학교" onerror="this.parentNode.style.display='none'"></div>
       </div>
       <p class="reportCertComment">${esc(report.overallComment)}</p>
     </div>
+    ${renderPriorityImprovements(report)}
     ${renderEvidenceAudit(report)}
     ${hlHtml}
     <div class="reportCriteriaGrid">${crit}</div>
@@ -1506,12 +1562,17 @@ function downloadReport(){
   let out=`Architecture AX Expert\n${evaluation.title}${evaluation.model?' · '+evaluation.model:''}\n${'='.repeat(44)}\n${savedSnapshot&&savedSnapshot.student?'평가 당시 학습자':'현재 입력된 학습자 (평가 당시 신원 확인 불가)'}\n이름: ${info.name||'(미기재)'}\n학번: ${info.studentId||'(미기재)'}\n파일 생성일시: ${new Date().toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})} (한국시간)\n평가 결과 저장시각: ${reportSavedLabel()}\n기준 버전: ${report.rubricVersion||'이전 기준 · 버전 정보 없음'}\n${'='.repeat(44)}\n\n`;
   if(reportIsStale())out+='⚠ 이전 답안 기준 AI 피드백: 현재 기록 또는 평가 설정과 다르거나 평가 당시 입력을 확인할 수 없습니다. 현재 답안의 결과로 간주하지 마세요.\n\n';
   if(report.rubricVersion!==EVIDENCE_RUBRIC_VERSION)out+='⚠ 이전 기준 결과입니다. 현재의 50개 근거 판단과 산정 규칙이 적용되거나 재인증되지 않았습니다.\n\n';
-  out+=`기본미션 완료 표시: ${report.completedCount||'-'}\n`;
+  out+=`평가 당시 기본미션 완료 표시: ${report.completedCount||'-'}\n`;
+  out+=`현재 기본미션 완료 표시: ${coreMissionsStatus().completedCount}/10 (기록의 질과 별도)\n`;
   out+=`종합 등급: ${report.overallTier}\n${report.overallComment}\n\n`;
+  out+='[서로 다른 확인 상태]\n기록의 질: 입력한 기록에 대한 AI 참고 초안\n원자료 대조: 원본의 진위·실측·법규·성능을 독립적으로 확인하지 않음\n교수 확인: 이 AI 결과만으로 확인 여부를 알 수 없음. 원자료와 실제 수행·성적은 담당교수의 별도 검토 대상\n\n';
+  const priorities=priorityImprovements(report);
+  if(priorities.items.length){out+='[먼저 보완할 기록 '+priorities.items.length+'개]\n';priorities.items.forEach(r=>{out+='미션 '+r.id+' · '+EVIDENCE_RUBRIC.find(c=>c.key===r.key).name+' · '+r.tier+'\n'+r.reason+'\n';});out+='\n';}
   const hl=summarizeStrengths(report);
   if(hl.strong.length||hl.weak.length||hl.pending.length) out+=`강점: ${hl.strong.length?hl.strong.join(' · '):'확인된 항목 없음'} / 보완: ${hl.weak.length?hl.weak.join(' · '):'평가된 항목에서 없음'}${hl.pending.length?' / 추가 확인 · 판단 보류: '+hl.pending.join(' · '):''}\n\n`;
   (report.criteria||[]).forEach(c=>{out+=`- ${c.name}: ${c.tier}\n  ${c.comment}\n\n`});
-  if(report.selfEvalCheck&&report.selfEvalCheck.mismatch&&report.selfEvalCheck.note) out+=`⚠ 자기평가와 실제 기록에 차이가 있어요: ${report.selfEvalCheck.note}\n\n`;
+  const selfCheck=currentSelfEvalCheck(report);
+  if(selfCheck.mismatch&&selfCheck.note) out+=`⚠ 현재 자기평가와 저장된 AI 초안의 차이: ${selfCheck.note}\n\n`;
   if((report.missionNotes||[]).length){
     out+=`[기본미션별 결과]\n`;
     report.missionNotes.forEach(n=>{out+=`${n.id}: ${n.tier} — ${n.note}\n`});
@@ -1625,7 +1686,7 @@ function updateProgress(){
 }
 const EXTRA_REQUIRED_FIELDS={
   '10':[{key:'finalLearning',label:'발표 한 줄 결론'}],
-  '11':[{key:'g2bQuestion',label:'내가 정한 검색 질문'}],
+  '11':[{key:'g2bQuestion',label:'내가 고른 문제와 원하는 결과'}],
   '12':[{key:'videoIntent',label:'공간 의도와 이용 시나리오'},{key:'spatialAudit',label:'발견한 오류와 최종 판단'}]
 };
 
@@ -1633,16 +1694,15 @@ function lessonCompletionChecklist(l){
   if(l.id==='00')return [];
   const challenge=['11','12'].includes(l.id),text=v=>typeof v==='string'&&v.trim().length>0;
   const items=[
-    {ok:s=>s.check1===true&&s.check2===true&&s.check3===true&&s.check4===true,label:'Human Check 4개 항목',selector:'.checks'},
     ...(!challenge?l.steps.map((step,i)=>({ok:s=>text(s['step'+(i+1)]),label:'STEP '+(i+1)+' 기록',selector:'[data-field="step'+(i+1)+'"]'})):[]),
-    {ok:s=>['채택','수정','거부'].includes(s.decisionType),label:'최종 결정',selector:'[data-field="decisionType"]'},
+    {ok:s=>['채택','수정','거부','판단 보류'].includes(s.decisionType),label:'최종 결정 또는 보류',selector:'[data-field="decisionType"]'},
     ...(!challenge?[{ok:s=>text(s.decision),label:'오류·판단 근거',selector:'[data-field="decision"]'}]:[]),
     {ok:s=>text(s.evidenceSource),label:'근거 출처',selector:'[data-field="evidenceSource"]'},
     {ok:s=>text(s.evidenceCheck),label:'대조 내용·불확실성',selector:'[data-field="evidenceCheck"]'}
   ];
   (EXTRA_REQUIRED_FIELDS[l.id]||[]).forEach(f=>items.push({ok:s=>text(s[f.key]),label:f.label,selector:'[data-field="'+f.key+'"]'}));
   if(l.id==='10')items.push({ok:s=>[1,2,3,4,5].every(n=>safeImageData(s['slideImage'+n])),label:'발표 슬라이드 5장',selector:'#slideBox1'});
-  if(l.id==='11')items.push({ok:s=>text(s.g2bEvidence)&&text(s.g2bDecision),label:'공고 근거와 반영·제외 판단',selector:'[data-field="g2bEvidence"]'});
+  if(l.id==='11')items.push({ok:s=>text(s.g2bEvidence)&&text(s.g2bDecision),label:'검증 또는 대안과 연결 판단',selector:'[data-field="g2bEvidence"]'});
   return items;
 }
 function toggleCompletion(){
