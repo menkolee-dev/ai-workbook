@@ -1038,8 +1038,9 @@ function renderEvidenceAudit(report){
   const summary=report.reviewSummary,manifest=report.imageManifest;
   let html='<section class="evidenceAudit" aria-label="평가 근거와 확인 범위"><b>기록에 대한 AI 참고 평가</b><p>기준 버전: '+esc(report.rubricVersion)+'<br>결과 저장시각: '+esc(reportSavedLabel())+'<br><b>판단 가능한 근거 '+summary.ratedCells+' / 50개</b> · 판단 보류 '+(50-summary.ratedCells)+'개</p>';
   html+='<p class="small">50개 판단을 모두 확보한 때에만 종합등급을 표시하는 보수적인 수업 운영 규칙입니다. 보류는 0점이나 낮은 능력의 판정이 아닙니다. 원문 인용은 판단 경로를 보여주며 내용의 사실성을 인증하지 않습니다. 성적은 담당교수가 원자료와 수행을 검토하여 확정합니다.</p>';
+  if(report.evidenceMode==='source-field')html+='<p class="small sourceFieldNotice">인용은 AI가 선택한 작성항목의 원문 전체를 서버에서 가져왔습니다. 선택한 근거와 등급·이유의 적절성은 담당자가 확인합니다.</p>';
   html+='<details class="evidenceDetails"><summary>미션별 5개 항목의 수준과 원문 근거 보기</summary><div class="rubricTableWrap" tabindex="0" role="region" aria-label="50개 판단 결과, 가로로 스크롤할 수 있습니다"><table class="rubricTable evidenceMatrix"><caption>기본미션 × 평가항목 · 총 50개</caption><thead><tr><th scope="col">미션</th>'+EVIDENCE_RUBRIC.map(c=>'<th scope="col">'+esc(c.name)+'</th>').join('')+'</tr></thead><tbody>'+report.assessments.map(a=>'<tr><th scope="row">'+esc(a.id)+'</th>'+a.ratings.map(r=>'<td class="'+(r.tier==='판단 보류'?'tierWithheld':'')+'">'+esc(r.tier)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
-  html+=report.assessments.map(a=>'<details class="evidenceDetails"><summary>미션 '+esc(a.id)+' · 인용 위치와 수준 판단 이유</summary>'+a.ratings.map(r=>'<div class="evidenceCell"><b>'+esc(EVIDENCE_RUBRIC.find(c=>c.key===r.key).name)+'</b> <span class="tierBadge '+(r.tier==='판단 보류'?'tierWithheld':'')+'">'+esc(r.tier)+'</span><p class="small">기록 위치: '+esc(REPORT_FIELD_LABELS[r.field]||r.field||'확인 가능한 기록 없음')+'</p>'+(r.quote?'<blockquote>'+esc(r.quote)+'</blockquote>':'<p class="small">인용 가능한 근거가 없습니다.</p>')+'<div class="evidenceReason">'+esc(r.reason)+'</div></div>').join('')+'</details>').join('')+'</details>';
+  html+=report.assessments.map(a=>'<details class="evidenceDetails"><summary>미션 '+esc(a.id)+' · 인용 위치와 수준 판단 이유</summary>'+a.ratings.map(r=>'<div class="evidenceCell"><b>'+esc(EVIDENCE_RUBRIC.find(c=>c.key===r.key).name)+'</b> <span class="tierBadge '+(r.tier==='판단 보류'?'tierWithheld':'')+'">'+esc(r.tier)+'</span><p class="small">기록 위치: '+esc(REPORT_FIELD_LABELS[r.field]||r.field||'확인 가능한 기록 없음')+'</p>'+(r.quote?(report.evidenceMode==='source-field'?'<details class="evidenceDetails evidenceQuoteDetails"><summary>선택한 작성항목의 원문 전체 보기</summary><blockquote>'+esc(r.quote)+'</blockquote></details>':'<blockquote>'+esc(r.quote)+'</blockquote>'):'<p class="small">인용 가능한 근거가 없습니다.</p>')+'<div class="evidenceReason">'+esc(r.reason)+'</div></div>').join('')+'</details>').join('')+'</details>';
   html+='<details class="evidenceDetails"><summary>AI에 실제 전달한 이미지 '+manifest.reviewed.length+'장과 검토 한계</summary>'+(manifest.reviewed.length?'<ul class="evidenceImageList">'+manifest.reviewed.map(x=>'<li>미션 '+esc(x.missionId)+' · '+esc(x.label)+(x.field?' ('+esc(x.field)+')':'')+'</li>').join('')+'</ul>':'<p>AI에 전달한 이미지가 없습니다. 텍스트 기록만 검토했습니다.</p>')+'<p class="small">이미지를 검토하지 않은 기본미션: '+esc(manifest.notReviewedMissionIds.join(', ')||'없음')+'</p><p class="small">'+esc(manifest.note)+'</p><p class="small">최대 256px 축소 이미지의 작은 글자·치수는 검증할 수 없습니다. 미션 10 슬라이드는 첨부 여부만 확인하며 시각 평가하지 않습니다.</p></details></section>';
   return html;
 }
@@ -1084,7 +1085,7 @@ function renderReportAISummary(){
   const hlField=(hl.strong.length||hl.weak.length||hl.pending.length)?'<div class="reportField"><span class="reportFieldLabel">강점 / 보완 / 추가 확인</span><span class="reportFieldValue">강점: '+esc(hl.strong.length?hl.strong.join(' · '):'확인된 항목 없음')+' / 보완: '+esc(hl.weak.length?hl.weak.join(' · '):'평가된 항목에서 없음')+(hl.pending.length?' / 추가 확인 · 판단 보류: '+esc(hl.pending.join(' · ')):'')+'</span></div>':'';
   const selfCheck=currentSelfEvalCheck(report);
   const selfCheckField=(selfCheck&&selfCheck.mismatch&&selfCheck.note)?'<div class="reportField"><span class="reportFieldLabel">자기평가 대조</span><span class="reportFieldValue">⚠ '+esc(selfCheck.note)+'</span></div>':'';
-  return '<div class="reportAISummary">'+renderVerificationStatus(report)+'<div class="small"><b>'+esc(evaluation.title)+'</b>'+(evaluation.model?' · '+esc(evaluation.model):'')+'</div>'+
+  return '<div class="reportAISummary">'+renderVerificationStatus(report)+'<div class="small"><b>'+esc(evaluation.title)+'</b>'+(evaluation.model?' · '+esc(evaluation.model)+(evaluation.reasoningEffort?' · 추론 '+esc(evaluation.reasoningEffort):''):'')+'</div>'+
     '<div class="reportTierHero"><span class="reportTierEmoji">'+tierEmoji(report.overallTier)+'</span><span class="reportTierText">'+esc(report.overallTier)+'</span><span class="reportTierSub">평가 당시 기본미션 완료 표시 '+esc(report.completedCount||'-')+'</span></div>'+
     '<div class="reportField"><span class="reportFieldLabel">총평</span><span class="reportFieldValue">'+esc(report.overallComment)+'</span></div>'+
     hlField+crit+selfCheckField+renderPriorityImprovements(report)+renderEvidenceAudit(report)+
@@ -1221,6 +1222,8 @@ function plainObject(v){return !!v&&typeof v==='object'&&!Array.isArray(v)&&(Obj
 function checkedText(v,name,max=30000){if(typeof v!=='string'||v.length>max)throw new Error(name+'의 형식 또는 길이가 올바르지 않습니다.');return v;}
 function validateAIReport(v,options={}){
   const current=v&&v.rubricVersion===EVIDENCE_RUBRIC_VERSION;
+  const sourceFieldMode=current&&v.evidenceMode==='source-field';
+  if(v&&v.evidenceMode!==undefined&&v.evidenceMode!=='source-field')throw new Error('지원하지 않는 평가 근거 표시 방식입니다.');
   if(options.requireCurrent&&!current)throw new Error('새 평가 기준의 결과가 아닙니다. 이전 결과는 보관하되 새 결과로 갱신하지 않았습니다.');
   if(v&&v.rubricVersion&&!current)throw new Error('지원하지 않는 평가 기준 버전입니다.');
   const tiers=['매우 잘함','잘함','보통','노력 필요',...(current?['판단 보류']:[])];
@@ -1251,6 +1254,7 @@ function validateAIReport(v,options={}){
   if(!exactList(v.assessments,ids,x=>x&&x.id))fail();
   const allowedFields=new Set(['projectNote','goal','step1','step2','step3','step4','decision','evidenceSource','evidenceCheck','reflection','finalLearning','compare.checked','compare.verdict','compare.reason','compare.action']);
   r.rubricVersion=EVIDENCE_RUBRIC_VERSION;
+  if(sourceFieldMode)r.evidenceMode='source-field';
   r.assessments=ids.map(id=>{
     const assessment=v.assessments.find(a=>a.id===id);
     if(!exactList(assessment.ratings,EVIDENCE_RUBRIC.map(c=>c.key),x=>x&&x.key))fail();
@@ -1258,10 +1262,10 @@ function validateAIReport(v,options={}){
     return {id,ratings:EVIDENCE_RUBRIC.map(c=>{
       const rating=assessment.ratings.find(x=>x.key===c.key);
       if(!plainObject(rating)||!tiers.includes(rating.tier))fail();
-      const field=checkedText(rating.field,'인용 위치',100),quote=checkedText(rating.quote,'인용 원문',20000),reason=checkedText(rating.reason,'판단 이유',20000);
+      const field=checkedText(rating.field,'인용 위치',100),quote=checkedText(rating.quote,'인용 원문',sourceFieldMode?30000:20000),reason=checkedText(rating.reason,'판단 이유',20000);
       if(!reason.trim()||(field&&!allowedFields.has(field))||(quote&&!field)||(rating.tier!=='판단 보류'&&(!field||!quote.trim()||isPlaceholderEvidence(quote))))fail();
       if(options.missions&&!mission)fail();
-      if(mission&&quote){const source=evidenceFieldValue(mission.fields||{},field);if(!source.includes(quote)||(rating.tier!=='판단 보류'&&(isPlaceholderEvidence(source)||isPlaceholderEvidence(quote))))fail();}
+      if(mission&&quote){const source=evidenceFieldValue(mission.fields||{},field);if(!source.includes(quote)||(rating.tier!=='판단 보류'&&((sourceFieldMode&&quote!==source)||isPlaceholderEvidence(source)||isPlaceholderEvidence(quote))))fail();}
       return {key:c.key,tier:rating.tier,field,quote,reason};
     })};
   });
@@ -1366,7 +1370,7 @@ window.__lastReportSnapshot=null;
 const AI_FEEDBACK_PIPELINE_VERSION='student-workflow-v30';
 const EVALUATION_ROUTES={
   check:{mode:'check',provider:'gemini',model:'gemini-3.5-flash-lite',reasoningEffort:'',label:'Gemini 셀프체크하기',title:'Gemini 셀프체크',timeoutSeconds:180},
-  final:{mode:'final',provider:'openai',model:'gpt-6-astra',reasoningEffort:'high',label:'GPT 최종 참고 평가받기',title:'GPT 기록 참고 평가',timeoutSeconds:330}
+  final:{mode:'final',provider:'openai',model:'gpt-6-luna',reasoningEffort:'medium',label:'GPT 최종 참고 평가받기',title:'GPT 기록 참고 평가',timeoutSeconds:180}
 };
 function coreEvaluationReadiness(missions){
   const source=missions||collectAllMissionData();
@@ -1413,17 +1417,24 @@ function lastReportEvaluation(){
   let snapshot;try{snapshot=JSON.parse(window.__lastReportSnapshot||'null');}catch(e){}
   if(snapshot&&['evidence-rubric-v29',AI_FEEDBACK_PIPELINE_VERSION].includes(snapshot.pipeline)){
     const actual=snapshot.evaluation,route=actual&&EVALUATION_ROUTES[actual.mode];
-    if(route&&actual.provider===route.provider&&actual.model===route.model&&actual.reasoningEffort===route.reasoningEffort)return {title:route.title,model:route.model};
+    if(route&&actual.provider===route.provider&&actual.model===route.model&&actual.reasoningEffort===route.reasoningEffort)return {title:route.title,model:route.model,reasoningEffort:route.reasoningEffort};
+    if(actual&&actual.mode==='final'&&actual.provider==='openai'&&actual.model==='gpt-6-astra'&&actual.reasoningEffort==='high')return {title:'이전 GPT 기록 참고 평가',model:actual.model,reasoningEffort:actual.reasoningEffort};
   }
-  if(snapshot&&snapshot.pipeline==='dual-evaluation-v28')return {title:snapshot.evaluation&&snapshot.evaluation.mode==='final'?'이전 GPT 참고 피드백':'이전 Gemini 셀프체크',model:snapshot.evaluation&&snapshot.evaluation.model||''};
+  if(snapshot&&snapshot.pipeline==='dual-evaluation-v28')return {title:snapshot.evaluation&&snapshot.evaluation.mode==='final'?'이전 GPT 참고 피드백':'이전 Gemini 셀프체크',model:snapshot.evaluation&&snapshot.evaluation.model||'',reasoningEffort:snapshot.evaluation&&snapshot.evaluation.reasoningEffort||''};
   if(snapshot&&snapshot.pipeline==='gemini-flash-lite-v27')return {title:'이전 Gemini 셀프체크',model:'gemini-3.5-flash-lite'};
   return {title:'이전 AI 참고 피드백',model:''};
 }
 function validateEvaluationRoute(actual,expected){
   if(!actual||actual.rubricVersion!==EVIDENCE_RUBRIC_VERSION){const error=new Error('서버가 현재 근거평가 기준으로 응답하지 않아 결과를 갱신하지 않았습니다. 기존 결과는 유지됩니다.');error.code='RUBRIC_VERSION_MISMATCH';throw error;}
-  if(!actual||actual.mode!==expected.mode||actual.provider!==expected.provider||actual.model!==expected.model||(expected.mode==='final'&&actual.reasoningEffort!=='high')){
+  if(!actual||actual.mode!==expected.mode||actual.provider!==expected.provider||actual.model!==expected.model||(expected.mode==='final'&&actual.reasoningEffort!==expected.reasoningEffort)){
     const error=new Error('평가 단계와 모델이 요청한 설정과 일치하지 않아 결과를 갱신하지 않았습니다. 관리자에게 확인해 주세요.');
     error.code='EVALUATION_ROUTE_MISMATCH';throw error;
+  }
+}
+function validateEvidenceMode(actual,report){
+  const mode=actual&&actual.evidenceMode;
+  if((mode!==undefined&&mode!=='source-field')||(mode||'')!==(report.evidenceMode||'')){
+    const error=new Error('평가 근거 표시 방식이 서버 정보와 일치하지 않아 기존 결과를 유지합니다.');error.code='EVIDENCE_MODE_MISMATCH';throw error;
   }
 }
 function saveLastReport(report,snapshot){const at=new Date().toISOString();window.__lastReportAt=at;return writeStoreJSON('aivis_last_report',{report,snapshot,at});}
@@ -1440,6 +1451,21 @@ function summarizeStrengths(report){
 }
 
 let gradingInFlight=false;
+function acquireGradingTabLock(){
+  const fallback=()=>{};
+  if(typeof navigator==='undefined'||!navigator.locks||typeof navigator.locks.request!=='function')return fallback;
+  return new Promise(resolve=>{
+    try{navigator.locks.request('zeroarchitect-evaluation-request',{ifAvailable:true},lock=>{
+      if(!lock){resolve(null);return;}
+      return new Promise(release=>resolve(release));
+    }).catch(()=>resolve(fallback));}catch(e){resolve(fallback);}
+  });
+}
+function gradingWaitHint(elapsed){
+  if(elapsed>=90)return '응답이 오래 걸리고 있습니다. 학습 기록과 이전 결과는 유지됩니다.';
+  if(elapsed>=45)return '응답이 지연되고 있습니다. 추가로 누르지 않아도 도착한 결과가 표시됩니다.';
+  return '평가 응답을 기다리는 중입니다. 같은 기록을 다시 요청하지 않아도 됩니다.';
+}
 async function requestGrading(){
   if(gradingInFlight)return;
   collectState();collectSelfEval();const info=saveStudentInfo();
@@ -1449,9 +1475,11 @@ async function requestGrading(){
   const missions=collectAllMissionData(),selfEval=loadSelfEval(),route=getEvaluationRoute(missions),requestSnapshot=createGradingSnapshot(info,missions,selfEval,route);
   if(window.__lastReport&&sameGradingInputs(window.__lastReportSnapshot,requestSnapshot)){renderReport(window.__lastReport);const note=document.createElement('div');note.className='reportDraftNotice';note.textContent='평가할 기록과 설정이 같아 저장된 AI 참고 피드백을 표시했습니다. 현재 자기평가와의 차이만 이 브라우저에서 다시 비교했으며 AI를 새로 호출하지 않았습니다.';box.insertBefore(note,box.firstChild);return;}
   gradingInFlight=true;btn.disabled=true;btn.textContent=route.title+' 응답 대기 중…';
+  const lockAttempt=acquireGradingTabLock(),releaseTabLock=typeof lockAttempt==='function'?lockAttempt:await lockAttempt;
+  if(!releaseTabLock){gradingInFlight=false;updateEvaluationAction();status.innerHTML='<div class="safetyNotice"><b>다른 탭에서 평가를 요청하고 있습니다</b><br><span class="small">해당 탭에서 응답을 확인해 주세요. 이 탭에서는 평가를 추가로 요청하지 않았습니다.</span></div>';return;}
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),route.timeoutSeconds*1000);let elapsed=0;
-  const showWaiting=()=>{status.innerHTML='<div class="gradeLoading"><div class="gradeSpinner"></div><div class="gradeLoadingMsg">'+esc(route.title)+' 응답을 기다립니다</div><div class="gradeLoadingSub">'+elapsed+'초 경과 · 최대 '+route.timeoutSeconds+'초 대기 · 실제 처리단계나 완료율을 나타내지 않습니다.<br>응답이 늦어도 서버에서 처리 중일 수 있습니다. 중복 요청을 피하려면 잠시 기다려 주세요.</div></div>';};
-  showWaiting();const timer=setInterval(()=>{elapsed++;showWaiting();},1000);
+  status.innerHTML='<div class="gradeLoading"><div class="gradeSpinner"></div><div class="gradeLoadingMsg">'+esc(route.title)+' 응답 대기</div><div class="gradeLoadingSub"><span id="gradeElapsed">경과 0초</span><br><span id="gradeWaitHint">'+esc(gradingWaitHint(0))+'</span></div></div>';
+  const timer=setInterval(()=>{elapsed++;const time=document.getElementById('gradeElapsed'),hint=document.getElementById('gradeWaitHint');if(time)time.textContent='경과 '+elapsed+'초';if(hint)hint.textContent=gradingWaitHint(elapsed);},1000);
   try{
     const payload={student:info,missions,selfEval,evaluationMode:route.mode,sentAt:new Date().toISOString(),secret:GAS_SECRET};
     const res=await fetch(GAS_ENDPOINT,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload),signal:controller.signal});
@@ -1460,13 +1488,14 @@ async function requestGrading(){
     if(!data||data.ok!==true){const error=new Error((data&&typeof data.error==='string'&&data.error)||'평가 서비스에서 결과를 반환하지 않았습니다.');if(data&&typeof data.code==='string')error.code=data.code;if(data&&typeof data.requestId==='string')error.requestId=data.requestId;throw error;}
     validateEvaluationRoute(data.evaluation,route);
     const report=validateAIReport(data.report,{requireCurrent:true,missions});
+    validateEvidenceMode(data.evaluation,report);
     window.__lastReport=report;window.__lastReportSnapshot=requestSnapshot;saveLastReport(report,requestSnapshot);
     clearInterval(timer);status.innerHTML='';renderReport(report);checkReportStale();
   }catch(err){
-    const msg=err.name==='AbortError'?route.timeoutSeconds+'초 안에 응답을 받지 못했습니다. 요청이 서버에서 처리 중일 수 있으므로 중복 요청을 피하고 잠시 후 확인해 주세요.':String(err.message||err);
+    const msg=err.name==='AbortError'?'응답 대기 한도를 넘었습니다. 서버 작업이 계속될 수 있으므로 바로 다시 요청하지 말고 잠시 후 확인해 주세요.':String(err.message||err);
     const diagnostics=[err.code,err.requestId].filter(v=>typeof v==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(v));
     status.innerHTML='<div class="safetyNotice"><b>AI 피드백 결과를 받지 못했습니다</b><br><span class="small">'+esc(msg)+'</span>'+(diagnostics.length?'<p class="small">담당자에게 알려줄 확인 코드: '+esc(diagnostics.join(' / '))+'</p>':'')+'<br><span class="small">학습 기록과 저장된 AI 피드백은 유지됩니다. 기록 작성 점검, 학습 보고서, 백업은 계속 이용할 수 있습니다.</span><div class="actions"><button class="ghost" onclick="showBasicRecordCheck()">기록 작성 점검으로 이동 →</button></div></div>';
-  }finally{clearTimeout(timeout);clearInterval(timer);gradingInFlight=false;updateEvaluationAction();}
+  }finally{clearTimeout(timeout);clearInterval(timer);releaseTabLock();gradingInFlight=false;updateEvaluationAction();}
 }
 const TIER_META={
   '판단 보류':{emoji:'⏸',svg:''},
@@ -1517,7 +1546,7 @@ function renderReport(report){
       <div class="reportCertTop">
         <div>
           <div class="reportCertTitle">${esc(evaluation.title)}</div>
-          ${evaluation.model?`<div class="small" style="color:#cfe4dc;margin-top:3px">${esc(evaluation.model)}</div>`:''}
+          ${evaluation.model?`<div class="small" style="color:#cfe4dc;margin-top:3px">${esc(evaluation.model)}${evaluation.reasoningEffort?' · 추론 '+esc(evaluation.reasoningEffort):''}</div>`:''}
           <div class="reportCertOverall">${tierEmoji(report.overallTier)} ${esc(report.overallTier)||'-'}</div>
           ${report.completedCount?`<div class="small" style="color:#cfe4dc;margin-top:2px">평가 당시 기본미션 완료 표시 ${esc(report.completedCount)}</div>`:''}
         </div>
@@ -1561,9 +1590,10 @@ function downloadReport(){
   let savedSnapshot;try{savedSnapshot=JSON.parse(window.__lastReportSnapshot||'null');}catch(e){}
   const info=savedSnapshot&&savedSnapshot.student||loadStudentInfo();
   const evaluation=lastReportEvaluation();
-  let out=`Architecture AX Expert\n${evaluation.title}${evaluation.model?' · '+evaluation.model:''}\n${'='.repeat(44)}\n${savedSnapshot&&savedSnapshot.student?'평가 당시 학습자':'현재 입력된 학습자 (평가 당시 신원 확인 불가)'}\n이름: ${info.name||'(미기재)'}\n학번: ${info.studentId||'(미기재)'}\n파일 생성일시: ${new Date().toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})} (한국시간)\n평가 결과 저장시각: ${reportSavedLabel()}\n기준 버전: ${report.rubricVersion||'이전 기준 · 버전 정보 없음'}\n${'='.repeat(44)}\n\n`;
+  let out=`Architecture AX Expert\n${evaluation.title}${evaluation.model?' · '+evaluation.model+(evaluation.reasoningEffort?' · 추론 '+evaluation.reasoningEffort:''):''}\n${'='.repeat(44)}\n${savedSnapshot&&savedSnapshot.student?'평가 당시 학습자':'현재 입력된 학습자 (평가 당시 신원 확인 불가)'}\n이름: ${info.name||'(미기재)'}\n학번: ${info.studentId||'(미기재)'}\n파일 생성일시: ${new Date().toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})} (한국시간)\n평가 결과 저장시각: ${reportSavedLabel()}\n기준 버전: ${report.rubricVersion||'이전 기준 · 버전 정보 없음'}\n${'='.repeat(44)}\n\n`;
   if(reportIsStale())out+='⚠ 이전 답안 기준 AI 피드백: 현재 기록 또는 평가 설정과 다르거나 평가 당시 입력을 확인할 수 없습니다. 현재 답안의 결과로 간주하지 마세요.\n\n';
   if(report.rubricVersion!==EVIDENCE_RUBRIC_VERSION)out+='⚠ 이전 기준 결과입니다. 현재의 50개 근거 판단과 산정 규칙이 적용되거나 재인증되지 않았습니다.\n\n';
+  if(report.evidenceMode==='source-field')out+='인용 방식: AI가 선택한 작성항목의 원문 전체를 서버에서 가져왔습니다. 선택한 근거와 등급·이유의 적절성은 담당자가 확인합니다.\n\n';
   out+=`평가 당시 기본미션 완료 표시: ${report.completedCount||'-'}\n`;
   out+=`현재 기본미션 완료 표시: ${coreMissionsStatus().completedCount}/10 (기록의 질과 별도)\n`;
   out+=`종합 등급: ${report.overallTier}\n${report.overallComment}\n\n`;
