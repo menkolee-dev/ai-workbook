@@ -695,7 +695,7 @@ function renderEvidenceContext(l){
   const human=document.getElementById('humanCheckCard');human.parentNode.insertBefore(card,human);
 }
 
-function renderPrompt(l){let h=document.getElementById('promptBlock');h.innerHTML='';if(!l.prompt)return;h.innerHTML=`<div class="card"><div class="eyebrow">프롬프트 복사하기</div><h3>예제 프롬프트</h3><div class="prompt" id="promptText">${l.prompt}</div><div class="actions"><button class="primary" onclick="copyPrompt()">프롬프트 복사</button></div></div>`}
+function renderPrompt(l){let h=document.getElementById('promptBlock');h.innerHTML='';if(!l.prompt)return;h.innerHTML=`<div class="card"><div class="eyebrow">프롬프트 복사하기</div><h3>${l.id==='11'?'내 문제를 정리하는 시작 프롬프트':'예제 프롬프트'}</h3><div class="prompt" id="promptText">${l.prompt}</div><div class="actions"><button class="primary" onclick="copyPrompt()">프롬프트 복사</button></div></div>`}
 function copyPrompt(){
   const text=document.getElementById('promptText').innerText;
   if(navigator.clipboard&&navigator.clipboard.writeText){
@@ -1630,7 +1630,7 @@ function render(opts){
   stepsEl.innerHTML=isIntro?'':l.steps.map((st,i)=>`${i?'<span class="missionStepArrow">→</span>':''}<span class="missionStep"><b>${i+1}</b>${esc(st[1])}</span>`).join('');
   document.getElementById('mission').style.cssText=isIntro?'background:none;border:0;padding:0;font-size:19px':'';
   document.getElementById('exampleEyebrow').textContent=isIntro?'생성 결과의 근거와 한계를 확인합니다':'예제 · 여기서 시작';
-  document.getElementById('exampleHeading').textContent=isIntro?'12개 실습에서 관찰·실험·근거·판단을 기록하세요':'예제 먼저 보기';
+  document.getElementById('exampleHeading').textContent=isIntro?'12개 실습에서 관찰·실험·근거·판단을 기록하세요':l.id==='11'?'내 문제에서 시작하기':'예제 먼저 보기';
   document.getElementById('principleCard').style.display=isIntro?'none':'flex';
   document.getElementById('humanCheckCard').style.display=isIntro?'none':'block';
   document.getElementById('lessonFooter').style.display=isIntro?'none':'flex';
