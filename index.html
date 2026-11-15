@@ -149,6 +149,8 @@ label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}textarea,inp
 .goodExample summary{cursor:pointer;font-weight:800;color:var(--accent)}
 .goodExample p{margin:6px 0 0}
 .privacyNote{font-size:11.5px;color:var(--muted);line-height:1.55;margin-top:8px}
+.studentPrivacyNote{font-size:12px;color:var(--muted);line-height:1.65;margin:8px 0 0}
+@media(max-width:640px){.studentPrivacyNote{font-size:13px}}
 .howToFlow{display:flex;flex-wrap:wrap;gap:6px 14px;margin:-2px 0 14px;padding:10px 14px;background:#f2f6f4;border-radius:11px;font-size:12.5px;line-height:1.5;color:var(--text)}
 .howToFlow b{color:var(--accent);margin-right:2px}
 #uploadPair.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -1793,9 +1795,10 @@ render();
       <b>학생 정보</b><br>
       <span class="small">기록 내보내기와 AI 셀프체크 결과에 사용됩니다.</span>
       <div class="grid2" style="margin-top:8px">
-        <input id="studentName" placeholder="이름 또는 시연용 별칭" oninput="saveStudentInfo()">
-        <input id="studentId" placeholder="학번 또는 익명 학습자 코드" oninput="saveStudentInfo()">
+        <input id="studentName" placeholder="이름 또는 시연용 별칭" aria-describedby="studentPrivacyNote" oninput="saveStudentInfo()">
+        <input id="studentId" placeholder="학번 또는 익명 학습자 코드" aria-describedby="studentPrivacyNote" oninput="saveStudentInfo()">
       </div>
+      <p id="studentPrivacyNote" class="studentPrivacyNote">이름·학번은 학생 확인용 입력란에만 입력해 주세요. 과제 본문과 첨부 이미지에는 이름·학번·연락처·얼굴 등 개인정보를 넣지 마세요. 이름·학번과 평가 요약은 교수자의 수업 관리에 사용됩니다.</p>
     </div>
 
     <div class="finalItem">
