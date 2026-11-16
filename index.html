@@ -1475,7 +1475,7 @@ function validateEvidenceMode(actual,report){
     const error=new Error('평가 근거 표시 방식이 서버 정보와 일치하지 않아 기존 결과를 유지합니다.');error.code='EVIDENCE_MODE_MISMATCH';throw error;
   }
 }
-function saveLastReport(report,snapshot){const at=new Date().toISOString();window.__lastReportAt=at;return writeStoreJSON('aivis_last_report',{report,snapshot,at});}
+function saveLastReport(report,snapshot,savedAt){const at=typeof savedAt==='string'&&savedAt.length<=100&&Number.isFinite(Date.parse(savedAt))?savedAt:new Date().toISOString();window.__lastReportAt=at;return writeStoreJSON('aivis_last_report',{report,snapshot,at});}
 function loadLastReportRaw(){return readStoreJSON('aivis_last_report',null);}
 function loadLastReport(){const d=loadLastReportRaw();if(d&&d.report){try{let snapshot;try{snapshot=JSON.parse(d.snapshot||'null');}catch(e){}window.__lastReport=validateAIReport(d.report,{missions:snapshot&&snapshot.m});window.__lastReportSnapshot=d.snapshot||null;window.__lastReportAt=d.at||'';}catch(e){window.__lastReport=null;window.__lastReportSnapshot=null;window.__lastReportAt='';}}}
 function summarizeStrengths(report){
@@ -1510,6 +1510,113 @@ function gradingWaitHint(elapsed){
   if(elapsed>=45)return '응답이 지연되고 있습니다. 추가로 누르지 않아도 도착한 결과가 표시됩니다.';
   return '평가 응답을 기다리는 중입니다. 같은 기록을 다시 요청하지 않아도 됩니다.';
 }
+const GRADING_SCOPE_KEY='aivis_evaluation_scope_v1';
+const GRADING_QUEUE_WAIT_MS=10*60*1000;
+let activeGradingRequest=null;
+function gradingScope(){
+  try{
+    const saved=localStorage.getItem(GRADING_SCOPE_KEY);
+    if(typeof saved==='string'&&/^[a-f0-9]{32}$/.test(saved))return saved;
+    if(typeof crypto==='undefined'||typeof crypto.getRandomValues!=='function')throw new Error('secure random unavailable');
+    const bytes=new Uint8Array(16);crypto.getRandomValues(bytes);
+    const scope=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+    localStorage.setItem(GRADING_SCOPE_KEY,scope);
+    if(localStorage.getItem(GRADING_SCOPE_KEY)!==scope)throw new Error('scope storage unavailable');
+    return scope;
+  }catch(e){const error=new Error('중복 요청을 구분할 안전한 브라우저 정보를 저장하지 못했습니다. 브라우저 저장공간을 확인한 뒤 다시 시도해 주세요. 새 평가는 시작하지 않았습니다.');error.code='DEDUPE_SCOPE_UNAVAILABLE';throw error;}
+}
+function gradingJitterMs(){
+  if(typeof crypto==='undefined'||typeof crypto.getRandomValues!=='function')return 0;
+  const value=new Uint16Array(1);crypto.getRandomValues(value);return value[0]%3001;
+}
+function gradingResponseError(data){
+  const error=new Error(data&&typeof data.error==='string'?data.error:'평가 서비스에서 결과를 반환하지 않았습니다.');
+  if(data&&typeof data.code==='string')error.code=data.code;
+  if(data&&typeof data.requestId==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(data.requestId))error.requestId=data.requestId;
+  return error;
+}
+function gradingAbortError(){const error=new Error('request cancelled');error.name='AbortError';return error;}
+function waitForGrading(ms,signal){
+  if(signal.aborted)return Promise.reject(gradingAbortError());
+  return new Promise((resolve,reject)=>{let timer;const abort=()=>{clearTimeout(timer);signal.removeEventListener('abort',abort);reject(gradingAbortError());};timer=setTimeout(()=>{signal.removeEventListener('abort',abort);resolve();},ms);signal.addEventListener('abort',abort,{once:true});});
+}
+async function postGradingData(payload,job,timeoutMs){
+  if(job.controller.signal.aborted)throw gradingAbortError();
+  const controller=new AbortController(),abort=()=>controller.abort();
+  job.controller.signal.addEventListener('abort',abort,{once:true});
+  const timeout=setTimeout(()=>controller.abort(),timeoutMs);
+  try{
+    const res=await fetch(GAS_ENDPOINT,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload),signal:controller.signal});
+    if(!res.ok){const error=new Error('요청 상태를 확인할 수 없습니다. 서버에서 이미 평가가 시작됐을 수 있으므로 바로 새 평가를 반복하지 마세요.');error.code='REQUEST_STATE_UNKNOWN';throw error;}
+    let data;try{data=JSON.parse(await res.text());}catch(e){const error=new Error('서버의 평가 진행 상태를 확인할 수 없습니다. 바로 새 평가를 반복하지 말고 잠시 후 확인해 주세요.');error.code='REQUEST_STATE_UNKNOWN';throw error;}
+    if(!data||typeof data!=='object'||Array.isArray(data))throw gradingResponseError();
+    return data;
+  }finally{clearTimeout(timeout);job.controller.signal.removeEventListener('abort',abort);}
+}
+function setGradingRequestId(job,data){
+  if(typeof data.requestId!=='string'||!/^[A-Za-z0-9_-]{1,100}$/.test(data.requestId))throw new Error('평가 진행 식별자를 확인할 수 없어 새 요청을 보내지 않았습니다.');
+  if(job.requestId&&job.requestId!==data.requestId)throw new Error('평가 진행 식별자가 달라 기존 요청을 계속하지 않았습니다.');
+  job.requestId=data.requestId;
+}
+function gradingRetryMs(data){
+  const seconds=data.retryAfterSeconds;
+  if(!Number.isInteger(seconds)||seconds<10||seconds>15)throw new Error('평가 대기 확인 간격을 확인할 수 없습니다.');
+  return seconds*1000+gradingJitterMs();
+}
+function showGradingRequestState(job,queued,data,delayMs){
+  const status=document.getElementById('gradeStatus'),seconds=Math.ceil(delayMs/1000);
+  status.innerHTML='<div class="gradeLoading"><div class="gradeSpinner"></div><div class="gradeLoadingMsg">'+(queued?'평가 순서를 기다리고 있습니다':'같은 기록의 평가가 진행 중입니다')+'</div><div class="gradeLoadingSub"><span id="gradeElapsed">경과 '+job.elapsed+'초</span><br><span id="gradeWaitHint">'+(queued?'마지막 확인한 대기 순번: '+data.position+'번 · 약 '+seconds+'초 뒤 다시 확인합니다.':'새 AI 요청 없이 진행 중인 결과를 약 '+seconds+'초 뒤 확인합니다.')+'</span></div></div>'+(queued?'<p class="small">대기는 최대 10분입니다. 이 창만 닫아도 열린 탭에서는 대기가 이어집니다. 탭을 닫으면 대기 재확인이 멈추며, 이미 시작한 서버 평가는 중단되지 않습니다.</p><button class="ghost" type="button" id="cancelGradingQueue" onclick="cancelQueuedGradingRequest()">대기 취소</button>':'')+'<p class="small" id="gradingCancelNotice" role="status"></p>';
+}
+async function cancelQueuedGradingRequest(){
+  const job=activeGradingRequest;if(!job||job.phase!=='queued'||job.cancelIntent)return;
+  job.cancelIntent=true;const button=document.getElementById('cancelGradingQueue');if(button)button.disabled=true;
+  job.cancelPromise=(async()=>{
+    try{
+      const data=await postGradingData({action:'cancelQueuedGrading',dedupeScope:job.scope,requestId:job.requestId,secret:GAS_SECRET},job,15000);
+      if(data.ok===true&&data.cancelled===true){job.cancelled=true;job.controller.abort();return;}
+      if(data.code==='EVALUATION_PROCESSING'){setGradingRequestId(job,data);job.cancelIntent=false;job.processingData=data;job.phase='processing';const notice=document.getElementById('gradingCancelNotice');if(notice)notice.textContent='이미 평가가 시작되어 대기 취소를 할 수 없습니다. 결과를 기다려 주세요.';return;}
+      if(data.ok===true&&data.report){job.cancelIntent=false;job.completedData=data;job.phase='processing';return;}
+      throw gradingResponseError(data);
+    }catch(e){job.cancelUnconfirmed=true;job.controller.abort();}
+  })();
+  await job.cancelPromise;
+}
+async function awaitExistingGrading(data,job,route){
+  const deadline=Date.now()+route.timeoutSeconds*1000;let polls=0;
+  while(data.ok!==true&&data.code==='EVALUATION_PROCESSING'){
+    setGradingRequestId(job,data);job.phase='processing';
+    const remaining=deadline-Date.now();if(remaining<=0||polls>=10)throw gradingResponseError(data);
+    const delay=Math.min(gradingRetryMs(data)+Math.min(polls,5)*1000,remaining);
+    showGradingRequestState(job,false,data,delay);await waitForGrading(delay,job.controller.signal);
+    const timeLeft=deadline-Date.now();if(timeLeft<=0)throw gradingResponseError(data);
+    data=await postGradingData({action:'gradingStatus',dedupeScope:job.scope,requestId:job.requestId,secret:GAS_SECRET},job,Math.min(30000,timeLeft));polls++;
+  }
+  return data;
+}
+async function obtainGradingResult(payload,job,route){
+  const jitter=gradingJitterMs();if(jitter)await waitForGrading(jitter,job.controller.signal);
+  let data=await postGradingData(payload,job,route.timeoutSeconds*1000);
+  while(data.ok!==true){
+    if(data.code==='EVALUATION_PROCESSING'){data=await awaitExistingGrading(data,job,route);continue;}
+    if(data.code!=='EVALUATION_QUEUED')throw gradingResponseError(data);
+    setGradingRequestId(job,data);
+    if(!Number.isInteger(data.position)||data.position<1||data.position>50)throw new Error('평가 대기 순번을 확인할 수 없습니다.');
+    job.phase='queued';if(job.queueStartedAt===null)job.queueStartedAt=Date.now();
+    const remaining=GRADING_QUEUE_WAIT_MS-(Date.now()-job.queueStartedAt);
+    if(remaining<=0){job.queueExpired=true;await cancelQueuedGradingRequest();const error=new Error('대기 시간이 10분을 넘었습니다. 새 평가는 시작하지 않았습니다.');error.code='QUEUE_WAIT_TIMEOUT';throw error;}
+    const delay=Math.min(gradingRetryMs(data),remaining);showGradingRequestState(job,true,data,delay);
+    await waitForGrading(delay,job.controller.signal);
+    if(job.cancelIntent&&job.cancelPromise)await job.cancelPromise;
+    if(job.cancelled||job.cancelUnconfirmed)throw gradingAbortError();
+    if(job.completedData)return job.completedData;
+    if(job.processingData){data=await awaitExistingGrading(job.processingData,job,route);continue;}
+    if(Date.now()-job.queueStartedAt>=GRADING_QUEUE_WAIT_MS){job.queueExpired=true;await cancelQueuedGradingRequest();const error=new Error('대기 시간이 10분을 넘었습니다. 새 평가는 시작하지 않았습니다.');error.code='QUEUE_WAIT_TIMEOUT';throw error;}
+    job.phase='requesting';const hint=document.getElementById('gradeWaitHint');if(hint)hint.textContent='내 순서인지 확인하고 평가를 요청하는 중입니다. 이미 시작한 서버 평가는 중단되지 않습니다.';
+    const button=document.getElementById('cancelGradingQueue');if(button)button.disabled=true;
+    data=await postGradingData({...payload,requestId:job.requestId},job,route.timeoutSeconds*1000);
+  }
+  return data;
+}
 async function requestGrading(){
   if(gradingInFlight)return;
   collectState();collectSelfEval();const info=saveStudentInfo();
@@ -1521,25 +1628,27 @@ async function requestGrading(){
   gradingInFlight=true;btn.disabled=true;btn.textContent=route.title+' 응답 대기 중…';
   const lockAttempt=acquireGradingTabLock(),releaseTabLock=typeof lockAttempt==='function'?lockAttempt:await lockAttempt;
   if(!releaseTabLock){gradingInFlight=false;updateEvaluationAction();status.innerHTML='<div class="safetyNotice"><b>다른 탭에서 평가를 요청하고 있습니다</b><br><span class="small">해당 탭에서 응답을 확인해 주세요. 이 탭에서는 평가를 추가로 요청하지 않았습니다.</span></div>';return;}
-  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),route.timeoutSeconds*1000);let elapsed=0;
+  const job={controller:new AbortController(),scope:'',requestId:'',phase:'requesting',queueStartedAt:null,elapsed:0};activeGradingRequest=job;
   status.innerHTML='<div class="gradeLoading"><div class="gradeSpinner"></div><div class="gradeLoadingMsg">'+esc(route.title)+' 응답 대기</div><div class="gradeLoadingSub"><span id="gradeElapsed">경과 0초</span><br><span id="gradeWaitHint">'+esc(gradingWaitHint(0))+'</span></div></div>';
-  const timer=setInterval(()=>{elapsed++;const time=document.getElementById('gradeElapsed'),hint=document.getElementById('gradeWaitHint');if(time)time.textContent='경과 '+elapsed+'초';if(hint)hint.textContent=gradingWaitHint(elapsed);},1000);
+  const timer=setInterval(()=>{job.elapsed++;const time=document.getElementById('gradeElapsed'),hint=document.getElementById('gradeWaitHint');if(time)time.textContent='경과 '+job.elapsed+'초';if(hint&&job.phase==='requesting')hint.textContent=gradingWaitHint(job.elapsed);},1000);
   try{
-    const payload={student:info,missions,selfEval,evaluationMode:route.mode,sentAt:new Date().toISOString(),secret:GAS_SECRET};
-    const res=await fetch(GAS_ENDPOINT,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload),signal:controller.signal});
-    if(!res.ok)throw new Error('평가 서비스에서 응답을 받지 못했습니다.');
-    let data;try{data=JSON.parse(await res.text());}catch(e){throw new Error('평가 서비스 응답 형식을 확인할 수 없습니다.');}
-    if(!data||data.ok!==true){const error=new Error((data&&typeof data.error==='string'&&data.error)||'평가 서비스에서 결과를 반환하지 않았습니다.');if(data&&typeof data.code==='string')error.code=data.code;if(data&&typeof data.requestId==='string')error.requestId=data.requestId;throw error;}
+    job.scope=gradingScope();
+    const payload={student:info,missions,selfEval,evaluationMode:route.mode,sentAt:new Date().toISOString(),secret:GAS_SECRET,dedupeScope:job.scope};
+    const data=await obtainGradingResult(payload,job,route);
     validateEvaluationRoute(data.evaluation,route);
     const report=validateAIReport(data.report,{requireCurrent:true,missions});
     validateEvidenceMode(data.evaluation,report);
-    window.__lastReport=report;window.__lastReportSnapshot=requestSnapshot;saveLastReport(report,requestSnapshot);
+    window.__lastReport=report;window.__lastReportSnapshot=requestSnapshot;saveLastReport(report,requestSnapshot,data.resultSavedAt);
     clearInterval(timer);status.innerHTML='';renderReport(report);checkReportStale();
   }catch(err){
-    const msg=err.name==='AbortError'?'응답 대기 한도를 넘었습니다. 서버 작업이 계속될 수 있으므로 바로 다시 요청하지 말고 잠시 후 확인해 주세요.':String(err.message||err);
+    const messages={SERVER_BUSY:'평가 요청이 몰려 있어 새 평가는 시작하지 않았습니다. 잠시 후 다시 눌러 주세요.',EVALUATION_PROCESSING:'같은 기록의 서버 평가가 계속 진행 중입니다. 새 AI 요청은 보내지 않았습니다. 잠시 후 다시 확인해 주세요.',DUPLICATE_IN_PROGRESS:'같은 학생 정보와 기록으로 다른 브라우저에서 평가가 진행 중입니다. 그 브라우저에서 결과를 확인해 주세요. 이 브라우저에서는 새 평가나 결과 조회를 시작하지 않았습니다.',RESULT_UNAVAILABLE:'서버 임시 결과를 가져올 수 없습니다. 자동 재평가는 하지 않았습니다. 이 브라우저의 저장 결과·기록을 확인하고, 잠시 후에도 문제가 계속되면 담당자에게 알려 주세요.',CANCELLED:'취소된 대기 요청입니다. 이 요청으로 새 평가는 시작하지 않았습니다.'};
+    let msg=messages[err.code]||(err.name==='AbortError'?'응답 대기 한도를 넘었습니다. 서버 작업이 계속될 수 있으므로 바로 다시 요청하지 말고 잠시 후 확인해 주세요.':String(err.message||err));
+    if(job.queueExpired)msg='대기 시간이 10분을 넘어 대기 확인을 종료했습니다. 이미 시작한 서버 평가는 중단되지 않습니다.';
+    else if(job.cancelled)msg='대기를 취소했습니다. 이 대기 요청으로 새 평가는 시작하지 않습니다.';
+    else if(job.cancelUnconfirmed)msg='대기 취소를 확인하지 못해 대기 재확인을 멈췄습니다. 새 평가 요청은 보내지 않았으며 서버 대기표는 재확인이 끊기면 만료됩니다.';
     const diagnostics=[err.code,err.requestId].filter(v=>typeof v==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(v));
     status.innerHTML='<div class="safetyNotice"><b>AI 피드백 결과를 받지 못했습니다</b><br><span class="small">'+esc(msg)+'</span>'+(diagnostics.length?'<p class="small">담당자에게 알려줄 확인 코드: '+esc(diagnostics.join(' / '))+'</p>':'')+'<br><span class="small">학습 기록과 저장된 AI 피드백은 유지됩니다. 기록 작성 점검, 학습 보고서, 백업은 계속 이용할 수 있습니다.</span><div class="actions"><button class="ghost" onclick="showBasicRecordCheck()">기록 작성 점검으로 이동 →</button></div></div>';
-  }finally{clearTimeout(timeout);clearInterval(timer);releaseTabLock();gradingInFlight=false;updateEvaluationAction();}
+  }finally{clearInterval(timer);releaseTabLock();activeGradingRequest=null;gradingInFlight=false;updateEvaluationAction();}
 }
 const TIER_META={
   '판단 보류':{emoji:'⏸',svg:''},
@@ -1879,6 +1988,7 @@ render();
       <b>기록에 대한 AI 참고 평가</b><br>
       <span class="small">사전 관찰 · AI 실험 체계성 · 근거 대조 · 오류 대응 · 기록의 구체성을 미션마다 검토합니다. 확인 가능한 원문 근거가 있을 때 매우 잘함/잘함/보통/노력 필요의 수준을 판단하고, 근거가 부족하거나 확인할 수 없으면 판단을 보류합니다. 11·12번 도전미션은 별도 활동입니다. 성적은 담당교수가 원자료와 실제 수행을 확인하여 확정합니다.</span>
       <div class="privacyNote">평가 버튼을 누르면 실습 기록과 이미지를 평가 서버로 전송합니다. Gemini 셀프체크는 Google Gemini, GPT 최종평가는 OpenAI에서 처리합니다. 이름·학번 별도 필드는 총괄 기록 확인 명단에 사용합니다. 집계된 기록은 담당자에게 전달됩니다. 실습 기록에 민감정보를 넣지 마세요. 상세 보관 정책은 운영자가 확인해야 합니다.</div>
+      <p class="small">대기 중에는 AI를 호출하지 않습니다. 중복 처리를 막기 위해 요청 상태를 임시 보관하며, 완료된 결과는 재조회용으로 최대 10분 동안 임시 보관합니다.</p>
       <details id="evaluationRubric" class="rubricGuide" style="margin-top:16px"><summary>평가 기준과 산정 방식 보기 · 5개 항목 × 10개 기본미션</summary><div id="rubricGuideContent"></div></details>
       <div id="evaluationReadiness" class="basicCheckSummary" style="margin-top:12px"></div>
       <div class="actions"><button class="primary primaryLg" id="gradeBtn" onclick="requestGrading()">Gemini 셀프체크하기</button></div>
