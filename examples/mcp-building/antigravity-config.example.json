@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "zeroarchitect-building": {
+      "command": "REPLACE_WITH_ABSOLUTE_VENV_PYTHON_PATH",
+      "args": ["REPLACE_WITH_ABSOLUTE_SERVER_PY_PATH"]
+    }
+  }
+}
