@@ -1541,7 +1541,7 @@ function gradingWaitHint(elapsed){
 const GRADING_SCOPE_KEY='aivis_evaluation_scope_v1';
 const GRADING_QUEUE_WAIT_MS=10*60*1000;
 // Queue estimates are illustrative, not server progress. Keep in sync if concurrency changes.
-const GRADING_ESTIMATE_SLOTS=3;
+const GRADING_ESTIMATE_SLOTS=5;
 let activeGradingRequest=null;
 let gradingActivityNotice=null;
 function gradingDuration(seconds){
